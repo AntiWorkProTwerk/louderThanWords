@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { CivicIntelligenceData } from '../types/civic';
+import { GovernmentBuilding } from '../types/buildings';
 import { RepresentativeCard } from './cards/RepresentativeCard';
 import { VotingRecordCard } from './cards/VotingRecordCard';
 import { LegislationCard } from './cards/LegislationCard';
 import { PublicMeetingsCard } from './cards/PublicMeetingsCard';
 import { CivicUpdatesCard } from './cards/CivicUpdatesCard';
 import { DataTransparencyCard } from './cards/DataTransparencyCard';
+import { BuildingInspectorCard } from './cards/BuildingInspectorCard';
+import { BoardGamePiece } from './pieces/BoardGamePiece';
 import {
   Users,
   Vote,
@@ -13,20 +16,28 @@ import {
   Bell,
   ShieldCheck,
   Search,
-  Filter,
-  Layers,
-  FileText,
+  Building2,
+  Sparkles,
 } from 'lucide-react';
 
 interface IntelligenceFeedProps {
   data: CivicIntelligenceData;
+  buildings: GovernmentBuilding[];
+  selectedBuilding: GovernmentBuilding | null;
+  onSelectBuilding: (building: GovernmentBuilding | null) => void;
   isLoading?: boolean;
 }
 
-type TabType = 'representatives' | 'legislation' | 'meetings' | 'updates' | 'transparency';
+type TabType = 'buildings' | 'representatives' | 'legislation' | 'meetings' | 'updates' | 'transparency';
 
-export const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({ data, isLoading }) => {
-  const [activeTab, setActiveTab] = useState<TabType>('representatives');
+export const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({
+  data,
+  buildings,
+  selectedBuilding,
+  onSelectBuilding,
+  isLoading,
+}) => {
+  const [activeTab, setActiveTab] = useState<TabType>('buildings');
   const [filterQuery, setFilterQuery] = useState('');
 
   const tabs: Array<{
@@ -35,6 +46,12 @@ export const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({ data, isLoad
     icon: React.ReactNode;
     count?: number;
   }> = [
+    {
+      id: 'buildings',
+      label: '3D Game Pieces',
+      icon: <Sparkles className="w-4 h-4 text-indigo-400" />,
+      count: buildings.length,
+    },
     {
       id: 'representatives',
       label: 'Officials',
@@ -67,6 +84,13 @@ export const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({ data, isLoad
   ];
 
   // Filtered collections
+  const filteredBuildings = buildings.filter(
+    (b) =>
+      b.name.toLowerCase().includes(filterQuery.toLowerCase()) ||
+      b.typeLabel.toLowerCase().includes(filterQuery.toLowerCase()) ||
+      b.occupants.some((occ) => occ.toLowerCase().includes(filterQuery.toLowerCase()))
+  );
+
   const filteredReps = data.representatives.filter(
     (r) =>
       r.name.toLowerCase().includes(filterQuery.toLowerCase()) ||
@@ -118,7 +142,7 @@ export const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({ data, isLoad
             </p>
           </div>
 
-          {/* Quick inline search within current tab */}
+          {/* Filter */}
           <div className="relative w-full sm:w-48">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
@@ -131,7 +155,7 @@ export const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({ data, isLoad
           </div>
         </div>
 
-        {/* Tab Navigation Pill Bar */}
+        {/* Tab Navigation */}
         <div className="flex items-center gap-1 overflow-x-auto border-b border-slate-800/80 -mb-px no-scrollbar">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
@@ -166,6 +190,14 @@ export const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({ data, isLoad
 
       {/* Scrollable Feed Container */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+        {/* If a building piece is clicked on the map, show inspector card at top of feed */}
+        {selectedBuilding && (
+          <BuildingInspectorCard
+            building={selectedBuilding}
+            onClose={() => onSelectBuilding(null)}
+          />
+        )}
+
         {isLoading ? (
           <div className="py-12 text-center text-slate-400 space-y-2">
             <div className="inline-block w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
@@ -173,6 +205,56 @@ export const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({ data, isLoad
           </div>
         ) : (
           <>
+            {/* TAB: 3D Board Game Building Pieces */}
+            {activeTab === 'buildings' && (
+              <div className="space-y-4">
+                <div className="text-xs text-slate-400 flex items-center justify-between">
+                  <span>
+                    Showing {filteredBuildings.length} key civic landmarks coded as 3D tabletop pieces.
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3">
+                  {filteredBuildings.map((bldg) => {
+                    const isSelected = selectedBuilding?.id === bldg.id;
+                    return (
+                      <div
+                        key={bldg.id}
+                        onClick={() => onSelectBuilding(bldg)}
+                        className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center gap-4 ${
+                          isSelected
+                            ? 'bg-slate-900 border-indigo-500 shadow-xl ring-1 ring-indigo-500/50'
+                            : 'bg-slate-900/70 border-slate-800 hover:border-slate-700 hover:bg-slate-900'
+                        }`}
+                      >
+                        <div className="p-1 bg-slate-950 rounded-lg border border-slate-800 flex-shrink-0">
+                          <BoardGamePiece
+                            type={bldg.type}
+                            size={44}
+                            showPedestal={false}
+                            isSelected={isSelected}
+                          />
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="text-[10px] font-mono font-bold uppercase px-1.5 py-0.2 rounded bg-indigo-950 text-indigo-400 border border-indigo-800/60">
+                              {bldg.typeLabel}
+                            </span>
+                            <span className="text-[11px] text-slate-400">
+                              {bldg.jurisdictionLevel.toUpperCase()}
+                            </span>
+                          </div>
+                          <h4 className="text-sm font-bold text-white truncate">{bldg.name}</h4>
+                          <p className="text-xs text-slate-400 truncate">{bldg.address}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* TAB: Representatives */}
             {activeTab === 'representatives' && (
               <div className="space-y-4">
@@ -195,7 +277,6 @@ export const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({ data, isLoad
             {/* TAB: Votes & Legislation */}
             {activeTab === 'legislation' && (
               <div className="space-y-6">
-                {/* Roll Call Votes Section */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Vote className="w-4 h-4 text-indigo-400" />
@@ -210,10 +291,9 @@ export const IntelligenceFeed: React.FC<IntelligenceFeedProps> = ({ data, isLoad
                   )}
                 </div>
 
-                {/* Sponsored Bills Section */}
                 <div className="space-y-3 pt-4 border-t border-slate-800">
                   <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-indigo-400" />
+                    <Building2 className="w-4 h-4 text-indigo-400" />
                     <h3 className="text-sm font-bold text-white">Sponsored & Introduced Bills</h3>
                   </div>
                   {filteredBills.length === 0 ? (

@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { CivicIntelligenceData, JurisdictionLevel, LocationContext } from './types/civic';
+import { GovernmentBuilding } from './types/buildings';
 import { FEATURED_PRESETS, reverseGeocode } from './services/geocodingService';
 import { fetchCivicIntelligence } from './services/civicDataService';
+import { getGovernmentBuildings } from './services/buildingService';
 import { HeaderBar } from './components/HeaderBar';
 import { JurisdictionLevelBar } from './components/JurisdictionLevelBar';
 import { CivicMapContainer } from './components/CivicMapContainer';
@@ -17,18 +19,23 @@ import {
 } from 'lucide-react';
 
 export function App() {
-  // State from URL or initial preset
   const [location, setLocation] = useState<LocationContext>(FEATURED_PRESETS[0].context);
   const [activeLevel, setActiveLevel] = useState<JurisdictionLevel>('local');
   const [data, setData] = useState<CivicIntelligenceData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [showLocationModal, setShowLocationModal] = useState<boolean>(false);
+  const [selectedBuilding, setSelectedBuilding] = useState<GovernmentBuilding | null>(null);
 
   // Desktop sidebar collapse state
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
 
   // Mobile Bottom Sheet state: 'peek' | 'full' | 'collapsed'
   const [mobileSheetState, setMobileSheetState] = useState<'peek' | 'full' | 'collapsed'>('peek');
+
+  // Compute Government Buildings for active location & filter by level if needed
+  const buildings = useMemo(() => {
+    return getGovernmentBuildings(location);
+  }, [location]);
 
   // Initialize from URL parameters
   useEffect(() => {
@@ -46,7 +53,6 @@ export function App() {
         });
       }
     } else {
-      // First-time visit: show lightweight onboarding modal
       const hasVisited = sessionStorage.getItem('civic_visited');
       if (!hasVisited) {
         setShowLocationModal(true);
@@ -90,11 +96,24 @@ export function App() {
 
   const handleLocationChange = (newLoc: LocationContext) => {
     setLocation(newLoc);
+    setSelectedBuilding(null);
     setShowLocationModal(false);
   };
 
   const handleLevelChange = (newLevel: JurisdictionLevel) => {
     setActiveLevel(newLevel);
+  };
+
+  const handleSelectBuilding = (building: GovernmentBuilding | null) => {
+    setSelectedBuilding(building);
+    if (building) {
+      // If mobile, expand sheet to peek or full
+      if (window.innerWidth < 768) {
+        setMobileSheetState('peek');
+      } else if (isSidebarCollapsed) {
+        setIsSidebarCollapsed(false);
+      }
+    }
   };
 
   return (
@@ -115,7 +134,7 @@ export function App() {
 
       {/* 3. Main Split-Screen Workspace */}
       <main className="flex-1 relative flex flex-col md:flex-row overflow-hidden">
-        {/* Left Side (Desktop: 55% or 100% when collapsed / Mobile: Full Background Map) */}
+        {/* Left Side: Interactive Map with Minimal Styling & 3D Board Game Pieces */}
         <div
           className={`relative h-full transition-all duration-300 ${
             isSidebarCollapsed ? 'w-full' : 'w-full md:w-[55%]'
@@ -126,10 +145,13 @@ export function App() {
               location={location}
               activeLevel={activeLevel}
               boundaryGeoJSON={data.boundaryGeoJSON}
+              buildings={buildings}
+              selectedBuilding={selectedBuilding}
+              onSelectBuilding={handleSelectBuilding}
             />
           )}
 
-          {/* Desktop Toggle Button to Expand / Collapse Feed */}
+          {/* Desktop Toggle Button */}
           <button
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
             className="hidden md:flex absolute top-4 right-4 z-20 items-center gap-1.5 bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white px-3 py-2 rounded-xl border border-slate-700/80 shadow-2xl transition-all text-xs font-semibold backdrop-blur-md"
@@ -138,7 +160,7 @@ export function App() {
             {isSidebarCollapsed ? (
               <>
                 <PanelLeftOpen className="w-4 h-4 text-indigo-400" />
-                <span>Show Panel</span>
+                <span>Show Feed</span>
               </>
             ) : (
               <>
@@ -149,24 +171,31 @@ export function App() {
           </button>
         </div>
 
-        {/* Right Side (Desktop: 45% Feed Panel / Mobile: Hidden in split mode, rendered in bottom-sheet) */}
+        {/* Right Side: Intelligence Feed Panel */}
         {!isSidebarCollapsed && (
           <div className="hidden md:flex md:w-[45%] h-full border-l border-slate-800/90 flex-col bg-slate-950 z-10 shadow-2xl">
-            {data && <IntelligenceFeed data={data} isLoading={isLoading} />}
+            {data && (
+              <IntelligenceFeed
+                data={data}
+                buildings={buildings}
+                selectedBuilding={selectedBuilding}
+                onSelectBuilding={handleSelectBuilding}
+                isLoading={isLoading}
+              />
+            )}
           </div>
         )}
 
-        {/* Mobile Pull-Up Drawer / Bottom Sheet */}
+        {/* Mobile Pull-Up Drawer */}
         <div
           className={`md:hidden absolute inset-x-0 bottom-0 z-30 flex flex-col bg-slate-950/95 border-t border-slate-800 rounded-t-2xl shadow-2xl backdrop-blur-xl transition-all duration-300 ease-in-out ${
             mobileSheetState === 'full'
               ? 'h-[90%]'
               : mobileSheetState === 'peek'
-              ? 'h-[46%]'
+              ? 'h-[50%]'
               : 'h-14'
           }`}
         >
-          {/* Mobile Drawer Grab Bar & Header */}
           <div
             onClick={() => {
               if (mobileSheetState === 'collapsed') setMobileSheetState('peek');
@@ -178,8 +207,8 @@ export function App() {
             <div className="w-10 h-1 bg-slate-700 rounded-full mb-1.5"></div>
             <div className="flex items-center justify-between w-full text-xs font-bold text-slate-200">
               <span className="flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-indigo-400" />
-                {activeLevel.toUpperCase()} Intelligence Feed ({location.city})
+                <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                {activeLevel.toUpperCase()} Intelligence & 3D Pieces ({location.city})
               </span>
               <div className="flex items-center gap-1 text-slate-400">
                 {mobileSheetState === 'full' ? (
@@ -191,14 +220,21 @@ export function App() {
             </div>
           </div>
 
-          {/* Feed Content in Mobile Drawer */}
           <div className="flex-1 overflow-hidden">
-            {data && <IntelligenceFeed data={data} isLoading={isLoading} />}
+            {data && (
+              <IntelligenceFeed
+                data={data}
+                buildings={buildings}
+                selectedBuilding={selectedBuilding}
+                onSelectBuilding={handleSelectBuilding}
+                isLoading={isLoading}
+              />
+            )}
           </div>
         </div>
       </main>
 
-      {/* 4. First-Time Location Consent & Address Modal */}
+      {/* 4. Onboarding Modal */}
       <LocationConsentModal
         isOpen={showLocationModal}
         onSelectLocation={handleLocationChange}
