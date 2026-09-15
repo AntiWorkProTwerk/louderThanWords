@@ -32,10 +32,10 @@ export function App() {
   // Mobile Bottom Sheet state: 'peek' | 'full' | 'collapsed'
   const [mobileSheetState, setMobileSheetState] = useState<'peek' | 'full' | 'collapsed'>('peek');
 
-  // Compute Government Buildings for active location & filter by level if needed
+  // Compute Government Buildings for active level & location
   const buildings = useMemo(() => {
-    return getGovernmentBuildings(location);
-  }, [location]);
+    return getGovernmentBuildings(activeLevel, location);
+  }, [activeLevel, location]);
 
   // Initialize from URL parameters
   useEffect(() => {
@@ -102,12 +102,12 @@ export function App() {
 
   const handleLevelChange = (newLevel: JurisdictionLevel) => {
     setActiveLevel(newLevel);
+    setSelectedBuilding(null); // Reset selection to focus on new level landmarks
   };
 
   const handleSelectBuilding = (building: GovernmentBuilding | null) => {
     setSelectedBuilding(building);
     if (building) {
-      // If mobile, expand sheet to peek or full
       if (window.innerWidth < 768) {
         setMobileSheetState('peek');
       } else if (isSidebarCollapsed) {
@@ -134,7 +134,7 @@ export function App() {
 
       {/* 3. Main Split-Screen Workspace */}
       <main className="flex-1 relative flex flex-col md:flex-row overflow-hidden">
-        {/* Left Side: Interactive Map with Minimal Styling & 3D Board Game Pieces */}
+        {/* Left Side: Interactive Map with Minimal Styling & Level-Specific 3D Board Game Pieces */}
         <div
           className={`relative h-full transition-all duration-300 ${
             isSidebarCollapsed ? 'w-full' : 'w-full md:w-[55%]'
@@ -208,7 +208,7 @@ export function App() {
             <div className="flex items-center justify-between w-full text-xs font-bold text-slate-200">
               <span className="flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-                {activeLevel.toUpperCase()} Intelligence & 3D Pieces ({location.city})
+                {activeLevel.toUpperCase()} Intelligence & 3D Pieces
               </span>
               <div className="flex items-center gap-1 text-slate-400">
                 {mobileSheetState === 'full' ? (

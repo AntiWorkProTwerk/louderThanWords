@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { JurisdictionLevel, LocationContext } from '../../types/civic';
 import { GovernmentBuilding } from '../../types/buildings';
 import { MINIMAL_CIVIC_MAP_STYLE } from '../../services/googleMapsService';
-import { getRecommendedZoom } from '../../services/boundaryService';
+import { getRecommendedZoomAndCenter } from '../../services/boundaryService';
 import ReactDOM from 'react-dom/client';
 import { BoardGamePiece } from '../pieces/BoardGamePiece';
 
@@ -33,9 +33,11 @@ export const GoogleCivicMap: React.FC<GoogleCivicMapProps> = ({
   useEffect(() => {
     if (!mapDivRef.current || mapInstanceRef.current) return;
 
+    const { center, zoom } = getRecommendedZoomAndCenter(activeLevel, location);
+
     const map = new google.maps.Map(mapDivRef.current, {
-      center: { lat: location.lat, lng: location.lng },
-      zoom: getRecommendedZoom(activeLevel),
+      center: { lat: center[0], lng: center[1] },
+      zoom,
       styles: MINIMAL_CIVIC_MAP_STYLE,
       disableDefaultUI: true,
       zoomControl: true,
@@ -48,22 +50,24 @@ export const GoogleCivicMap: React.FC<GoogleCivicMapProps> = ({
     mapInstanceRef.current = map;
   }, []);
 
-  // 2. Pan/Zoom on Location or Active Level Change
+  // 2. Pan/Zoom smoothly to the active Jurisdiction Center & Zoom
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
 
-    map.panTo({ lat: location.lat, lng: location.lng });
-    map.setZoom(getRecommendedZoom(activeLevel));
+    const { center, zoom } = getRecommendedZoomAndCenter(activeLevel, location);
 
-    // Update or Create User Pin
+    map.panTo({ lat: center[0], lng: center[1] });
+    map.setZoom(zoom);
+
+    // Update User Pin at their specific local address
     if (userMarkerRef.current) {
       userMarkerRef.current.setPosition({ lat: location.lat, lng: location.lng });
     } else {
       userMarkerRef.current = new google.maps.Marker({
         position: { lat: location.lat, lng: location.lng },
         map,
-        title: `Your Location: ${location.city}`,
+        title: `Your Address: ${location.city}`,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
           scale: 7,
@@ -76,7 +80,7 @@ export const GoogleCivicMap: React.FC<GoogleCivicMapProps> = ({
     }
   }, [location.lat, location.lng, activeLevel]);
 
-  // 3. Render Blocky Square Boundary Polygon
+  // 3. Render Accurate Real Boundary Polygon (e.g. Real State of Illinois border or County lines)
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || !boundaryGeoJSON) return;
@@ -89,19 +93,18 @@ export const GoogleCivicMap: React.FC<GoogleCivicMapProps> = ({
     const getColorForLevel = (lvl: JurisdictionLevel) => {
       switch (lvl) {
         case 'local':
-          return { stroke: '#6366f1', fill: '#818cf8' }; // Indigo
+          return { stroke: '#6366f1', fill: '#818cf8' }; // Indigo (City Limits)
         case 'county':
-          return { stroke: '#a855f7', fill: '#c084fc' }; // Purple
+          return { stroke: '#a855f7', fill: '#c084fc' }; // Purple (County Grid)
         case 'state':
-          return { stroke: '#0ea5e9', fill: '#38bdf8' }; // Sky Blue
+          return { stroke: '#0ea5e9', fill: '#38bdf8' }; // Sky Blue (State Outline)
         case 'federal':
-          return { stroke: '#10b981', fill: '#34d399' }; // Emerald
+          return { stroke: '#10b981', fill: '#34d399' }; // Emerald (Congressional / Federal)
       }
     };
 
     const colors = getColorForLevel(activeLevel);
 
-    // Extract coordinates from FeatureCollection
     const feature = (boundaryGeoJSON as any).features?.[0];
     if (feature && feature.geometry && feature.geometry.coordinates) {
       const coords = feature.geometry.coordinates[0].map((coord: [number, number]) => ({
@@ -115,23 +118,23 @@ export const GoogleCivicMap: React.FC<GoogleCivicMapProps> = ({
         strokeOpacity: 0.95,
         strokeWeight: 3.5,
         fillColor: colors.fill,
-        fillOpacity: 0.14,
+        fillOpacity: 0.12,
         map,
       });
 
       polygon.addListener('mouseover', () => {
-        polygon.setOptions({ fillOpacity: 0.28, strokeWeight: 4.5 });
+        polygon.setOptions({ fillOpacity: 0.25, strokeWeight: 4.5 });
       });
 
       polygon.addListener('mouseout', () => {
-        polygon.setOptions({ fillOpacity: 0.14, strokeWeight: 3.5 });
+        polygon.setOptions({ fillOpacity: 0.12, strokeWeight: 3.5 });
       });
 
       polygonRef.current = polygon;
     }
   }, [boundaryGeoJSON, activeLevel]);
 
-  // 4. Render 3D Board Game Piece Markers on Google Map
+  // 4. Render 3D Board Game Piece Markers for the active Level
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
@@ -140,7 +143,6 @@ export const GoogleCivicMap: React.FC<GoogleCivicMapProps> = ({
     markersRef.current.forEach((m) => m.cleanup());
     markersRef.current = [];
 
-    // Custom HTML Overlay for each Board Game Building Piece
     buildings.forEach((building) => {
       class BoardGameOverlay extends google.maps.OverlayView {
         private container: HTMLDivElement;

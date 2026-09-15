@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { JurisdictionLevel, LocationContext } from '../types/civic';
 import { GovernmentBuilding } from '../types/buildings';
-import { getRecommendedZoom } from '../services/boundaryService';
+import { getRecommendedZoomAndCenter } from '../services/boundaryService';
 import { loadGoogleMapsScript } from '../services/googleMapsService';
 import { GoogleCivicMap } from './map/GoogleCivicMap';
 import L from 'leaflet';
@@ -58,9 +58,11 @@ export const CivicMapContainer: React.FC<CivicMapContainerProps> = ({
     if (mapEngine !== 'leaflet' || !leafletContainerRef.current) return;
 
     if (!leafletMapRef.current) {
+      const { center, zoom } = getRecommendedZoomAndCenter(activeLevel, location);
+
       const map = L.map(leafletContainerRef.current, {
-        center: [location.lat, location.lng],
-        zoom: getRecommendedZoom(activeLevel),
+        center: [center[0], center[1]],
+        zoom,
         zoomControl: false,
         attributionControl: false,
       });
@@ -89,8 +91,8 @@ export const CivicMapContainer: React.FC<CivicMapContainerProps> = ({
     const map = leafletMapRef.current;
     if (!map) return;
 
-    const zoom = getRecommendedZoom(activeLevel);
-    map.flyTo([location.lat, location.lng], zoom, { duration: 1.2 });
+    const { center, zoom } = getRecommendedZoomAndCenter(activeLevel, location);
+    map.flyTo([center[0], center[1]], zoom, { duration: 1.2 });
 
     if (leafletUserPinRef.current) {
       leafletUserPinRef.current.setLatLng([location.lat, location.lng]);
@@ -110,7 +112,7 @@ export const CivicMapContainer: React.FC<CivicMapContainerProps> = ({
     }
   }, [mapEngine, location.lat, location.lng, activeLevel]);
 
-  // Leaflet Blocky Boundary Layer
+  // Leaflet Real Boundary Layer
   useEffect(() => {
     if (mapEngine !== 'leaflet') return;
     const map = leafletMapRef.current;
@@ -142,7 +144,7 @@ export const CivicMapContainer: React.FC<CivicMapContainerProps> = ({
         opacity: 0.95,
         dashArray: activeLevel === 'federal' ? '8, 8' : undefined,
         fillColor: styleColors.fill,
-        fillOpacity: 0.14,
+        fillOpacity: 0.12,
       },
       onEachFeature: (feature, l) => {
         const props = feature.properties || {};
@@ -154,7 +156,7 @@ export const CivicMapContainer: React.FC<CivicMapContainerProps> = ({
         l.on({
           mouseover: (e) => {
             const target = e.target;
-            target.setStyle({ fillOpacity: 0.28, weight: 4.5 });
+            target.setStyle({ fillOpacity: 0.25, weight: 4.5 });
           },
           mouseout: (e) => {
             layer.resetStyle(e.target);
@@ -233,7 +235,8 @@ export const CivicMapContainer: React.FC<CivicMapContainerProps> = ({
 
   const handleRecenter = () => {
     if (mapEngine === 'leaflet' && leafletMapRef.current) {
-      leafletMapRef.current.flyTo([location.lat, location.lng], getRecommendedZoom(activeLevel));
+      const { center, zoom } = getRecommendedZoomAndCenter(activeLevel, location);
+      leafletMapRef.current.flyTo([center[0], center[1]], zoom);
     }
   };
 
@@ -260,7 +263,7 @@ export const CivicMapContainer: React.FC<CivicMapContainerProps> = ({
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse"></span>
               <span className="text-xs font-bold text-white uppercase tracking-wider">
-                {activeLevel} Blocky Grid Line
+                {activeLevel} Jurisdiction Map
               </span>
             </div>
 
@@ -292,10 +295,10 @@ export const CivicMapContainer: React.FC<CivicMapContainerProps> = ({
           </div>
 
           <div className="text-[11px] text-slate-300 font-medium">
-            {activeLevel === 'local' && `Municipal Ward Grid: ${location.city}`}
-            {activeLevel === 'county' && `Square County Border: ${location.county}`}
-            {activeLevel === 'state' && `Square State Line: State of ${location.state}`}
-            {activeLevel === 'federal' && `Congressional Grid Corridor: ${location.stateCode}-${location.congressionalDistrict}`}
+            {activeLevel === 'local' && `Municipal Limits: ${location.city}`}
+            {activeLevel === 'county' && `County Grid: ${location.county}`}
+            {activeLevel === 'state' && `State Line: State of ${location.state} (Springfield & Chicago Hub)`}
+            {activeLevel === 'federal' && `U.S. Federal: Washington D.C. + State Capitals`}
           </div>
         </div>
 
