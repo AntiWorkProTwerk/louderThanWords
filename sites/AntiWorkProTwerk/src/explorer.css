@@ -1,0 +1,1031 @@
+/* Persistent explorer: preserve the reference design while the map stays live. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.detail-tabs {
+  display: flex;
+  gap: 5px;
+  margin: 20px 0;
+  border-bottom: 1px solid #d9e6f1;
+}
+.detail-tabs button {
+  flex: 1;
+  background: none;
+  color: #6483a2;
+  padding: 12px 6px;
+  font-size: 12px;
+  border-bottom: 2px solid transparent;
+}
+.detail-tabs button.active {
+  border-bottom-color: var(--red);
+  color: #142e47;
+  font-weight: 600;
+}
+.skip-link {
+  position: fixed;
+  left: 20px;
+  top: -100px;
+  z-index: 100;
+  background: #fff;
+  padding: 12px;
+  color: #005ad4;
+}
+.skip-link:focus {
+  top: 10px;
+}
+.header-right {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+}
+.account-button {
+  background: none;
+  color: #557ba5;
+  padding: 0;
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  min-height: 32px;
+}
+.account-button span {
+  color: var(--red);
+  margin-left: 8px;
+}
+.explorer-dashboard {
+  min-height: 100svh;
+}
+.explorer-dashboard .actions-panel,
+.explorer-dashboard .politicians-panel {
+  align-self: start;
+}
+.state-picker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 7px;
+}
+.state-picker .selected-state {
+  margin: 0;
+  gap: 10px;
+  font-size: 8px;
+  letter-spacing: 2px;
+  flex-shrink: 0;
+}
+.state-picker select {
+  width: auto;
+  max-width: 170px;
+  padding: 7px 21px 7px 5px;
+  background: transparent;
+  border: 0;
+  font-family: var(--condensed);
+  font-weight: 600;
+  font-size: 18px;
+  color: #294a6b;
+}
+.explorer-dashboard h1 {
+  font-size: clamp(90px, 8vw, 140px);
+}
+.explorer-dashboard .actions-foot {
+  margin-top: 32px;
+}
+.actions-foot a {
+  font-size: 8px;
+  letter-spacing: 1.5px;
+}
+.explorer-dashboard .action {
+  min-height: 88px;
+}
+.panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.explorer-dashboard .politicians-panel h2 {
+  font-size: clamp(47px, 4.1vw, 78px);
+  transform: scaleX(1.15);
+  width: 85%;
+}
+.result-count {
+  font-family: var(--condensed);
+  color: #9ab1c9;
+  font-size: 21px;
+}
+.explorer-dashboard .politicians-panel > .tagline {
+  font-size: 9px;
+  letter-spacing: 2.6px;
+}
+.explorer-filters {
+  display: flex;
+  gap: 8px;
+  margin: 13px 0;
+}
+.explorer-filters input {
+  flex: 1;
+  min-width: 0;
+}
+.explorer-filters select {
+  width: 110px;
+}
+.explorer-filters input,
+.explorer-filters select {
+  border: 1px solid #dbe8f3;
+  border-radius: 5px;
+  padding: 9px;
+  background: #ffffffdc;
+  font-size: 10px;
+  color: #426485;
+  height: 36px;
+}
+.explorer-filters input::placeholder {
+  color: #7591ae;
+}
+.portrait-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 6px;
+  width: 100px;
+  aspect-ratio: 1;
+  background: linear-gradient(145deg, #dcecf9, #afc7de);
+  border-radius: 4px;
+  font-family: var(--condensed);
+  font-size: 36px;
+  font-weight: 600;
+  color: #426786;
+}
+.portrait-placeholder small {
+  font-family: Inter, sans-serif;
+  font-size: 8px;
+  letter-spacing: 3px;
+}
+.explorer-dashboard .profile {
+  gap: 14px;
+}
+.explorer-dashboard .profile img,
+.explorer-dashboard .portrait-placeholder {
+  width: 92px;
+}
+.explorer-dashboard .description {
+  font-size: 12px;
+}
+.explorer-dashboard .profile h3 {
+  font-size: 25px;
+  gap: 8px;
+}
+.explorer-dashboard .role {
+  font-size: 12px;
+}
+.release-update {
+  display: block;
+  background: #e7f1fc;
+  color: #225c98;
+  border: 1px solid #cadff4;
+  border-radius: 4px;
+  padding: 9px;
+  font-size: 11px;
+  margin: 14px auto 0;
+}
+.empty-state {
+  padding: 25px 15px;
+  border: 1px dashed #cadcea;
+  border-radius: 7px;
+  background: #ffffffad;
+}
+.empty-state h3 {
+  font-size: 26px;
+  margin: 0 0 9px;
+}
+.empty-state p {
+  font-size: 13px;
+  color: #577392;
+  line-height: 1.6;
+}
+.empty-state button {
+  background: #e8f2ff;
+  color: #125ba6;
+  border-radius: 4px;
+  padding: 10px;
+  font-size: 12px;
+}
+.card-skeleton {
+  height: 155px;
+  border-radius: 6px;
+  border: 1px solid #e0eaf5;
+  background: linear-gradient(110deg, #edf4fa 20%, #fbfdff 40%, #edf4fa 60%);
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s linear infinite;
+}
+@keyframes loading-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+.mobile-state-bar,
+.sheet-handle {
+  display: none;
+}
+.live-map {
+  inset: 0 24% 0 22%;
+  pointer-events: auto;
+  min-height: 700px;
+}
+.live-map::after {
+  z-index: 2;
+  background: linear-gradient(90deg, #f9fcff 0%, transparent 12%, transparent 87%, #f9fcff 100%);
+}
+.maplibre-host {
+  position: absolute;
+  inset: 0;
+}
+.maplibregl-canvas:focus-visible {
+  outline: 2px solid #0065ff;
+  outline-offset: -3px;
+}
+.maplibregl-ctrl-bottom-right {
+  right: 35px;
+  bottom: 75px;
+}
+.maplibregl-ctrl-bottom-left {
+  left: 35px;
+  bottom: 75px;
+}
+.maplibregl-ctrl-group {
+  box-shadow: 0 0 0 1px #dbe6f0 !important;
+  border-radius: 5px !important;
+}
+.maplibregl-ctrl-scale {
+  background: #ffffff8a !important;
+  border-color: #819db9 !important;
+  color: #476782 !important;
+  font-size: 9px !important;
+}
+.maplibregl-ctrl-attrib {
+  font-size: 9px !important;
+  color: #577797 !important;
+  background: #ffffffad !important;
+}
+.map-state-name {
+  background: transparent;
+  color: #6489ac;
+  font-size: 10px;
+  font-family: Inter, sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  padding: 3px;
+  pointer-events: auto;
+  text-shadow: 0 1px 3px #fff;
+}
+.map-state-name:hover {
+  color: #0065ff;
+}
+.map-place {
+  font-family: var(--condensed);
+  font-size: 14px;
+  color: #fff;
+  text-shadow: 0 1px 3px #ac1530;
+  pointer-events: none;
+}
+.map-place::before {
+  content: '○';
+  font-size: 20px;
+  font-weight: 700;
+  margin-right: 5px;
+}
+.maplibre-host[data-zoom='national'] .map-place {
+  display: none;
+}
+.map-toolbar {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  white-space: nowrap;
+  padding: 4px;
+  border: 1px solid #dbe7f1;
+  background: #ffffffdf;
+  border-radius: 5px;
+}
+.map-toolbar button {
+  padding: 8px 10px;
+  font-size: 9px;
+  background: transparent;
+  color: #446c94;
+  min-height: 32px;
+  border-radius: 3px;
+}
+.map-toolbar button:hover {
+  background: #edf4fc;
+}
+.map-caption {
+  position: absolute;
+  left: 40px;
+  top: 130px;
+  z-index: 2;
+  font-size: 10px;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: #6c92ba;
+  pointer-events: none;
+}
+.map-caption > span:last-child {
+  display: block;
+  font-size: 7px;
+  letter-spacing: 2px;
+  margin: 12px 0 0 21px;
+}
+.crosshair {
+  color: #1684ff;
+  font-size: 19px;
+  margin-right: 6px;
+}
+.map-loading {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #6081a0;
+  white-space: nowrap;
+}
+.map-loading > span {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  background: #ff0525;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+.map-notice {
+  position: absolute;
+  bottom: 115px;
+  left: 15%;
+  right: 15%;
+  font-size: 11px;
+  background: #ffffffde;
+  padding: 12px;
+  color: #446786;
+  border-radius: 5px;
+  z-index: 3;
+}
+.fallback-map {
+  position: absolute;
+  inset: 10%;
+  width: 80%;
+  height: 80%;
+}
+.detail-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: #193d5f40;
+  backdrop-filter: blur(3px);
+  animation: overlay-in 0.15s ease;
+}
+.detail-sheet {
+  position: fixed;
+  right: 22px;
+  top: 22px;
+  bottom: 22px;
+  z-index: 21;
+  width: min(570px, calc(100% - 44px));
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 28px;
+  background: #fbfdff;
+  border: 1px solid #d6e5f2;
+  border-radius: 12px;
+  box-shadow: 0 15px 90px #17395833;
+  animation: sheet-in 0.18s ease;
+}
+.detail-title {
+  font-family: var(--condensed);
+  font-size: 42px;
+  line-height: 1.06;
+  margin: 0 0 14px;
+}
+.detail-description,
+.detail-sheet p,
+.detail-sheet blockquote {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #4d6480;
+}
+.detail-sheet h3 {
+  font-size: 25px;
+  margin: 20px 0 9px;
+}
+.detail-sheet .dialog-disclaimer {
+  font-size: 11px;
+}
+.detail-sheet .detail-profile p {
+  margin: 6px 0;
+  font-size: 13px;
+}
+.detail-sheet .dialog-top {
+  margin-bottom: 20px;
+}
+.detail-sheet .source-details,
+.premium-detail {
+  border-top: 1px solid #dce7f1;
+  margin-top: 24px;
+  padding-top: 14px;
+}
+.source-details summary,
+.premium-detail summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: #4f7194;
+}
+.source-details p,
+.source-details a {
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+.profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.secondary-button {
+  background: #e8f1fb;
+  color: #245b93;
+  border: 1px solid #d0e0f1;
+  padding: 11px 15px;
+  border-radius: 5px;
+  font-size: 12px;
+}
+.secondary-button:disabled,
+.primary-button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.detail-sheet input,
+.detail-sheet textarea {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccdfee;
+  border-radius: 5px;
+  color: #23476b;
+  background: #fff;
+  font: inherit;
+  font-size: 13px;
+}
+.detail-sheet textarea {
+  min-height: 90px;
+  resize: vertical;
+  margin-bottom: 10px;
+}
+.text-button {
+  display: inline-block;
+  background: none;
+  color: #2268ad;
+  padding: 10px 0;
+  font-size: 12px;
+}
+.feedback-message {
+  background: #edf4fc;
+  border-left: 3px solid var(--blue);
+  padding: 11px;
+  font-size: 12px !important;
+}
+.saved-list article {
+  padding: 16px 0;
+  border-bottom: 1px solid #e1eaf3;
+}
+.saved-name {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  padding: 0;
+  text-align: left;
+  font-family: var(--condensed);
+  font-size: 27px;
+}
+.saved-name span {
+  color: #6c8bab;
+  font-size: 16px;
+}
+.saved-list p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.account-demo {
+  padding: 20px;
+  background: #edf5fc;
+  border: 1px solid #dce9f5;
+  border-radius: 6px;
+  margin: 20px 0;
+}
+.account-demo h3 {
+  font-size: 32px;
+  margin-top: 0;
+}
+.account-plan {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 20px;
+  background: #eaf3fd;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.account-plan strong {
+  font-family: var(--condensed);
+  font-size: 26px;
+}
+.detail-sheet form .primary-button {
+  margin-top: 15px;
+}
+.detail-sheet .account-plan ~ .secondary-button {
+  margin: 15px;
+}
+.detail-loading {
+  min-height: 230px;
+  margin-top: 20px;
+}
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@media (min-width: 1001px) and (max-width: 1250px) {
+  .explorer-dashboard {
+    grid-template-columns: 270px 1fr 340px;
+  }
+  .live-map {
+    inset: 0 30% 0 23%;
+  }
+  .state-picker {
+    gap: 5px;
+  }
+  .state-picker select {
+    max-width: 130px;
+    font-size: 15px;
+  }
+  .state-picker .selected-state {
+    font-size: 7px;
+    letter-spacing: 1px;
+  }
+  .explorer-dashboard .politicians-panel h2 {
+    font-size: 48px;
+  }
+  .explorer-dashboard .profile img,
+  .explorer-dashboard .portrait-placeholder {
+    width: 76px;
+  }
+  .explorer-dashboard .profile h3 {
+    font-size: 22px;
+  }
+  .explorer-dashboard .description {
+    font-size: 11px;
+  }
+  .map-toolbar {
+    gap: 0;
+  }
+  .map-toolbar button {
+    padding: 8px 5px;
+    font-size: 8px;
+  }
+  .map-caption {
+    left: 30px;
+    letter-spacing: 2px;
+  }
+  .map-caption > span:last-child {
+    letter-spacing: 1px;
+    font-size: 6px;
+  }
+}
+@media (max-width: 1000px) {
+  .explorer-dashboard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    padding-top: 100px;
+  }
+  .explorer-dashboard .actions-panel {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .live-map {
+    position: relative;
+    inset: auto;
+    grid-column: 2;
+    grid-row: 1;
+    min-height: 660px;
+    margin: -100px -28px -12px -35px;
+  }
+  .explorer-dashboard .politicians-panel {
+    grid-column: 1/-1;
+    grid-row: 2;
+  }
+  .explorer-dashboard .politicians-panel h2 {
+    font-size: 62px;
+    width: auto;
+    transform: none;
+  }
+  .explorer-dashboard h1 {
+    font-size: 108px;
+  }
+  .map-caption {
+    top: 150px;
+    left: 30px;
+    letter-spacing: 2px;
+  }
+  .map-caption > span:last-child {
+    letter-spacing: 1px;
+  }
+  .map-toolbar {
+    bottom: 28px;
+    gap: 0;
+  }
+  .map-toolbar button {
+    padding: 8px 6px;
+    font-size: 8px;
+  }
+  .explorer-dashboard .profile img,
+  .explorer-dashboard .portrait-placeholder {
+    width: 86px;
+  }
+  .header-right {
+    gap: 12px;
+  }
+  .account-button {
+    font-size: 8px;
+  }
+  .state-picker {
+    gap: 8px;
+  }
+  .state-picker select {
+    max-width: 150px;
+  }
+  .explorer-filters input,
+  .explorer-filters select {
+    height: 40px;
+    font-size: 12px;
+  }
+  .explorer-filters select {
+    width: 150px;
+  }
+  .result-count {
+    margin-right: 6px;
+  }
+}
+@media (max-width: 650px) {
+  body {
+    overflow: hidden;
+  }
+  .masthead {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 82px;
+    padding: 18px 20px;
+    background: linear-gradient(#f9fcfff5, #f9fcffea);
+    z-index: 5;
+  }
+  .masthead-note {
+    display: none;
+  }
+  .brand {
+    font-size: 8px;
+    letter-spacing: 2px;
+  }
+  .masthead nav {
+    font-size: 7px;
+    gap: 10px;
+    letter-spacing: 2px;
+  }
+  .account-button {
+    font-size: 8px;
+    letter-spacing: 0.6px;
+  }
+  .explorer-dashboard {
+    display: block;
+    height: 100svh;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+  .live-map {
+    position: absolute;
+    inset: 112px 0 28svh;
+    min-height: 0;
+    height: auto;
+    margin: 0;
+  }
+  .live-map::after {
+    background: linear-gradient(180deg, #f9fcff 0%, transparent 9%, transparent 91%, #f9fcff 100%);
+  }
+  .map-caption {
+    top: 17px;
+    left: 22px;
+    font-size: 8px;
+    letter-spacing: 3px;
+  }
+  .map-caption > span:last-child {
+    font-size: 6px;
+    margin-top: 5px;
+  }
+  .map-toolbar {
+    bottom: 28px;
+    left: 20px;
+    transform: none;
+    border-radius: 5px;
+  }
+  .map-toolbar button {
+    font-size: 8px;
+    padding: 6px 8px;
+    min-height: 30px;
+  }
+  .maplibregl-ctrl-bottom-right {
+    right: 10px;
+    bottom: 65px;
+  }
+  .maplibregl-ctrl-bottom-left {
+    left: 10px;
+    bottom: 65px;
+  }
+  .maplibregl-ctrl-attrib {
+    max-width: 220px;
+  }
+  .map-state-name {
+    font-size: 8px;
+    letter-spacing: 0;
+    padding: 0;
+  }
+  .map-place {
+    font-size: 11px;
+  }
+  .map-notice {
+    bottom: 115px;
+    left: 10%;
+    right: 10%;
+    font-size: 10px;
+  }
+  .mobile-state-bar {
+    position: absolute;
+    top: 82px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 6;
+  }
+  .mobile-state-bar > label {
+    text-transform: uppercase;
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: #6b8aad;
+  }
+  .mobile-state-bar > select {
+    width: auto;
+    min-width: 0;
+    flex: 1;
+    background: #fff;
+    border: 1px solid #d7e5f2;
+    padding: 7px;
+    font-family: var(--condensed);
+    font-size: 19px;
+    font-weight: 600;
+  }
+  .mobile-state-bar > button {
+    background: #ff0525;
+    color: white;
+    border-radius: 4px;
+    padding: 10px;
+    font-size: 10px;
+  }
+  .mobile-state-bar > button.active {
+    background: #203b55;
+  }
+  .explorer-dashboard .actions-panel {
+    display: none;
+    position: absolute;
+    top: 128px;
+    left: 12px;
+    right: 12px;
+    bottom: 36svh;
+    z-index: 8;
+    background: #f9fcfff5;
+    backdrop-filter: blur(10px);
+    padding: 18px;
+    border: 1px solid #d8e6f2;
+    border-radius: 10px;
+    overflow: auto;
+  }
+  .explorer-dashboard .actions-panel.actions-open {
+    display: block;
+  }
+  .actions-panel .state-picker,
+  .actions-panel > .section-tick,
+  .actions-panel h1,
+  .actions-panel > .tagline {
+    display: none;
+  }
+  .explorer-dashboard .action {
+    min-height: 69px;
+    gap: 15px;
+    padding: 8px 4px;
+  }
+  .explorer-dashboard .action-icon {
+    width: 44px;
+    height: 44px;
+    flex-basis: 44px;
+  }
+  .explorer-dashboard .action-text strong {
+    font-size: 24px;
+  }
+  .explorer-dashboard .action-text > span {
+    font-size: 7px;
+  }
+  .explorer-dashboard .politicians-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 32svh;
+    z-index: 7;
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: 0 18px max(20px, env(safe-area-inset-bottom));
+    background: #fbfdfff5;
+    backdrop-filter: blur(12px);
+    border: 1px solid #d5e4f1;
+    border-bottom: 0;
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -8px 40px #294c6b12;
+    transition: height 0.2s ease;
+  }
+  .explorer-dashboard.sheet-expanded .politicians-panel {
+    height: 74svh;
+  }
+  .sheet-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: sticky;
+    top: 0;
+    background: #fbfdfff5;
+    width: 100%;
+    height: 28px;
+    z-index: 2;
+  }
+  .sheet-handle span {
+    width: 38px;
+    height: 4px;
+    background: #b6c9db;
+    border-radius: 4px;
+  }
+  .explorer-dashboard .section-bars {
+    display: none;
+  }
+  .explorer-dashboard .politicians-panel h2 {
+    font-size: 39px;
+    margin: 0;
+  }
+  .explorer-dashboard .politicians-panel > .tagline {
+    font-size: 7px;
+    margin: 6px 0 10px;
+    letter-spacing: 2px;
+  }
+  .explorer-filters {
+    margin: 10px 0 12px;
+    gap: 6px;
+  }
+  .explorer-filters input,
+  .explorer-filters select {
+    font-size: 10px;
+    height: 36px;
+  }
+  .explorer-filters select {
+    width: 106px;
+  }
+  .explorer-dashboard .politician-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 11px;
+  }
+  .explorer-dashboard .profile img,
+  .explorer-dashboard .portrait-placeholder {
+    width: 76px;
+  }
+  .explorer-dashboard .profile {
+    gap: 12px;
+  }
+  .explorer-dashboard .profile h3 {
+    font-size: 24px;
+  }
+  .explorer-dashboard .description {
+    font-size: 11px;
+  }
+  .explorer-dashboard .role {
+    font-size: 11px;
+  }
+  .explorer-dashboard .metrics dt {
+    font-size: 8px;
+  }
+  .explorer-dashboard .metrics dd {
+    font-size: 22px;
+  }
+  .result-count {
+    font-size: 19px;
+  }
+  .detail-sheet {
+    left: 0;
+    right: 0;
+    top: auto;
+    bottom: 0;
+    width: 100%;
+    max-height: 88svh;
+    border-radius: 18px 18px 0 0;
+    padding: 24px 20px max(24px, env(safe-area-inset-bottom));
+    animation: mobile-sheet-in 0.18s ease;
+  }
+  .detail-title {
+    font-size: 36px;
+  }
+  .detail-sheet .dialog-top {
+    margin-bottom: 18px;
+  }
+  .detail-sheet .dialog-top .eyebrow {
+    font-size: 7px;
+    letter-spacing: 1px;
+  }
+  .detail-sheet .detail-profile {
+    gap: 14px;
+  }
+  .detail-sheet .detail-profile img {
+    width: 75px;
+    height: 95px;
+  }
+  .detail-sheet .detail-profile p {
+    font-size: 12px;
+  }
+  .detail-sheet .detail-metrics dt {
+    font-size: 10px;
+  }
+  .maplibregl-ctrl-attrib-button {
+    width: 24px !important;
+    height: 24px !important;
+  }
+  .detail-overlay {
+    background: #193d5f55;
+  }
+  .portrait-placeholder small {
+    font-size: 7px;
+  }
+  .explorer-dashboard .actions-foot {
+    display: none;
+  }
+}
+@keyframes mobile-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
