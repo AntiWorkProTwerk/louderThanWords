@@ -110,7 +110,7 @@ export const CivicMapContainer: React.FC<CivicMapContainerProps> = ({
     }
   }, [mapEngine, location.lat, location.lng, activeLevel]);
 
-  // Leaflet Boundary Layer
+  // Leaflet Blocky Boundary Layer
   useEffect(() => {
     if (mapEngine !== 'leaflet') return;
     const map = leafletMapRef.current;
@@ -123,13 +123,13 @@ export const CivicMapContainer: React.FC<CivicMapContainerProps> = ({
     const getColorForLevel = (lvl: JurisdictionLevel) => {
       switch (lvl) {
         case 'local':
-          return { color: '#6366f1', fill: '#818cf8' };
+          return { color: '#6366f1', fill: '#818cf8' }; // Indigo
         case 'county':
-          return { color: '#a855f7', fill: '#c084fc' };
+          return { color: '#a855f7', fill: '#c084fc' }; // Purple
         case 'state':
-          return { color: '#0ea5e9', fill: '#38bdf8' };
+          return { color: '#0ea5e9', fill: '#38bdf8' }; // Sky Blue
         case 'federal':
-          return { color: '#10b981', fill: '#34d399' };
+          return { color: '#10b981', fill: '#34d399' }; // Emerald
       }
     };
 
@@ -138,11 +138,28 @@ export const CivicMapContainer: React.FC<CivicMapContainerProps> = ({
     const layer = L.geoJSON(boundaryGeoJSON, {
       style: {
         color: styleColors.color,
-        weight: 2.5,
-        opacity: 0.9,
-        dashArray: activeLevel === 'federal' ? '6, 6' : undefined,
+        weight: 3.5,
+        opacity: 0.95,
+        dashArray: activeLevel === 'federal' ? '8, 8' : undefined,
         fillColor: styleColors.fill,
-        fillOpacity: 0.12,
+        fillOpacity: 0.14,
+      },
+      onEachFeature: (feature, l) => {
+        const props = feature.properties || {};
+        l.bindTooltip(
+          `<div class="text-xs font-semibold text-slate-900">${props.label || props.name || 'Boundary'}</div>`,
+          { sticky: true, className: 'leaflet-custom-tooltip' }
+        );
+
+        l.on({
+          mouseover: (e) => {
+            const target = e.target;
+            target.setStyle({ fillOpacity: 0.28, weight: 4.5 });
+          },
+          mouseout: (e) => {
+            layer.resetStyle(e.target);
+          },
+        });
       },
     }).addTo(map);
 
@@ -163,14 +180,12 @@ export const CivicMapContainer: React.FC<CivicMapContainerProps> = ({
     buildings.forEach((bldg) => {
       const isSelected = selectedBuilding?.id === bldg.id;
       const getSvgForType = (type: string) => {
-        // Return lightweight HTML markup for board game token
         return `
           <div class="group relative flex flex-col items-center cursor-pointer transition-transform duration-300 ${
             isSelected ? '-translate-y-3 scale-110' : 'hover:-translate-y-2 hover:scale-105'
           }">
             <div class="w-12 h-12 flex items-center justify-center filter drop-shadow-[0_8px_6px_rgba(0,0,0,0.6)]">
               <svg viewBox="0 0 100 100" width="48" height="48">
-                <!-- Base Pedestal -->
                 <ellipse cx="50" cy="80" rx="40" ry="12" fill="#0f172a" opacity="0.6" />
                 <ellipse cx="50" cy="74" rx="34" ry="10" fill="#334155" stroke="#94a3b8" stroke-width="1.5" />
                 ${
@@ -245,7 +260,7 @@ export const CivicMapContainer: React.FC<CivicMapContainerProps> = ({
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse"></span>
               <span className="text-xs font-bold text-white uppercase tracking-wider">
-                {activeLevel} Boundary Layer
+                {activeLevel} Blocky Grid Line
               </span>
             </div>
 
@@ -277,10 +292,10 @@ export const CivicMapContainer: React.FC<CivicMapContainerProps> = ({
           </div>
 
           <div className="text-[11px] text-slate-300 font-medium">
-            {activeLevel === 'local' && `Municipal Limits: ${location.city}`}
-            {activeLevel === 'county' && `County Borders: ${location.county}`}
-            {activeLevel === 'state' && `State Lines: State of ${location.state}`}
-            {activeLevel === 'federal' && `U.S. Congressional District: ${location.stateCode}-${location.congressionalDistrict}`}
+            {activeLevel === 'local' && `Municipal Ward Grid: ${location.city}`}
+            {activeLevel === 'county' && `Square County Border: ${location.county}`}
+            {activeLevel === 'state' && `Square State Line: State of ${location.state}`}
+            {activeLevel === 'federal' && `Congressional Grid Corridor: ${location.stateCode}-${location.congressionalDistrict}`}
           </div>
         </div>
 

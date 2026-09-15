@@ -1,28 +1,79 @@
 import { JurisdictionLevel, LocationContext } from '../types/civic';
 
-// Generate realistic synthetic polygon vertices around a center point with jitter for natural boundary feel
-function generatePolygon(
+// Generate authentic rectilinear, orthogonal (90-degree angle) blocky boundaries
+// mimicking US square state lines, county grids, and township/range municipal survey blocks
+function generateBlockyPolygon(
   centerLat: number,
   centerLng: number,
-  radiusKm: number,
-  pointsCount: number = 24,
-  irregularity: number = 0.25,
+  halfWidthKm: number,
+  halfHeightKm: number,
+  complexity: 'rect' | 'stepped' | 'corridor',
   seed: number = 1
 ): [number, number][] {
-  const coords: [number, number][] = [];
   const kmPerDegreeLat = 111.0;
   const kmPerDegreeLng = 111.0 * Math.cos((centerLat * Math.PI) / 180);
 
-  for (let i = 0; i <= pointsCount; i++) {
-    const angle = (i % pointsCount) * ((2 * Math.PI) / pointsCount);
-    // Deterministic pseudo-random variation
-    const noise = Math.sin(angle * 3 + seed) * irregularity + Math.cos(angle * 5 + seed * 2) * (irregularity / 2);
-    const r = radiusKm * (1 + noise);
+  const dLat = halfHeightKm / kmPerDegreeLat;
+  const dLng = halfWidthKm / kmPerDegreeLng;
 
-    const latOffset = (r * Math.cos(angle)) / kmPerDegreeLat;
-    const lngOffset = (r * Math.sin(angle)) / kmPerDegreeLng;
+  const minLat = centerLat - dLat;
+  const maxLat = centerLat + dLat;
+  const minLng = centerLng - dLng;
+  const maxLng = centerLng + dLng;
 
-    coords.push([centerLng + lngOffset, centerLat + latOffset]);
+  const coords: [number, number][] = [];
+
+  if (complexity === 'rect') {
+    // Pure square / rectangular state & county boundary line
+    coords.push([minLng, maxLat]); // Top-Left
+    coords.push([maxLng, maxLat]); // Top-Right
+    coords.push([maxLng, minLat]); // Bottom-Right
+    coords.push([minLng, minLat]); // Bottom-Left
+    coords.push([minLng, maxLat]); // Close polygon
+  } else if (complexity === 'stepped') {
+    // Stepped blocky orthogonal grid (classic county/township survey grid)
+    const midLng1 = minLng + dLng * 0.65;
+    const midLng2 = minLng + dLng * 1.35;
+    const midLat1 = minLat + dLat * 0.4;
+    const midLat2 = minLat + dLat * 1.4;
+
+    coords.push([minLng, maxLat]);
+    coords.push([midLng1, maxLat]);
+    coords.push([midLng1, maxLat + dLat * 0.15]); // Step up
+    coords.push([midLng2, maxLat + dLat * 0.15]);
+    coords.push([midLng2, maxLat]);
+    coords.push([maxLng, maxLat]);
+    coords.push([maxLng, midLat2]);
+    coords.push([maxLng + dLng * 0.2, midLat2]); // Step right
+    coords.push([maxLng + dLng * 0.2, midLat1]);
+    coords.push([maxLng, midLat1]);
+    coords.push([maxLng, minLat]);
+    coords.push([midLng2, minLat]);
+    coords.push([midLng2, minLat - dLat * 0.1]); // Step down
+    coords.push([midLng1, minLat - dLat * 0.1]);
+    coords.push([midLng1, minLat]);
+    coords.push([minLng, minLat]);
+    coords.push([minLng, midLat1]);
+    coords.push([minLng - dLng * 0.15, midLat1]); // Step left
+    coords.push([minLng - dLng * 0.15, midLat2]);
+    coords.push([minLng, midLat2]);
+    coords.push([minLng, maxLat]); // Close
+  } else {
+    // Congressional District blocky corridor
+    const stepX = (maxLng - minLng) / 4;
+    const stepY = (maxLat - minLat) / 4;
+
+    coords.push([minLng, maxLat - stepY]);
+    coords.push([minLng + stepX * 2, maxLat - stepY]);
+    coords.push([minLng + stepX * 2, maxLat]);
+    coords.push([maxLng, maxLat]);
+    coords.push([maxLng, minLat + stepY * 2]);
+    coords.push([maxLng - stepX, minLat + stepY * 2]);
+    coords.push([maxLng - stepX, minLat]);
+    coords.push([minLng + stepX, minLat]);
+    coords.push([minLng + stepX, minLat + stepY]);
+    coords.push([minLng, minLat + stepY]);
+    coords.push([minLng, maxLat - stepY]); // Close
   }
 
   return coords;
@@ -34,39 +85,44 @@ export function getBoundaryForLevel(
 ): GeoJSON.FeatureCollection {
   const { lat, lng, city, county, state, congressionalDistrict } = location;
 
-  let radiusKm = 5;
-  let label = `${city} Municipal Limits`;
+  let halfWidthKm = 5;
+  let halfHeightKm = 5;
+  let label = `${city} Municipal Grid Limits`;
   let levelName = 'Local Municipality';
-  let seed = 12;
+  let complexity: 'rect' | 'stepped' | 'corridor' = 'stepped';
 
   switch (level) {
     case 'local':
-      radiusKm = 6.5;
-      label = `${city} Municipal Boundary (Ward / Council District)`;
+      halfWidthKm = 5.5;
+      halfHeightKm = 4.8;
+      label = `${city} Municipal Ward & Infill Boundary`;
       levelName = 'City of ' + city;
-      seed = 42;
+      complexity = 'stepped'; // Blocky urban ward annexation boundary
       break;
     case 'county':
-      radiusKm = 24.0;
-      label = `${county} Boundary (Commission Districts)`;
+      halfWidthKm = 18.0;
+      halfHeightKm = 16.0;
+      label = `${county} Boundary (Survey Grid & Townships)`;
       levelName = county;
-      seed = 84;
+      complexity = 'rect'; // Classic square American county lines
       break;
     case 'state':
-      radiusKm = 140.0;
-      label = `${state} State Legislative Boundary`;
+      halfWidthKm = 110.0;
+      halfHeightKm = 95.0;
+      label = `${state} State Line & Territorial Bounds`;
       levelName = state;
-      seed = 128;
+      complexity = 'rect'; // Iconic square state line border
       break;
     case 'federal':
-      radiusKm = 48.0;
-      label = `${state} Congressional District ${congressionalDistrict}`;
+      halfWidthKm = 36.0;
+      halfHeightKm = 32.0;
+      label = `${state} Congressional District ${congressionalDistrict} (Blocky District)`;
       levelName = `U.S. House Dist. ${congressionalDistrict}`;
-      seed = 210;
+      complexity = 'corridor'; // Blocky contiguous congressional district
       break;
   }
 
-  const coordinates = generatePolygon(lat, lng, radiusKm, 32, 0.22, seed);
+  const coordinates = generateBlockyPolygon(lat, lng, halfWidthKm, halfHeightKm, complexity);
 
   return {
     type: 'FeatureCollection',
@@ -78,7 +134,8 @@ export function getBoundaryForLevel(
           name: levelName,
           label,
           center: [lng, lat],
-          radiusKm,
+          halfWidthKm,
+          halfHeightKm,
         },
         geometry: {
           type: 'Polygon',

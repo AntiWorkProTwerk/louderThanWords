@@ -76,7 +76,7 @@ export const GoogleCivicMap: React.FC<GoogleCivicMapProps> = ({
     }
   }, [location.lat, location.lng, activeLevel]);
 
-  // 3. Render Boundary Polygon
+  // 3. Render Blocky Square Boundary Polygon
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || !boundaryGeoJSON) return;
@@ -89,13 +89,13 @@ export const GoogleCivicMap: React.FC<GoogleCivicMapProps> = ({
     const getColorForLevel = (lvl: JurisdictionLevel) => {
       switch (lvl) {
         case 'local':
-          return { stroke: '#6366f1', fill: '#818cf8' };
+          return { stroke: '#6366f1', fill: '#818cf8' }; // Indigo
         case 'county':
-          return { stroke: '#a855f7', fill: '#c084fc' };
+          return { stroke: '#a855f7', fill: '#c084fc' }; // Purple
         case 'state':
-          return { stroke: '#0ea5e9', fill: '#38bdf8' };
+          return { stroke: '#0ea5e9', fill: '#38bdf8' }; // Sky Blue
         case 'federal':
-          return { stroke: '#10b981', fill: '#34d399' };
+          return { stroke: '#10b981', fill: '#34d399' }; // Emerald
       }
     };
 
@@ -112,19 +112,19 @@ export const GoogleCivicMap: React.FC<GoogleCivicMapProps> = ({
       const polygon = new google.maps.Polygon({
         paths: coords,
         strokeColor: colors.stroke,
-        strokeOpacity: 0.9,
-        strokeWeight: 2.5,
+        strokeOpacity: 0.95,
+        strokeWeight: 3.5,
         fillColor: colors.fill,
-        fillOpacity: 0.12,
+        fillOpacity: 0.14,
         map,
       });
 
       polygon.addListener('mouseover', () => {
-        polygon.setOptions({ fillOpacity: 0.25, strokeWeight: 3.5 });
+        polygon.setOptions({ fillOpacity: 0.28, strokeWeight: 4.5 });
       });
 
       polygon.addListener('mouseout', () => {
-        polygon.setOptions({ fillOpacity: 0.12, strokeWeight: 2.5 });
+        polygon.setOptions({ fillOpacity: 0.14, strokeWeight: 3.5 });
       });
 
       polygonRef.current = polygon;
@@ -173,14 +173,12 @@ export const GoogleCivicMap: React.FC<GoogleCivicMapProps> = ({
             const isSelected = selectedBuilding?.id === building.id;
             this.root.render(
               <div className="group relative flex flex-col items-center">
-                {/* 3D Board Game Sculpture Piece */}
                 <BoardGamePiece
                   type={building.type}
                   size={52}
                   isSelected={isSelected}
                 />
 
-                {/* Tabletop Floating Label */}
                 <div
                   className={`mt-1 px-2 py-0.5 rounded text-[10px] font-bold font-mono tracking-tight whitespace-nowrap border shadow-lg transition-all ${
                     isSelected
