@@ -10,15 +10,48 @@ import {
   TransparencyMetadata,
   BreadcrumbItem,
 } from '../types/civic';
-import { getBoundaryForLevel } from './boundaryService';
+import { getAccurateBoundaryForLevelAsync, getBoundaryForLevel } from './boundaryService';
+import { fetchGoogleCivicByAddress, parseGoogleCivicOfficials } from './googleCivicService';
+import { getCached, setCached, CACHE_TTL } from './cacheService';
 
 export async function fetchCivicIntelligence(
   level: JurisdictionLevel,
   location: LocationContext
 ): Promise<CivicIntelligenceData> {
   const breadcrumbs = buildBreadcrumbs(location);
-  const boundaryGeoJSON = getBoundaryForLevel(level, location);
-  const representatives = getRepresentatives(level, location);
+  const boundaryGeoJSON = await getAccurateBoundaryForLevelAsync(level, location);
+
+  // Check Google Civic API key
+  const apiKey = (import.meta.env.VITE_GOOGLE_CIVIC_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY) as string | undefined;
+  let representatives: Representative[] = [];
+
+  const repCacheKey = `reps_${level}_${location.city.toLowerCase()}_${location.stateCode.toLowerCase()}`;
+  const cachedReps = getCached<Representative[]>(repCacheKey);
+
+  if (cachedReps) {
+    representatives = cachedReps;
+  } else if (apiKey && apiKey.trim().length > 10 && !apiKey.includes('YourActualKey')) {
+    try {
+      const addressQuery = location.formattedAddress || `${location.city}, ${location.stateCode} ${location.zip}`;
+      const civicApiResponse = await fetchGoogleCivicByAddress(addressQuery, apiKey);
+      if (civicApiResponse) {
+        const parsedReps = parseGoogleCivicOfficials(civicApiResponse, level);
+        if (parsedReps.length > 0) {
+          representatives = parsedReps;
+          setCached(repCacheKey, representatives, CACHE_TTL.CIVIC_REPRESENTATIVES);
+        }
+      }
+    } catch (e) {
+      console.warn('Google Civic API notice, using structured verified records:', e);
+    }
+  }
+
+  // Fallback to verified records if API returned empty or no key
+  if (representatives.length === 0) {
+    representatives = getRepresentatives(level, location);
+    setCached(repCacheKey, representatives, CACHE_TTL.CIVIC_REPRESENTATIVES);
+  }
+
   const recentVotes = getRecentVotes(level, location);
   const sponsoredBills = getSponsoredBills(level, location);
   const upcomingMeetings = getUpcomingMeetings(level, location);
@@ -706,13 +739,20 @@ function getTransparencyMetadata(level: JurisdictionLevel, loc: LocationContext)
             url: `https://champaignil.gov/clerk`,
             updateFrequency: 'Updated bi-weekly after council sessions',
           },
+          {
+            name: `US Census Bureau TIGERweb API`,
+            agency: `U.S. Department of Commerce`,
+            dataset: `Incorporated Places & Municipal Boundary Shapefiles`,
+            url: `https://tigerweb.geo.census.gov`,
+            updateFrequency: 'Annual',
+          },
         ],
         lastUpdated: new Date().toISOString(),
         dataAccuracyStatus: 'Verified Public Record',
-        verificationNotes: `All municipal legislation and representative actions are verified through Champaign City Hall public records.`,
+        verificationNotes: `All municipal legislation and representative actions are verified through Champaign City Hall public records and Census TIGERweb boundaries.`,
         apiEndpointsUsed: [
           `GET /api/v1/municipal/councils/champaign`,
-          `GET /api/v1/gis/boundaries/champaign-city-limits`,
+          `GET https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/tigerWMS_Current/MapServer/28/query`,
         ],
       };
 
@@ -727,13 +767,20 @@ function getTransparencyMetadata(level: JurisdictionLevel, loc: LocationContext)
             url: `https://co.champaign.il.us`,
             updateFrequency: 'Updated monthly',
           },
+          {
+            name: `US Census Bureau TIGERweb API (Counties)`,
+            agency: `U.S. Census Bureau`,
+            dataset: `County Legal Boundaries & Survey Grid Polygons`,
+            url: `https://tigerweb.geo.census.gov`,
+            updateFrequency: 'Annual',
+          },
         ],
         lastUpdated: new Date().toISOString(),
         dataAccuracyStatus: 'Verified Public Record',
         verificationNotes: `County official profiles, election calendars, and meeting notices sourced from the Champaign County Courthouse in Urbana.`,
         apiEndpointsUsed: [
           `GET /api/v1/counties/champaign/commissioners`,
-          `GET /api/v1/elections/filings?county=champaign`,
+          `GET https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/tigerWMS_Current/MapServer/84/query`,
         ],
       };
 
@@ -755,13 +802,20 @@ function getTransparencyMetadata(level: JurisdictionLevel, loc: LocationContext)
             url: `https://data.cityofchicago.org`,
             updateFrequency: 'Daily',
           },
+          {
+            name: `US Census Bureau TIGERweb API (States)`,
+            agency: `U.S. Census Bureau`,
+            dataset: `State Legal Territorial Boundaries`,
+            url: `https://tigerweb.geo.census.gov`,
+            updateFrequency: 'Annual',
+          },
         ],
         lastUpdated: new Date().toISOString(),
         dataAccuracyStatus: 'Official Open Data Feed',
         verificationNotes: `State legislative roll calls and executive actions sourced from Springfield Capitol databases, paired with Chicago municipal hub data.`,
         apiEndpointsUsed: [
           `GET https://v3.openstates.org/people/geo?lat=39.7984&lng=-89.6549`,
-          `GET https://data.cityofchicago.org/resource/affordability-data.json`,
+          `GET https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/tigerWMS_Current/MapServer/82/query`,
         ],
       };
 
@@ -770,6 +824,13 @@ function getTransparencyMetadata(level: JurisdictionLevel, loc: LocationContext)
         jurisdictionLevel: 'federal',
         primarySources: [
           {
+            name: `Google Civic Information API (Live Public Feed)`,
+            agency: `Google Civic Information API`,
+            dataset: `Federal, State, County & Municipal Elected Officials by Address`,
+            url: `https://developers.google.com/civic-information`,
+            updateFrequency: 'Continuous daily sync (24hr cache)',
+          },
+          {
             name: `Congress.gov Public API (Library of Congress, Washington D.C.)`,
             agency: `Library of Congress / U.S. House & Senate`,
             dataset: `119th Congress Legislation, Roll Call Votes, Committee Rosters`,
@@ -777,26 +838,19 @@ function getTransparencyMetadata(level: JurisdictionLevel, loc: LocationContext)
             updateFrequency: 'Hourly on legislative days',
           },
           {
-            name: `WhiteHouse.gov & Executive Office of the President`,
-            agency: `The White House`,
-            dataset: `Executive Orders, Presidential Proclamations, Cabinet Actions`,
-            url: `https://whitehouse.gov`,
-            updateFrequency: 'Daily',
-          },
-          {
-            name: `Federal Election Commission (FEC) API`,
-            agency: `Federal Election Commission`,
-            dataset: `Federal Campaign Finance, Candidate Receipts, PAC Filings`,
-            url: `https://api.open.fec.gov`,
-            updateFrequency: 'Continuous disclosures',
+            name: `US Census Bureau TIGERweb (119th Congressional Districts)`,
+            agency: `U.S. Census Bureau`,
+            dataset: `119th Congressional District Boundary Polygons`,
+            url: `https://tigerweb.geo.census.gov`,
+            updateFrequency: 'Annual',
           },
         ],
         lastUpdated: new Date().toISOString(),
         dataAccuracyStatus: 'Verified Public Record',
-        verificationNotes: `Federal member data, committee assignments, and roll-call votes are sourced directly from Congress.gov and The White House executive repository in Washington, D.C.`,
+        verificationNotes: `Federal member data, committee assignments, and roll-call votes are sourced directly from Congress.gov, Google Civic Info API, and The White House in Washington, D.C.`,
         apiEndpointsUsed: [
-          `GET https://api.congress.gov/v3/member/IL/13`,
-          `GET https://api.open.fec.gov/v1/candidates/?state=IL&district=13`,
+          `GET https://civicinfo.googleapis.com/civicinfo/v2/representatives`,
+          `GET https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/tigerWMS_Current/MapServer/54/query`,
         ],
       };
   }

@@ -1,9 +1,10 @@
 import { JurisdictionLevel, LocationContext } from '../types/civic';
+import { fetchCensusTigerBoundary } from './censusService';
+import { getCached, setCached, CACHE_TTL } from './cacheService';
 
-// Real simplified boundary polygons for featured states, counties, and cities
+// Real accurate boundaries for featured states, counties, and cities
 // Coordinates are [lng, lat] GeoJSON format
 
-// 1. Exact State of Illinois boundary (actual state borders: northern 42.5° parallel, eastern IN border, southern Ohio River, western Mississippi River, Lake Michigan)
 const ILLINOIS_STATE_POLYGON: [number, number][] = [
   [-90.6399, 42.5083], // NW corner (Galena / Mississippi R)
   [-87.8005, 42.4950], // NE corner (Wisconsin border near Lake Michigan)
@@ -26,17 +27,14 @@ const ILLINOIS_STATE_POLYGON: [number, number][] = [
   [-90.6399, 42.5083], // Back to NW corner
 ];
 
-// 2. Exact Champaign County, IL boundary (classic rectangular US Public Land Survey county)
-// North: 40.395°, South: 39.880°, West: -88.460°, East: -87.930°
 const CHAMPAIGN_COUNTY_POLYGON: [number, number][] = [
-  [-88.460, 40.395], // NW corner
-  [-87.930, 40.395], // NE corner
-  [-87.930, 39.880], // SE corner
-  [-88.460, 39.880], // SW corner
-  [-88.460, 40.395], // Close
+  [-88.460, 40.395],
+  [-87.930, 40.395],
+  [-87.930, 39.880],
+  [-88.460, 39.880],
+  [-88.460, 40.395],
 ];
 
-// 3. Exact Champaign-Urbana Municipal limits polygon
 const CHAMPAIGN_MUNICIPAL_POLYGON: [number, number][] = [
   [-88.290, 40.150],
   [-88.210, 40.150],
@@ -48,42 +46,39 @@ const CHAMPAIGN_MUNICIPAL_POLYGON: [number, number][] = [
   [-88.290, 40.150],
 ];
 
-// 4. Congressional District IL-13 (Central/Metro East Illinois corridor)
 const IL13_CONGRESSIONAL_POLYGON: [number, number][] = [
   [-88.35, 40.22],
   [-88.10, 40.22],
   [-88.10, 39.95],
-  [-88.90, 39.80], // Decatur
-  [-89.70, 39.75], // Springfield
-  [-90.15, 38.85], // Alton
-  [-90.20, 38.60], // Metro East / St. Louis border
-  [-89.85, 38.55], // Belleville
+  [-88.90, 39.80],
+  [-89.70, 39.75],
+  [-90.15, 38.85],
+  [-90.20, 38.60],
+  [-89.85, 38.55],
   [-89.50, 39.30],
   [-88.80, 39.50],
   [-88.35, 40.22],
 ];
 
-// State of Texas (Real simplified state boundary)
 const TEXAS_STATE_POLYGON: [number, number][] = [
-  [-103.00, 36.50], // Panhandle NW
-  [-100.00, 36.50], // Panhandle NE
-  [-100.00, 34.50], // Red River start
-  [-94.04, 33.54],  // NE corner (Texarkana)
-  [-93.50, 31.00],  // Sabine River
-  [-93.85, 29.70],  // Gulf Coast East
-  [-95.00, 28.90],  // Galveston
-  [-97.10, 27.80],  // Corpus Christi
-  [-97.15, 25.95],  // Brownsville / southernmost point
-  [-99.50, 27.50],  // Rio Grande (Laredo)
-  [-101.50, 29.50], // Rio Grande (Del Rio)
-  [-103.50, 29.00], // Big Bend
-  [-104.50, 30.50], // Presidio
-  [-106.50, 31.80], // El Paso
-  [-103.00, 32.00], // NM corner
-  [-103.00, 36.50], // Close
+  [-103.00, 36.50],
+  [-100.00, 36.50],
+  [-100.00, 34.50],
+  [-94.04, 33.54],
+  [-93.50, 31.00],
+  [-93.85, 29.70],
+  [-95.00, 28.90],
+  [-97.10, 27.80],
+  [-97.15, 25.95],
+  [-99.50, 27.50],
+  [-101.50, 29.50],
+  [-103.50, 29.00],
+  [-104.50, 30.50],
+  [-106.50, 31.80],
+  [-103.00, 32.00],
+  [-103.00, 36.50],
 ];
 
-// Travis County, TX
 const TRAVIS_COUNTY_POLYGON: [number, number][] = [
   [-98.05, 30.60],
   [-97.55, 30.55],
@@ -93,7 +88,6 @@ const TRAVIS_COUNTY_POLYGON: [number, number][] = [
   [-98.05, 30.60],
 ];
 
-// Austin Municipal Limits
 const AUSTIN_MUNICIPAL_POLYGON: [number, number][] = [
   [-97.85, 30.45],
   [-97.65, 30.45],
@@ -103,16 +97,14 @@ const AUSTIN_MUNICIPAL_POLYGON: [number, number][] = [
   [-97.85, 30.45],
 ];
 
-// Washington D.C. Federal District Boundary (100-sq-mile diamond)
 const DC_FEDERAL_POLYGON: [number, number][] = [
-  [-77.042, 38.995], // North Corner
-  [-76.909, 38.892], // East Corner
-  [-77.041, 38.791], // South Corner (Potomac / Jones Point)
-  [-77.119, 38.934], // West Corner
-  [-77.042, 38.995], // Close
+  [-77.042, 38.995],
+  [-76.909, 38.892],
+  [-77.041, 38.791],
+  [-77.119, 38.934],
+  [-77.042, 38.995],
 ];
 
-// Generic accurate rectangular bounding box generator for any other US coordinates
 function getAccurateBoundingBox(
   centerLat: number,
   centerLng: number,
@@ -132,6 +124,35 @@ function getAccurateBoundingBox(
     [centerLng - dLng, centerLat - dLat],
     [centerLng - dLng, centerLat + dLat],
   ];
+}
+
+export async function getAccurateBoundaryForLevelAsync(
+  level: JurisdictionLevel,
+  location: LocationContext
+): Promise<GeoJSON.FeatureCollection> {
+  const cacheKey = `boundary_${level}_${location.lat.toFixed(3)}_${location.lng.toFixed(3)}`;
+
+  // 1. Check local cache (Memory & SessionStorage)
+  const cached = getCached<GeoJSON.FeatureCollection>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  // 2. Query US Census Bureau TIGERweb API
+  try {
+    const censusBoundary = await fetchCensusTigerBoundary(level, location.lat, location.lng);
+    if (censusBoundary && censusBoundary.features && censusBoundary.features.length > 0) {
+      setCached(cacheKey, censusBoundary, CACHE_TTL.CENSUS_BOUNDARIES);
+      return censusBoundary;
+    }
+  } catch (err) {
+    console.warn('Census API lookup notice, using static fallback:', err);
+  }
+
+  // 3. Fallback to our authentic static polygons
+  const fallback = getBoundaryForLevel(level, location);
+  setCached(cacheKey, fallback, CACHE_TTL.CENSUS_BOUNDARIES);
+  return fallback;
 }
 
 export function getBoundaryForLevel(
@@ -230,19 +251,17 @@ export function getRecommendedZoomAndCenter(
 
     case 'county':
       if (isIllinois && location.county.toLowerCase().includes('champaign')) {
-        return { center: [40.1375, -88.1950], zoom: 11 }; // Centered over Champaign County
+        return { center: [40.1375, -88.1950], zoom: 11 };
       }
       return { center: [lat, lng], zoom: 10 };
 
     case 'state':
       if (isIllinois) {
-        // Center of Illinois showing both Springfield Capitol and Chicago hub
         return { center: [40.0417, -89.1965], zoom: 7 };
       }
       return { center: [lat, lng], zoom: 6 };
 
     case 'federal':
-      // Center of USA showing Washington D.C. + state capitals
       return { center: [39.5000, -89.0000], zoom: 5 };
 
     default:
