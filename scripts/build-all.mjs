@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { availableSites, sites as registeredSites } from './site-registry.mjs';
 import { syncSiteHandlers, renderPortal, renderHeaders } from './sync-sites.mjs';
+import './check-lockfile.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const dist = join(root, 'dist');
