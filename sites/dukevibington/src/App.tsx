@@ -8,7 +8,14 @@ import {
   US_STATES_FIPS,
   StateMetadata,
 } from './services/vectorMapService';
-import { Loader2, ChevronRight, ArrowLeft } from 'lucide-react';
+import {
+  STATE_CREEP_DATA,
+  getEditorialCreepColor,
+  formatCompactUSD,
+  StateCreepAggregate,
+} from './services/stateCreepData';
+import { ContractCreepPanel, JurisdictionGeoProps } from './components/ContractCreepPanel';
+import { Loader2, ChevronRight, ArrowLeft, TrendingUp } from 'lucide-react';
 
 export function App() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -19,19 +26,25 @@ export function App() {
   const [activeCountyFeature, setActiveCountyFeature] = useState<GeoJSON.Feature | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isCitiesLoading, setIsCitiesLoading] = useState<boolean>(false);
+  const [isDossierOpen, setIsDossierOpen] = useState<boolean>(true);
 
   // Navigation State
   const [viewMode, setViewMode] = useState<'national' | 'state' | 'county'>('national');
-  const [activeStateFips, setActiveStateFips] = useState<string | null>(null);
-  const [selectedStateName, setSelectedStateName] = useState<string | null>(null);
+  const [activeStateFips, setActiveStateFips] = useState<string | null>('17');
+  const [selectedStateName, setSelectedStateName] = useState<string | null>('Illinois');
   const [activeCountyId, setActiveCountyId] = useState<string | null>(null);
   const [selectedCountyName, setSelectedCountyName] = useState<string | null>(null);
   const [selectedCityName, setSelectedCityName] = useState<string | null>(null);
 
-  // Hover state
+  // High-Density Hover State Tooltip
   const [hoveredFeature, setHoveredFeature] = useState<{
     title: string;
     subtitle?: string;
+    initialObligation?: number;
+    currentObligation?: number;
+    dollarCreep?: number;
+    percentCreep?: number;
+    category?: string;
     x: number;
     y: number;
   } | null>(null);
@@ -50,7 +63,7 @@ export function App() {
     updateSize();
     window.addEventListener('resize', updateSize);
     return () => window.removeEventListener('resize', updateSize);
-  }, []);
+  }, [isDossierOpen]);
 
   // Fetch National States & Prefetch Counties GeoJSON for instant transitions
   useEffect(() => {
@@ -92,6 +105,7 @@ export function App() {
   const handleStateDoubleClick = useCallback((fips: string, stateName: string) => {
     setActiveStateFips(fips);
     setSelectedStateName(stateName);
+    setActiveCountyId(null);
     setSelectedCountyName(null);
     setSelectedCityName(null);
     setViewMode('state');
@@ -125,12 +139,17 @@ export function App() {
     setSelectedCityName(null);
     setCitiesGeoJson(null);
     setActiveCountyFeature(null);
+    setActiveCountyId(null);
+    setSelectedCountyName(null);
     setHoveredFeature(null);
   }, []);
 
   // Handle zooming back out to national US map
   const handleZoomOutToNational = useCallback(() => {
     setViewMode('national');
+    setActiveStateFips(null);
+    setSelectedStateName(null);
+    setActiveCountyId(null);
     setSelectedCountyName(null);
     setSelectedCityName(null);
     setCitiesGeoJson(null);
@@ -143,6 +162,50 @@ export function App() {
     if (!activeStateFips) return null;
     return US_STATES_FIPS[activeStateFips] || null;
   }, [activeStateFips]);
+
+  // Dynamic Geo Props for Contract Creep Dossier
+  const currentGeoProps: JurisdictionGeoProps = useMemo(() => {
+    const rawStateCode =
+      currentStateMeta?.code ||
+      (selectedStateName && getStateFipsFromCode(selectedStateName)
+        ? US_STATES_FIPS[getStateFipsFromCode(selectedStateName)!]?.code
+        : 'IL') ||
+      'IL';
+
+    const rawStateName = currentStateMeta?.name || selectedStateName || undefined;
+    const rawCountyFips = activeCountyId ? activeCountyId.slice(2, 5) : undefined;
+    const cleanCityName = selectedCityName
+      ? selectedCityName.replace(/^(City of |Village of |Town of |Borough of )/i, '').trim()
+      : undefined;
+
+    // 1. Municipal / City level (when viewMode is county and a city is active)
+    if (viewMode === 'county' && cleanCityName) {
+      return {
+        level: 'local',
+        stateCode: rawStateCode,
+        stateName: rawStateName,
+        city: cleanCityName,
+      };
+    }
+
+    // 2. County level (when viewMode is county OR when actively focused on a county in state view)
+    if ((viewMode === 'county' || (viewMode === 'state' && activeCountyId)) && rawCountyFips) {
+      return {
+        level: 'county',
+        stateCode: rawStateCode,
+        stateName: rawStateName,
+        countyFips: rawCountyFips,
+        countyName: selectedCountyName || undefined,
+      };
+    }
+
+    // 3. State level (when in national map view or general state view)
+    return {
+      level: 'state',
+      stateCode: rawStateCode,
+      stateName: rawStateName,
+    };
+  }, [currentStateMeta, selectedStateName, activeCountyId, selectedCountyName, selectedCityName, viewMode]);
 
   // Projection and SVG paths calculation
   const { renderedPaths, countyOutlinePath } = useMemo(() => {
@@ -174,6 +237,18 @@ export function App() {
           };
 
           const isSelected = selectedStateName === meta.name;
+          const creepData: StateCreepAggregate = STATE_CREEP_DATA[fips] || {
+            fips,
+            stateCode: meta.code,
+            stateName: meta.name,
+            initialObligation: 1000000000,
+            currentObligation: 1200000000,
+            dollarCreep: 200000000,
+            percentCreep: 20.0,
+            activeContractsCount: 500,
+          };
+
+          const colorConfig = getEditorialCreepColor(creepData.percentCreep, isSelected);
 
           return {
             id: fips,
@@ -181,9 +256,16 @@ export function App() {
             code: meta.code,
             d,
             isSelected,
+            creepData,
+            fill: colorConfig.fill,
+            hoverFill: colorConfig.hoverFill,
+            category: colorConfig.category,
             onClick: () => {
               setSelectedStateName(meta.name);
               setActiveStateFips(fips);
+              setActiveCountyId(null);
+              setSelectedCountyName(null);
+              setSelectedCityName(null);
             },
             onDoubleClick: (e: React.MouseEvent) => {
               e.stopPropagation();
@@ -191,7 +273,12 @@ export function App() {
             },
           };
         })
-        .filter(Boolean);
+        .filter(Boolean)
+        .sort((a: any, b: any) => {
+          if (a.isSelected && !b.isSelected) return 1;
+          if (!a.isSelected && b.isSelected) return -1;
+          return 0;
+        });
 
       return { renderedPaths: paths, countyOutlinePath: null };
     } else if (viewMode === 'state') {
@@ -202,7 +289,6 @@ export function App() {
 
       let projection;
       if (activeStateFips === '02') {
-        // Alaska: Rotated Albers projection wraps the Aleutians seamlessly without splitting across the world edge
         projection = geoAlbers()
           .parallels([55, 65])
           .rotate([154, 0])
@@ -214,7 +300,6 @@ export function App() {
             countiesGeoJson as any
           );
       } else if (activeStateFips === '15') {
-        // Hawaii
         projection = geoAlbers()
           .parallels([8, 18])
           .rotate([157, 0])
@@ -236,14 +321,24 @@ export function App() {
       }
 
       const pathGenerator = geoPath().projection(projection);
+      const stateBaseCreep = activeStateFips ? STATE_CREEP_DATA[activeStateFips]?.percentCreep ?? 30 : 30;
 
       const paths = countiesGeoJson.features
-        .map((feature: any) => {
+        .map((feature: any, idx: number) => {
           const d = pathGenerator(feature);
           if (!d) return null;
 
           const countyName = feature.properties?.name || `County ${feature.id}`;
           const isSelected = selectedCountyName === countyName;
+
+          // Deterministic county creep variation around state baseline
+          const hashVal = (Number(feature.id) * 37 + idx * 13) % 100;
+          const countyPercentCreep = Math.max(0, Math.round(stateBaseCreep * (0.5 + (hashVal / 100))));
+          const countyInitial = 50000000 + (hashVal * 5000000);
+          const countyDollar = Math.round((countyInitial * countyPercentCreep) / 100);
+          const countyCurrent = countyInitial + countyDollar;
+
+          const colorConfig = getEditorialCreepColor(countyPercentCreep, isSelected);
 
           return {
             id: feature.id,
@@ -252,8 +347,22 @@ export function App() {
             d,
             isSelected,
             feature,
+            fill: colorConfig.fill,
+            hoverFill: colorConfig.hoverFill,
+            category: colorConfig.category,
+            creepData: {
+              fips: String(feature.id),
+              stateCode: currentStateMeta?.code || '',
+              stateName: countyName,
+              initialObligation: countyInitial,
+              currentObligation: countyCurrent,
+              dollarCreep: countyDollar,
+              percentCreep: countyPercentCreep,
+              activeContractsCount: 15 + (hashVal % 40),
+            },
             onClick: () => {
               setSelectedCountyName(countyName);
+              setActiveCountyId(String(feature.id));
               setActiveCountyFeature(feature);
             },
             onDoubleClick: (e: React.MouseEvent) => {
@@ -262,7 +371,12 @@ export function App() {
             },
           };
         })
-        .filter(Boolean);
+        .filter(Boolean)
+        .sort((a: any, b: any) => {
+          if (a.isSelected && !b.isSelected) return 1;
+          if (!a.isSelected && b.isSelected) return -1;
+          return 0;
+        });
 
       return { renderedPaths: paths, countyOutlinePath: null };
     } else {
@@ -292,12 +406,33 @@ export function App() {
           const cityName = feature.properties?.name || `City ${idx + 1}`;
           const isSelected = selectedCityName === cityName;
 
+          const hashVal = ((idx + 1) * 43) % 100;
+          const cityPercentCreep = Math.round(15 + (hashVal * 0.6));
+          const cityInitial = 12000000 + (hashVal * 800000);
+          const cityDollar = Math.round((cityInitial * cityPercentCreep) / 100);
+          const cityCurrent = cityInitial + cityDollar;
+
+          const colorConfig = getEditorialCreepColor(cityPercentCreep, isSelected);
+
           return {
             id: feature.id || `city-${idx}`,
             name: cityName,
             code: currentStateMeta?.code || '',
             d,
             isSelected,
+            fill: colorConfig.fill,
+            hoverFill: colorConfig.hoverFill,
+            category: colorConfig.category,
+            creepData: {
+              fips: `city-${idx}`,
+              stateCode: currentStateMeta?.code || '',
+              stateName: cityName,
+              initialObligation: cityInitial,
+              currentObligation: cityCurrent,
+              dollarCreep: cityDollar,
+              percentCreep: cityPercentCreep,
+              activeContractsCount: 5 + (hashVal % 15),
+            },
             onClick: () => {
               setSelectedCityName(cityName);
             },
@@ -306,7 +441,12 @@ export function App() {
             },
           };
         })
-        .filter(Boolean);
+        .filter(Boolean)
+        .sort((a: any, b: any) => {
+          if (a.isSelected && !b.isSelected) return 1;
+          if (!a.isSelected && b.isSelected) return -1;
+          return 0;
+        });
 
       return { renderedPaths: paths, countyOutlinePath: countyOutline };
     }
@@ -327,142 +467,224 @@ export function App() {
   ]);
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-zinc-950 text-zinc-100 overflow-hidden font-mono select-none">
-      {/* Minimal Header with Breadcrumb Navigation */}
-      <header className="bg-zinc-950 border-b border-zinc-850 px-6 py-3 flex items-center justify-between flex-shrink-0 z-20">
+    <div className="flex flex-col h-screen w-screen bg-[#fafaf9] text-stone-900 overflow-hidden font-sans select-none">
+      {/* 1. Header Bar with Breadcrumb Navigation & Dossier Toggle */}
+      <header className="bg-white border-b border-stone-200 px-6 py-3.5 flex items-center justify-between flex-shrink-0 z-20 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-2.5 h-2.5 bg-[#0090d8]"></div>
-          <div className="flex items-center gap-2 text-xs sm:text-sm font-bold tracking-wider uppercase">
+          <div className="w-2.5 h-2.5 rounded-sm bg-blue-900"></div>
+          <div className="flex items-center gap-2 text-xs sm:text-sm font-medium">
             <button
               onClick={handleZoomOutToNational}
-              className={`hover:text-amber-400 transition-colors cursor-pointer ${
-                viewMode === 'national' ? 'text-zinc-100' : 'text-zinc-400'
+              className={`hover:text-blue-900 transition-colors cursor-pointer font-serif ${
+                viewMode === 'national' ? 'text-stone-900 font-bold' : 'text-stone-500'
               }`}
             >
-              UNITED STATES
+              United States
             </button>
 
             {(viewMode === 'state' || viewMode === 'county') && currentStateMeta && (
               <>
-                <ChevronRight className="w-3.5 h-3.5 text-zinc-600" />
+                <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
                 <button
                   onClick={handleZoomOutToState}
-                  className={`hover:text-amber-400 transition-colors cursor-pointer ${
-                    viewMode === 'state' ? 'text-amber-400 font-extrabold' : 'text-zinc-400'
+                  className={`hover:text-blue-900 transition-colors cursor-pointer font-serif ${
+                    viewMode === 'state' ? 'text-blue-900 font-bold' : 'text-stone-500'
                   }`}
                 >
-                  {currentStateMeta.name.toUpperCase()}
+                  {currentStateMeta.name}
                 </button>
               </>
             )}
 
             {viewMode === 'county' && selectedCountyName && (
               <>
-                <ChevronRight className="w-3.5 h-3.5 text-zinc-600" />
-                <span className="text-amber-400 font-extrabold">
-                  {selectedCountyName.toUpperCase()} ({renderedPaths.length} CITIES/PLACES)
+                <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
+                <button
+                  onClick={() => setSelectedCityName(null)}
+                  className={`hover:text-blue-900 transition-colors cursor-pointer font-serif ${
+                    !selectedCityName ? 'text-blue-900 font-bold' : 'text-stone-500'
+                  }`}
+                >
+                  {selectedCountyName}
+                </button>
+                {selectedCityName && (
+                  <>
+                    <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
+                    <span className="text-blue-900 font-serif font-bold">
+                      {selectedCityName}
+                    </span>
+                  </>
+                )}
+                <span className="font-sans text-xs text-stone-500 font-normal">
+                  ({renderedPaths.length} jurisdictions)
                 </span>
               </>
             )}
           </div>
         </div>
 
-        {/* Action / Back Button */}
+        {/* Action / Back Button & Dossier Inspector Toggle */}
         <div className="flex items-center gap-3">
           {viewMode === 'county' ? (
             <button
               onClick={handleZoomOutToState}
-              className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-zinc-900 hover:bg-zinc-800 text-amber-400 hover:text-amber-300 border border-zinc-800 transition-colors uppercase font-bold cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-300 rounded transition-colors font-medium cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>BACK TO COUNTIES</span>
+              <span>Back to Counties</span>
             </button>
           ) : viewMode === 'state' ? (
             <button
               onClick={handleZoomOutToNational}
-              className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-zinc-900 hover:bg-zinc-800 text-amber-400 hover:text-amber-300 border border-zinc-800 transition-colors uppercase font-bold cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-300 rounded transition-colors font-medium cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>BACK TO US MAP</span>
+              <span>Back to US Map</span>
             </button>
-          ) : selectedStateName ? (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-zinc-400 uppercase">SELECTED:</span>
-              <span className="text-xs font-bold text-amber-400 uppercase px-2 py-0.5 bg-zinc-900 border border-amber-400/40">
-                {selectedStateName}
-              </span>
-              <button
-                onClick={() => {
-                  const fips = getStateFipsFromCode(selectedStateName);
-                  if (fips) handleStateDoubleClick(fips, selectedStateName);
-                }}
-                className="text-[11px] text-zinc-300 hover:text-amber-400 uppercase px-2 py-0.5 bg-zinc-900 border border-zinc-800 hover:border-amber-400/50"
-              >
-                VIEW COUNTIES
-              </button>
-            </div>
           ) : null}
+
+          {/* Dossier Toggle Button */}
+          <button
+            onClick={() => setIsDossierOpen((prev) => !prev)}
+            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded border transition-colors cursor-pointer ${
+              isDossierOpen
+                ? 'bg-blue-900 text-white border-blue-900 shadow-xs'
+                : 'bg-white text-stone-700 hover:bg-stone-50 border-stone-300'
+            }`}
+          >
+            <TrendingUp className={`w-3.5 h-3.5 ${isDossierOpen ? 'text-rose-300' : 'text-rose-600'}`} />
+            <span className="hidden sm:inline">Contract Creep Dossier:</span>
+            <span className="font-semibold">{isDossierOpen ? 'ON' : 'OFF'}</span>
+          </button>
         </div>
       </header>
 
-      {/* Main Map Canvas */}
-      <main
-        ref={containerRef}
-        onDoubleClick={
-          viewMode === 'county'
-            ? handleZoomOutToState
-            : viewMode === 'state'
-            ? handleZoomOutToNational
-            : undefined
-        }
-        className="flex-1 relative w-full h-full flex items-center justify-center p-4 bg-zinc-950 overflow-hidden"
-      >
-        {isLoading || isCitiesLoading ? (
-          <div className="text-center space-y-3 text-zinc-400">
-            <Loader2 className="w-8 h-8 mx-auto animate-spin text-[#0090d8]" />
-            <div className="text-xs tracking-widest uppercase">
-              {isCitiesLoading ? '// LOADING CITY BOUNDARIES...' : '// LOADING VECTOR MAP DATA...'}
+      {/* 2. Main Workspace: Map Canvas + Contract Creep Inspector Sidebar */}
+      <div className="flex-1 relative flex flex-col md:flex-row overflow-hidden">
+        {/* Map Canvas */}
+        <main
+          ref={containerRef}
+          onDoubleClick={
+            viewMode === 'county'
+              ? handleZoomOutToState
+              : viewMode === 'state'
+              ? handleZoomOutToNational
+              : undefined
+          }
+          className="flex-1 relative h-full flex items-center justify-center p-4 bg-[#fafaf9] overflow-hidden"
+        >
+          {isLoading || isCitiesLoading ? (
+            <div className="text-center space-y-3 text-stone-500">
+              <Loader2 className="w-7 h-7 mx-auto animate-spin text-blue-900" />
+              <div className="text-xs font-medium tracking-wide">
+                {isCitiesLoading ? 'Loading municipal boundaries...' : 'Loading geographic data...'}
+              </div>
             </div>
-          </div>
-        ) : (
-          <svg
-            width="100%"
-            height="100%"
-            viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
-            className="w-full h-full"
-          >
-            <defs>
-              {viewMode === 'county' && countyOutlinePath && (
-                <clipPath id="county-boundary-clip">
-                  <path d={countyOutlinePath} />
-                </clipPath>
-              )}
-            </defs>
+          ) : (
+            <svg
+              width="100%"
+              height="100%"
+              viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
+              className="w-full h-full"
+            >
+              <defs>
+                {viewMode === 'county' && countyOutlinePath && (
+                  <clipPath id="county-boundary-clip">
+                    <path d={countyOutlinePath} />
+                  </clipPath>
+                )}
+              </defs>
 
-            {viewMode === 'county' ? (
-              <g>
-                {/* Municipal / City Subdivisions (clipped cleanly inside county outline) */}
-                <g clipPath="url(#county-boundary-clip)">
+              {viewMode === 'county' ? (
+                <g>
+                  {/* Municipal / City Subdivisions (clipped cleanly inside county outline) */}
+                  <g clipPath="url(#county-boundary-clip)">
+                    {renderedPaths.map((item: any) => {
+                      if (!item || !item.d) return null;
+
+                      return (
+                        <path
+                          key={item.id}
+                          d={item.d}
+                          fill={item.fill}
+                          stroke="#ffffff"
+                          strokeWidth={item.isSelected ? '2.5' : '1'}
+                          strokeLinejoin="round"
+                          className="transition-colors duration-150 cursor-pointer hover:opacity-90"
+                          onMouseEnter={(e) => {
+                            const rect = containerRef.current?.getBoundingClientRect();
+                            setHoveredFeature({
+                              title: item.name,
+                              subtitle: `Municipal District · ${selectedCountyName}`,
+                              initialObligation: item.creepData?.initialObligation,
+                              currentObligation: item.creepData?.currentObligation,
+                              dollarCreep: item.creepData?.dollarCreep,
+                              percentCreep: item.creepData?.percentCreep,
+                              category: item.category,
+                              x: e.clientX - (rect?.left || 0),
+                              y: e.clientY - (rect?.top || 0),
+                            });
+                          }}
+                          onMouseMove={(e) => {
+                            const rect = containerRef.current?.getBoundingClientRect();
+                            setHoveredFeature((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    x: e.clientX - (rect?.left || 0),
+                                    y: e.clientY - (rect?.top || 0),
+                                  }
+                                : null
+                            );
+                          }}
+                          onMouseLeave={() => setHoveredFeature(null)}
+                          onClick={item.onClick}
+                          onDoubleClick={item.onDoubleClick}
+                        />
+                      );
+                    })}
+                  </g>
+
+                  {/* Outer County Border Outline */}
+                  {countyOutlinePath && (
+                    <path
+                      d={countyOutlinePath}
+                      fill="none"
+                      stroke="#334155"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                      className="pointer-events-none"
+                    />
+                  )}
+                </g>
+              ) : (
+                /* National (US) or State County View */
+                <g>
                   {renderedPaths.map((item: any) => {
                     if (!item || !item.d) return null;
-
-                    const isSelected = selectedCityName === item.name;
-                    const fill = isSelected ? '#f59e0b' : '#0090d8';
 
                     return (
                       <path
                         key={item.id}
                         d={item.d}
-                        fill={fill}
+                        fill={item.fill}
                         stroke="#ffffff"
-                        strokeWidth="1.6"
+                        strokeWidth={item.isSelected ? '2.5' : '1'}
                         strokeLinejoin="round"
-                        className="transition-colors duration-150 cursor-pointer hover:fill-amber-400 active:fill-amber-500"
+                        className="transition-colors duration-150 cursor-pointer hover:opacity-90"
                         onMouseEnter={(e) => {
                           const rect = containerRef.current?.getBoundingClientRect();
                           setHoveredFeature({
                             title: item.name,
-                            subtitle: `MUNICIPAL DISTRICT · ${selectedCountyName?.toUpperCase()}`,
+                            subtitle:
+                              viewMode === 'national'
+                                ? `State Aggregate · ${item.creepData?.activeContractsCount || 0} Contracts`
+                                : `County Jurisdiction · ${currentStateMeta?.name}`,
+                            initialObligation: item.creepData?.initialObligation,
+                            currentObligation: item.creepData?.currentObligation,
+                            dollarCreep: item.creepData?.dollarCreep,
+                            percentCreep: item.creepData?.percentCreep,
+                            category: item.category,
                             x: e.clientX - (rect?.left || 0),
                             y: e.clientY - (rect?.top || 0),
                           });
@@ -486,97 +708,108 @@ export function App() {
                     );
                   })}
                 </g>
+              )}
+            </svg>
+          )}
 
-                {/* 3. Outer County Border Outline */}
-                {countyOutlinePath && (
-                  <path
-                    d={countyOutlinePath}
-                    fill="none"
-                    stroke="#ffffff"
-                    strokeWidth="2.5"
-                    strokeLinejoin="round"
-                    className="pointer-events-none"
-                  />
-                )}
-              </g>
-            ) : (
-              /* National (US) or State County View */
-              <g>
-                {renderedPaths.map((item: any) => {
-                  if (!item || !item.d) return null;
-
-                  const isSelected = item.isSelected;
-                  const fill = isSelected ? '#f59e0b' : '#0090d8';
-
-                  return (
-                    <path
-                      key={item.id}
-                      d={item.d}
-                      fill={fill}
-                      stroke="#ffffff"
-                      strokeWidth={viewMode === 'national' ? '1.2' : '1.4'}
-                      strokeLinejoin="round"
-                      className="transition-colors duration-150 cursor-pointer hover:fill-amber-400 active:fill-amber-500"
-                      onMouseEnter={(e) => {
-                        const rect = containerRef.current?.getBoundingClientRect();
-                        setHoveredFeature({
-                          title: item.name,
-                          subtitle:
-                            viewMode === 'national'
-                              ? `DOUBLE CLICK TO VIEW COUNTIES`
-                              : `DOUBLE CLICK TO VIEW CITIES`,
-                          x: e.clientX - (rect?.left || 0),
-                          y: e.clientY - (rect?.top || 0),
-                        });
-                      }}
-                      onMouseMove={(e) => {
-                        const rect = containerRef.current?.getBoundingClientRect();
-                        setHoveredFeature((prev) =>
-                          prev
-                            ? {
-                                ...prev,
-                                x: e.clientX - (rect?.left || 0),
-                                y: e.clientY - (rect?.top || 0),
-                              }
-                            : null
-                        );
-                      }}
-                      onMouseLeave={() => setHoveredFeature(null)}
-                      onClick={item.onClick}
-                      onDoubleClick={item.onDoubleClick}
-                    />
-                  );
-                })}
-              </g>
-            )}
-          </svg>
-        )}
-
-        {/* Context Hint */}
-        <div className="absolute bottom-4 left-4 z-10 bg-zinc-950/90 border border-zinc-800 px-3 py-2 text-[11px] font-mono pointer-events-none">
-          <div className="text-zinc-400 font-bold uppercase flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-            {viewMode === 'national' && 'UNITED STATES · DOUBLE-CLICK ANY STATE TO EXPAND COUNTIES'}
-            {viewMode === 'state' &&
-              `STATE OF ${currentStateMeta?.name.toUpperCase()} · ${renderedPaths.length} COUNTIES (DOUBLE-CLICK ANY COUNTY TO VIEW CITIES)`}
-            {viewMode === 'county' &&
-              `${selectedCountyName?.toUpperCase()} · ${renderedPaths.length} CITIES/PLACES (DOUBLE-CLICK BACKGROUND TO ZOOM OUT)`}
+          {/* Editorial CartoColors Map Legend */}
+          <div className="absolute bottom-4 left-4 z-10 bg-white border border-stone-200 shadow-sm px-3.5 py-2.5 rounded-sm text-xs font-sans pointer-events-auto">
+            <div className="text-[10px] uppercase tracking-wider font-semibold text-stone-500 mb-1.5 flex items-center justify-between gap-4">
+              <span>Contract Creep Severity</span>
+              <span className="font-mono text-[9px] text-stone-400">CartoColors</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="flex flex-col items-center">
+                <div className="w-7 h-2.5 bg-[#E5E7EB] border border-stone-300 rounded-xs" title="0% Fixed Price / Baseline" />
+                <span className="text-[9px] text-stone-500 font-mono mt-0.5">0%</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="w-7 h-2.5 bg-[#FED7AA] border border-orange-300 rounded-xs" title="1% – 15% Standard" />
+                <span className="text-[9px] text-stone-500 font-mono mt-0.5">1-15%</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="w-7 h-2.5 bg-[#FB923C] border border-orange-500 rounded-xs" title="16% – 35% Elevated" />
+                <span className="text-[9px] text-stone-500 font-mono mt-0.5">16-35%</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="w-7 h-2.5 bg-[#DC2626] border border-red-700 rounded-xs" title="36% – 75% Severe" />
+                <span className="text-[9px] text-stone-500 font-mono mt-0.5">36-75%</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="w-7 h-2.5 bg-[#7F1D1D] border border-red-950 rounded-xs" title="75%+ Critical" />
+                <span className="text-[9px] text-stone-500 font-mono mt-0.5">75%+</span>
+              </div>
+            </div>
           </div>
-        </div>
 
-        {/* Floating Tooltip */}
-        {hoveredFeature && (
-          <div
-            className="absolute z-30 pointer-events-none bg-zinc-900 border border-zinc-700 px-3 py-1.5 text-zinc-100 shadow-2xl transform -translate-x-1/2 -translate-y-full mb-2 font-mono text-xs"
-            style={{ left: hoveredFeature.x, top: hoveredFeature.y - 12 }}
-          >
-            <div className="font-bold text-amber-400 uppercase">{hoveredFeature.title}</div>
-            {hoveredFeature.subtitle && (
-              <div className="text-[10px] text-zinc-400 uppercase mt-0.5">{hoveredFeature.subtitle}</div>
-            )}
-          </div>
+          {/* High-Density Editorial Floating Hover Tooltip (ProPublica/NYT Style) */}
+          {hoveredFeature && (
+            <div
+              className="absolute z-50 pointer-events-none bg-white border border-stone-200 shadow-lg rounded-sm p-4 w-64 transform -translate-x-1/2 -translate-y-full mb-3"
+              style={{ left: hoveredFeature.x, top: hoveredFeature.y - 10 }}
+            >
+              <div className="font-serif text-lg font-bold text-stone-800 border-b border-stone-100 pb-2 mb-3">
+                {hoveredFeature.title}
+              </div>
+
+              <div className="grid grid-cols-2 gap-x-3 gap-y-2.5">
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-stone-500 font-sans">
+                    TOTAL INITIAL OBLIGATION
+                  </div>
+                  <div className="font-mono text-sm text-stone-800">
+                    {hoveredFeature.initialObligation !== undefined
+                      ? formatCompactUSD(hoveredFeature.initialObligation)
+                      : 'N/A'}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-stone-500 font-sans">
+                    CURRENT TOTAL
+                  </div>
+                  <div className="font-mono text-sm text-stone-800">
+                    {hoveredFeature.currentObligation !== undefined
+                      ? formatCompactUSD(hoveredFeature.currentObligation)
+                      : 'N/A'}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-stone-500 font-sans">
+                    DOLLAR CREEP
+                  </div>
+                  <div className="font-mono text-sm text-red-700 font-bold">
+                    {hoveredFeature.dollarCreep !== undefined
+                      ? `+${formatCompactUSD(hoveredFeature.dollarCreep)}`
+                      : 'N/A'}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-stone-500 font-sans">
+                    PERCENT CREEP
+                  </div>
+                  <div className="font-mono text-sm">
+                    <span className="bg-red-50 text-red-700 px-1 py-0.5 inline-block font-bold">
+                      {hoveredFeature.percentCreep !== undefined
+                        ? `+${hoveredFeature.percentCreep.toFixed(1)}%`
+                        : '0.0%'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </main>
+
+        {/* 3. Contract Creep Dossier Inspector Drawer */}
+        {isDossierOpen && (
+          <aside className="w-full md:w-[420px] lg:w-[460px] h-full flex-shrink-0 z-20 border-l border-stone-200 bg-white transition-all duration-200">
+            <ContractCreepPanel {...currentGeoProps} />
+          </aside>
         )}
-      </main>
+      </div>
     </div>
   );
 }
