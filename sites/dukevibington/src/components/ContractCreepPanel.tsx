@@ -8,8 +8,11 @@ import {
   X,
   Landmark,
   FileText,
+  BarChart3,
+  Info,
 } from 'lucide-react';
 import { PoliticianCreepPanel } from './PoliticianCreepPanel';
+import { ContractAnalyticsPanel } from './ContractAnalyticsPanel';
 
 export interface JurisdictionGeoProps {
   level: 'local' | 'county' | 'state' | 'federal';
@@ -322,8 +325,8 @@ export const ContractCreepPanel: React.FC<JurisdictionGeoProps> = ({
   districtNumber,
   city,
 }) => {
-  // View Mode Tab: 'contracts' | 'politicians'
-  const [activeViewTab, setActiveViewTab] = useState<'contracts' | 'politicians'>('contracts');
+  // View Mode Tab: 'contracts' | 'politicians' | 'analytics'
+  const [activeViewTab, setActiveViewTab] = useState<'contracts' | 'politicians' | 'analytics'>('contracts');
 
   // View State: 'list' | 'detail'
   const [selectedAward, setSelectedAward] = useState<USAspendingAwardItem | null>(null);
@@ -808,7 +811,36 @@ export const ContractCreepPanel: React.FC<JurisdictionGeoProps> = ({
           </div>
         </div>
 
-        {/* View Tabs: Prime Contracts vs Elected Officials */}
+        {/* Dynamic Scope & Data Provenance Banner */}
+        <div className="flex items-start gap-2.5 px-3 py-2 bg-stone-50 border border-stone-200 rounded-sm text-left">
+          <Info className="w-3.5 h-3.5 text-blue-900 shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[10px] uppercase font-bold font-mono tracking-wider text-stone-900">
+                {level === 'local'
+                  ? 'Municipal Scope'
+                  : level === 'county'
+                  ? 'County Scope'
+                  : level === 'federal'
+                  ? 'District Scope'
+                  : 'State-Wide Scope'}
+              </span>
+              <span className="text-[10px] text-stone-400">·</span>
+              <span className="text-[10px] font-mono text-stone-600">
+                {level === 'local' || level === 'county'
+                  ? 'Federal Procurement Performed Locally'
+                  : 'Full State Delegation & Award Rollup'}
+              </span>
+            </div>
+            <p className="text-[11px] text-stone-500 leading-tight mt-0.5">
+              {level === 'local' || level === 'county'
+                ? `Tracking federal prime awards executed in ${city || countyName || stateCode}. Officials include direct local representatives plus state-wide officials with concurrent jurisdiction.`
+                : `Aggregated procurement awards, committee jurisdictions, and legislative authorizers for ${stateName || stateCode}.`}
+            </p>
+          </div>
+        </div>
+
+        {/* View Tabs: Prime Contracts vs Elected Officials vs Visual Analytics */}
         <div className="flex items-center p-0.5 bg-stone-100 border border-stone-200 rounded-sm">
           <button
             onClick={() => setActiveViewTab('contracts')}
@@ -820,7 +852,7 @@ export const ContractCreepPanel: React.FC<JurisdictionGeoProps> = ({
           >
             <FileText className="w-3.5 h-3.5 text-stone-500" />
             <span>Prime Contracts</span>
-            <span className="text-[10px] font-mono text-stone-400">({sortedContracts.length})</span>
+            <span className="text-[10px] font-mono text-stone-400 hidden sm:inline">({sortedContracts.length})</span>
           </button>
           <button
             onClick={() => setActiveViewTab('politicians')}
@@ -832,15 +864,38 @@ export const ContractCreepPanel: React.FC<JurisdictionGeoProps> = ({
           >
             <Landmark className="w-3.5 h-3.5 text-stone-700" />
             <span>Elected Officials</span>
-            <span className="text-[10px] font-mono text-blue-900 font-bold bg-blue-50 px-1 rounded-xs">
-              Accountability
+          </button>
+          <button
+            onClick={() => setActiveViewTab('analytics')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1 text-xs font-semibold rounded-xs transition-all cursor-pointer ${
+              activeViewTab === 'analytics'
+                ? 'bg-white text-stone-900 shadow-xs border border-stone-200/80 font-bold'
+                : 'text-stone-600 hover:text-stone-900'
+            }`}
+          >
+            <BarChart3 className="w-3.5 h-3.5 text-blue-900" />
+            <span>Analytics</span>
+            <span className="text-[9px] font-mono text-purple-900 font-bold bg-purple-50 px-1 py-0.2 rounded-xs">
+              Graphs
             </span>
           </button>
         </div>
       </div>
 
       {/* 2. Scrollable Body Content */}
-      {activeViewTab === 'politicians' ? (
+      {activeViewTab === 'analytics' ? (
+        <div className="flex-1 overflow-hidden">
+          <ContractAnalyticsPanel
+            level={level}
+            stateCode={stateCode}
+            stateName={stateName}
+            countyFips={countyFips}
+            countyName={countyName}
+            districtNumber={districtNumber}
+            city={city}
+          />
+        </div>
+      ) : activeViewTab === 'politicians' ? (
         <div className="flex-1 overflow-hidden">
           <PoliticianCreepPanel
             level={level}

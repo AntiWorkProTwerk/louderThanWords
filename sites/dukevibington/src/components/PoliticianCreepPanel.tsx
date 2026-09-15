@@ -16,6 +16,8 @@ import {
   Building2,
   Landmark,
   Loader2,
+  MapPin,
+  Info,
 } from 'lucide-react';
 import {
   PoliticianWithMetrics,
@@ -527,127 +529,212 @@ export function PoliticianCreepPanel({
           </div>
         ) : (
           /* Politician Cards Feed */
-          sortedPoliticians.map((p) => {
-            const party = getPartyBadge(p.party, p.stateCode, p.district);
-            const color = getCreepColorClass(p.metrics.aggregatePercentCreep);
+          (() => {
+            const isSubStateView = Boolean(countyName || countyFips || city || districtNumber);
 
-            return (
-              <div
-                key={p.id}
-                onClick={() => setSelectedPoliticianId(p.id)}
-                className="bg-white border border-stone-200 hover:border-stone-400 rounded-sm p-3.5 shadow-2xs hover:shadow-sm transition-all cursor-pointer space-y-3"
-              >
-                {/* Header: Photo + Name + Party + Role */}
-                <div className="flex items-start gap-3">
-                  <div className="relative shrink-0 w-12 h-14 bg-stone-100 border border-stone-300 rounded-xs overflow-hidden shadow-2xs">
-                    {!imageErrorMap[p.id] ? (
-                      <img
-                        src={p.photoUrl}
-                        alt={p.name}
-                        referrerPolicy="no-referrer"
-                        crossOrigin="anonymous"
-                        loading="lazy"
-                        onError={() => setImageErrorMap((prev) => ({ ...prev, [p.id]: true }))}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-stone-400 bg-stone-100">
-                        <User className="w-6 h-6" />
+            const renderPoliticianCard = (p: PoliticianWithMetrics, isStateWideScope: boolean = false) => {
+              const party = getPartyBadge(p.party, p.stateCode, p.district);
+              const color = getCreepColorClass(p.metrics.aggregatePercentCreep);
+
+              return (
+                <div
+                  key={p.id}
+                  onClick={() => setSelectedPoliticianId(p.id)}
+                  className="bg-white border border-stone-200 hover:border-stone-400 rounded-sm p-3.5 shadow-2xs hover:shadow-sm transition-all cursor-pointer space-y-3"
+                >
+                  {/* Header: Photo + Name + Party + Role */}
+                  <div className="flex items-start gap-3">
+                    <div className="relative shrink-0 w-12 h-14 bg-stone-100 border border-stone-300 rounded-xs overflow-hidden shadow-2xs">
+                      {!imageErrorMap[p.id] ? (
+                        <img
+                          src={p.photoUrl}
+                          alt={p.name}
+                          referrerPolicy="no-referrer"
+                          crossOrigin="anonymous"
+                          loading="lazy"
+                          onError={() => setImageErrorMap((prev) => ({ ...prev, [p.id]: true }))}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-stone-400 bg-stone-100">
+                          <User className="w-6 h-6" />
+                        </div>
+                      )}
+                      <div className={`absolute bottom-0 inset-x-0 h-1 ${party.pillClass}`} />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h4 className="font-serif font-bold text-stone-900 text-sm tracking-tight truncate">
+                            {p.name}
+                          </h4>
+                          <span
+                            className={`text-[9px] font-mono px-1 py-0.2 rounded border ${party.badgeClass}`}
+                          >
+                            {party.label}
+                          </span>
+                          {isSubStateView && (
+                            <span
+                              className={`text-[9px] font-mono px-1.5 py-0.2 rounded border ${
+                                isStateWideScope
+                                  ? 'bg-stone-100 text-stone-600 border-stone-200'
+                                  : 'bg-blue-50 text-blue-900 border-blue-200 font-semibold'
+                              }`}
+                            >
+                              {isStateWideScope ? 'State-Wide Overlap' : 'Direct Mandate'}
+                            </span>
+                          )}
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-stone-400 shrink-0" />
                       </div>
-                    )}
-                    <div className={`absolute bottom-0 inset-x-0 h-1 ${party.pillClass}`} />
+
+                      <div className="text-[11px] text-stone-600 font-medium truncate mt-0.5">
+                        {p.officialRole}
+                      </div>
+
+                      <div className="text-[10px] text-stone-500 font-mono mt-0.5">
+                        {p.metrics.linkedContractsCount} Linked Awards · {p.termsInOffice}
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-1">
-                      <div className="flex items-center gap-1.5">
-                        <h4 className="font-serif font-bold text-stone-900 text-sm tracking-tight truncate">
-                          {p.name}
-                        </h4>
+                  {/* 4-Metric Data Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-stone-50 border border-stone-200 rounded-xs p-2 text-center font-mono">
+                    <div>
+                      <div className="text-[8px] uppercase tracking-wider text-stone-500 font-sans">
+                        Initial Obligation
+                      </div>
+                      <div className="text-xs font-semibold text-stone-800">
+                        {formatCurrency(p.metrics.totalInitialObligation, true)}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-[8px] uppercase tracking-wider text-stone-500 font-sans">
+                        Current Total
+                      </div>
+                      <div className="text-xs font-semibold text-stone-900">
+                        {formatCurrency(p.metrics.totalCurrentObligation, true)}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-[8px] uppercase tracking-wider text-stone-500 font-sans">
+                        Dollar Creep
+                      </div>
+                      <div className="text-xs font-bold text-red-700">
+                        +{formatCurrency(p.metrics.totalDollarCreep, true)}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-[8px] uppercase tracking-wider text-stone-500 font-sans">
+                        Creep %
+                      </div>
+                      <div>
                         <span
-                          className={`text-[9px] font-mono px-1 py-0.2 rounded border ${party.badgeClass}`}
+                          className={`text-[10px] font-mono px-1 py-0.2 rounded border inline-block ${color.bg}`}
                         >
-                          {party.label}
+                          +{p.metrics.aggregatePercentCreep.toFixed(1)}%
                         </span>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-stone-400 shrink-0" />
-                    </div>
-
-                    <div className="text-[11px] text-stone-600 font-medium truncate mt-0.5">
-                      {p.officialRole}
-                    </div>
-
-                    <div className="text-[10px] text-stone-500 font-mono mt-0.5">
-                      {p.metrics.linkedContractsCount} Linked Awards · {p.termsInOffice}
-                    </div>
-                  </div>
-                </div>
-
-                {/* 4-Metric Data Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-stone-50 border border-stone-200 rounded-xs p-2 text-center font-mono">
-                  <div>
-                    <div className="text-[8px] uppercase tracking-wider text-stone-500 font-sans">
-                      Initial Obligation
-                    </div>
-                    <div className="text-xs font-semibold text-stone-800">
-                      {formatCurrency(p.metrics.totalInitialObligation, true)}
                     </div>
                   </div>
 
-                  <div>
-                    <div className="text-[8px] uppercase tracking-wider text-stone-500 font-sans">
-                      Current Total
+                  {/* Bottom Receipt Highlight Strip */}
+                  <div className="flex items-center justify-between text-[10px] text-stone-500 pt-0.5 font-sans border-t border-stone-100">
+                    <div className="truncate pr-2">
+                      <span className="font-semibold text-stone-700">Top Linked:</span>{' '}
+                      <span className="text-stone-600 font-medium">{p.metrics.topRecipient}</span>
                     </div>
-                    <div className="text-xs font-semibold text-stone-900">
-                      {formatCurrency(p.metrics.totalCurrentObligation, true)}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="text-[8px] uppercase tracking-wider text-stone-500 font-sans">
-                      Dollar Creep
-                    </div>
-                    <div className="text-xs font-bold text-red-700">
-                      +{formatCurrency(p.metrics.totalDollarCreep, true)}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="text-[8px] uppercase tracking-wider text-stone-500 font-sans">
-                      Creep %
-                    </div>
-                    <div>
-                      <span
-                        className={`text-[10px] font-mono px-1 py-0.2 rounded border inline-block ${color.bg}`}
-                      >
-                        +{p.metrics.aggregatePercentCreep.toFixed(1)}%
+                    {p.metrics.pacDonorTotal > 0 && (
+                      <span className="font-mono text-blue-900 font-semibold shrink-0 bg-blue-50 border border-blue-200 px-1 py-0.2 rounded">
+                        PAC: {formatCurrency(p.metrics.pacDonorTotal, true)}
                       </span>
-                    </div>
+                    )}
                   </div>
                 </div>
+              );
+            };
 
-                {/* Bottom Receipt Highlight Strip */}
-                <div className="flex items-center justify-between text-[10px] text-stone-500 pt-0.5 font-sans border-t border-stone-100">
-                  <div className="truncate pr-2">
-                    <span className="font-semibold text-stone-700">Top Linked:</span>{' '}
-                    <span className="text-stone-600 font-medium">{p.metrics.topRecipient}</span>
-                  </div>
-                  {p.metrics.pacDonorTotal > 0 && (
-                    <span className="font-mono text-blue-900 font-semibold shrink-0 bg-blue-50 border border-blue-200 px-1 py-0.2 rounded">
-                      PAC: {formatCurrency(p.metrics.pacDonorTotal, true)}
-                    </span>
+            if (sortedPoliticians.length === 0) {
+              return (
+                <div className="text-center py-10 text-stone-400 space-y-2">
+                  <User className="w-8 h-8 mx-auto text-stone-300" />
+                  <p className="text-xs font-medium">No elected officials found for this query.</p>
+                </div>
+              );
+            }
+
+            // Sub-State view with 2 tiers
+            if (isSubStateView) {
+              const directOfficials = sortedPoliticians.filter(
+                (p) =>
+                  p.jurisdictionLevel === 'local' ||
+                  p.jurisdictionLevel === 'county' ||
+                  (p.jurisdictionLevel === 'federal' && Boolean(p.district))
+              );
+              const stateWideOfficials = sortedPoliticians.filter(
+                (p) =>
+                  p.jurisdictionLevel === 'state' ||
+                  (p.jurisdictionLevel === 'federal' && !p.district)
+              );
+
+              return (
+                <div className="space-y-4">
+                  {/* Tier 1: Direct Local / District Representatives */}
+                  {directOfficials.length > 0 && (
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between border-b border-stone-200 pb-1.5 pt-0.5">
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-blue-900" />
+                          <span className="text-[11px] uppercase tracking-wider font-bold text-stone-800 font-mono">
+                            Direct District & Local Governance
+                          </span>
+                        </div>
+                        <span className="text-[10px] bg-blue-50 text-blue-900 border border-blue-200 px-1.5 py-0.5 rounded font-mono font-semibold">
+                          Direct Mandate ({directOfficials.length})
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-stone-500 leading-tight">
+                        Elected officials with direct representative boundaries over {city || countyName || districtNumber}.
+                      </p>
+                      <div className="space-y-3">
+                        {directOfficials.map((p) => renderPoliticianCard(p, false))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tier 2: State-Wide Concurrent Oversight */}
+                  {stateWideOfficials.length > 0 && (
+                    <div className="space-y-2.5 pt-3 border-t border-stone-200">
+                      <div className="flex items-center justify-between border-b border-stone-200 pb-1.5">
+                        <div className="flex items-center gap-1.5">
+                          <Landmark className="w-3.5 h-3.5 text-stone-600" />
+                          <span className="text-[11px] uppercase tracking-wider font-bold text-stone-700 font-mono">
+                            Overlapping State-Wide Delegation
+                          </span>
+                        </div>
+                        <span className="text-[10px] bg-stone-100 text-stone-700 border border-stone-200 px-1.5 py-0.5 rounded font-mono font-semibold">
+                          Concurrent Oversight ({stateWideOfficials.length})
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-stone-500 leading-tight">
+                        U.S. Senators and State Executives carrying concurrent statutory oversight over all {stateName || stateCode} jurisdictions.
+                      </p>
+                      <div className="space-y-3">
+                        {stateWideOfficials.map((p) => renderPoliticianCard(p, true))}
+                      </div>
+                    </div>
                   )}
                 </div>
-              </div>
-            );
-          })
-        )}
+              );
+            }
 
-        {sortedPoliticians.length === 0 && (
-          <div className="text-center py-10 text-stone-400 space-y-2">
-            <User className="w-8 h-8 mx-auto text-stone-300" />
-            <p className="text-xs font-medium">No elected officials found for this query.</p>
-          </div>
+            // Standard Unified List for National/State Views
+            return sortedPoliticians.map((p) => renderPoliticianCard(p, false));
+          })()
         )}
       </div>
     </div>
