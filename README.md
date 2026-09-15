@@ -56,9 +56,9 @@ Every site must build into `dist/GitHubUsername/`. Never commit `dist/`; the com
 5. Get at least one approval and any required site-owner approval.
 6. Merge the pull request. Cloudflare then builds and deploys `main` to production.
 
-`main` is protected. GitHub requires a pull request, one approving review, successful GitHub and Cloudflare checks, resolved conversations, and approval from the owner of any site changed by the pull request. New commits dismiss earlier approvals. These rules also apply to repository administrators.
+`main` is protected. GitHub requires a pull request, one approving review, successful GitHub and Cloudflare checks, and resolved conversations. New commits dismiss earlier approvals. These rules also apply to repository administrators.
 
-Git cannot stop someone from editing another person’s folder on their feature branch. `CODEOWNERS` prevents that change from merging to `main` without the affected site owner’s approval.
+Git cannot stop someone from editing another person’s folder on their feature branch. Once teammates are added, each site should list both its owner and a backup reviewer in `CODEOWNERS`; required code-owner reviews can then prevent that change from merging without an authorized site reviewer. Two owners are necessary because GitHub does not allow a pull request author to approve their own work.
 
 ## Automatic deployment
 
