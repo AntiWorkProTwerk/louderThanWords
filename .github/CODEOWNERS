@@ -1,7 +1,10 @@
-* @AntiWorkProTwerk
+# Shared project files require approval from the owner or either collaborator.
+* @AntiWorkProTwerk @Alantran32 @dukevibington
 
-# Each site's final matching rule names its owner. Add one line per teammate.
-/sites/AntiWorkProTwerk/ @AntiWorkProTwerk
+# A site change requires its owner or the repository owner as backup.
+/sites/AntiWorkProTwerk/ @AntiWorkProTwerk @Alantran32 @dukevibington
+/sites/Alantran32/ @Alantran32 @AntiWorkProTwerk
+/sites/dukevibington/ @dukevibington @AntiWorkProTwerk
 
-# Only the repository owner may approve changes to the ownership rules.
-/.github/CODEOWNERS @AntiWorkProTwerk
+# CODEOWNERS changes themselves require an existing trusted reviewer.
+/.github/CODEOWNERS @AntiWorkProTwerk @Alantran32 @dukevibington
