@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Representative } from '../../types/civic';
+import { createCivicPortraitSvg } from '../../services/headshotService';
 import { Phone, Mail, Globe, MapPin, Calendar, Award, ChevronDown, ChevronUp, ExternalLink, CheckCircle2 } from 'lucide-react';
 
 interface RepresentativeCardProps {
@@ -28,14 +29,13 @@ export const RepresentativeCard: React.FC<RepresentativeCardProps> = ({ rep }) =
         <img
           src={rep.photoUrl}
           alt={rep.name}
-          className="w-16 h-16 rounded-full object-cover border border-slate-700 flex-shrink-0 shadow-inner"
+          className="w-16 h-16 rounded-full object-cover border border-slate-700 flex-shrink-0 shadow-inner bg-slate-950"
           onError={(e) => {
-            // Fallback avatar if external image fails
-            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-              rep.name
-            )}&background=334155&color=f8fafc`;
+            // Elegant civic portrait SVG fallback if image fails
+            (e.target as HTMLImageElement).src = createCivicPortraitSvg(rep.name, rep.party, rep.role);
           }}
         />
+
 
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1">

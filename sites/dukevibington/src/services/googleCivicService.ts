@@ -109,6 +109,8 @@ export function parseGoogleCivicOfficials(
           party: official.party || 'Nonpartisan',
           photoUrl: getHeadshotUrl(official.name, {
             jurisdictionLevel: targetLevel,
+            party: official.party || 'Nonpartisan',
+            role: office.name,
             existingPhotoUrl: official.photoUrl,
           }),
           termStart: '2023-01-01',
