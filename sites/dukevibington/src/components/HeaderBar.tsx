@@ -12,6 +12,8 @@ import {
   MapPin,
   Sparkles,
   ArrowLeft,
+  CheckCircle2,
+  Database,
 } from 'lucide-react';
 
 interface HeaderBarProps {
@@ -32,6 +34,9 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   const [showDropdown, setShowDropdown] = useState(false);
   const [showPrivacyNotice, setShowPrivacyNotice] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const googleApiKey = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_CIVIC_API_KEY) as string | undefined;
+  const isGoogleConnected = Boolean(googleApiKey && googleApiKey.trim().length > 10 && !googleApiKey.includes('YourActualKey'));
 
   // Debounced search
   useEffect(() => {
@@ -180,7 +185,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
             {/* Quick presets in dropdown */}
             <div className="border-t border-slate-800 p-2 bg-slate-950/40">
               <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider px-2 mb-1 flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-indigo-400" />
+                <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
                 Demo Presets
               </div>
               <div className="grid grid-cols-2 gap-1">
@@ -200,27 +205,44 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
         )}
       </div>
 
-      {/* Right Side: Privacy & Active Area */}
+      {/* Right Side: Live API Status & Privacy */}
       <div className="flex items-center gap-2">
+        {/* API Status Badge */}
+        <div className="hidden sm:flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border bg-slate-900 border-slate-800">
+          <span className={`w-2 h-2 rounded-full ${isGoogleConnected ? 'bg-emerald-400 animate-pulse' : 'bg-indigo-400'}`}></span>
+          <span className="text-[11px] font-mono text-slate-300">
+            {isGoogleConnected ? 'Google APIs Live' : 'Open Standards'}
+          </span>
+        </div>
+
+        {/* Privacy Popover */}
         <div className="relative">
           <button
             onClick={() => setShowPrivacyNotice(!showPrivacyNotice)}
             className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200 bg-slate-900 border border-slate-800 px-2.5 py-1.5 rounded-lg transition-colors"
-            title="Privacy status"
+            title="Privacy and caching info"
           >
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="hidden sm:inline">Client-Side Only</span>
+            <span className="hidden md:inline">24hr Cache</span>
           </button>
 
           {showPrivacyNotice && (
-            <div className="absolute right-0 top-full mt-2 w-72 bg-slate-900 border border-slate-800 rounded-xl p-3.5 text-xs text-slate-300 shadow-2xl z-50 space-y-2">
+            <div className="absolute right-0 top-full mt-2 w-80 bg-slate-900 border border-slate-800 rounded-xl p-4 text-xs text-slate-300 shadow-2xl z-50 space-y-2.5">
               <div className="font-bold text-white flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                Zero-Tracking Privacy Guarantee
+                Zero-Tracking & Compliant Caching
               </div>
               <p className="text-slate-400 text-[11px] leading-relaxed">
-                Your coordinates and address queries remain strictly in your browser session. No data is sold, logged, or tied to your identity.
+                Queries are cached client-side and at the Cloudflare edge for 24 hours to maximize performance and respect public API quotas.
               </p>
+              <div className="space-y-1 text-[11px] bg-slate-950 p-2.5 rounded-lg border border-slate-800 font-mono">
+                <div className="text-emerald-400 flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> US Census TIGERweb (Live)
+                </div>
+                <div className="text-indigo-400 flex items-center gap-1">
+                  <Database className="w-3 h-3" /> Google Civic & Maps ({isGoogleConnected ? 'Active' : 'Standby'})
+                </div>
+              </div>
             </div>
           )}
         </div>
