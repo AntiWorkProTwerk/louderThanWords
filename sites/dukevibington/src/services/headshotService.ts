@@ -1,9 +1,12 @@
+import { CONGRESS_NAME_TO_BIOGUIDE, CONGRESS_DISTRICT_TO_BIOGUIDE } from '../data/congressBioguideData';
+
 // Service providing authentic government headshot URLs using the official @unitedstates CDN
 // CDN Source: https://unitedstates.github.io/images/congress/
 
 export const CONGRESS_CDN_225x275 = 'https://unitedstates.github.io/images/congress/225x275';
 export const CONGRESS_CDN_450x550 = 'https://unitedstates.github.io/images/congress/450x550';
 export const CONGRESS_CDN_ORIGINAL = 'https://unitedstates.github.io/images/congress/original';
+
 
 // Bioguide ID mapping for U.S. Senators, Representatives, and Leadership
 export const BIOGUIDE_MAP: Record<string, string> = {
@@ -149,39 +152,69 @@ export function getHeadshotUrl(
   name: string,
   options?: {
     bioguideId?: string;
+    stateCode?: string;
+    district?: string;
     jurisdictionLevel?: string;
     size?: '225x275' | '450x550' | 'original';
     existingPhotoUrl?: string;
   }
 ): string {
-  const normalized = name.toLowerCase().trim().replace(/^hon\.\s+/i, '').replace(/^rep\.\s+/i, '').replace(/^sen\.\s+/i, '').replace(/^dr\.\s+/i, '');
+  const size = options?.size || '225x275';
+  const cleanName = name
+    .replace(/^(Hon\.|Rep\.|Sen\.|Senator|Representative|Congressman|Congresswoman|Mayor|Gov\.|Governor|Dr\.)\s+/gi, '')
+    .trim();
+  const normalized = cleanName.toLowerCase();
 
   // 1. Direct Bioguide ID passed
   if (options?.bioguideId) {
-    const size = options.size || '225x275';
     return `https://unitedstates.github.io/images/congress/${size}/${options.bioguideId}.jpg`;
   }
 
-  // 2. Bioguide lookup in our registry
-  for (const [key, bioguide] of Object.entries(BIOGUIDE_MAP)) {
-    if (normalized.includes(key) || key.includes(normalized)) {
-      const size = options?.size || '225x275';
+  // 2. Exact match in 539-member Congress Bioguide Registry
+  if (CONGRESS_NAME_TO_BIOGUIDE[normalized]) {
+    return `https://unitedstates.github.io/images/congress/${size}/${CONGRESS_NAME_TO_BIOGUIDE[normalized]}.jpg`;
+  }
+
+  // 3. District match if stateCode + district provided (e.g. IL-13)
+  if (options?.stateCode && options?.district) {
+    const distKey = `${options.stateCode.toUpperCase()}-${options.district}`;
+    if (CONGRESS_DISTRICT_TO_BIOGUIDE[distKey]) {
+      return `https://unitedstates.github.io/images/congress/${size}/${CONGRESS_DISTRICT_TO_BIOGUIDE[distKey]}.jpg`;
+    }
+  }
+
+  // 4. Fuzzy lookup in Congress Bioguide Registry
+  for (const [key, bioguide] of Object.entries(CONGRESS_NAME_TO_BIOGUIDE)) {
+    if (key.length > 3 && (normalized.includes(key) || key.includes(normalized))) {
       return `https://unitedstates.github.io/images/congress/${size}/${bioguide}.jpg`;
     }
   }
 
-  // 3. Official Government / Executive Portrait
+  // 5. Bioguide lookup in explicit BIOGUIDE_MAP
+  for (const [key, bioguide] of Object.entries(BIOGUIDE_MAP)) {
+    if (normalized.includes(key) || key.includes(normalized)) {
+      return `https://unitedstates.github.io/images/congress/${size}/${bioguide}.jpg`;
+    }
+  }
+
+  // 6. Official Executive / State / Municipal Portrait
   for (const [key, url] of Object.entries(OFFICIAL_GOVERNMENT_PORTRAITS)) {
     if (normalized.includes(key) || key.includes(normalized)) {
       return url;
     }
   }
 
-  // 4. Use existing non-stock photo URL if valid and not a stock placeholder
-  if (options?.existingPhotoUrl && !options.existingPhotoUrl.includes('unsplash.com') && !options.existingPhotoUrl.includes('stock')) {
+  // 7. Use existing non-stock photo URL if valid and not a stock placeholder
+  if (
+    options?.existingPhotoUrl &&
+    !options.existingPhotoUrl.includes('unsplash.com') &&
+    !options.existingPhotoUrl.includes('stock') &&
+    !options.existingPhotoUrl.includes('placeholder')
+  ) {
     return options.existingPhotoUrl;
   }
 
-  // 5. Clean fallback UI Avatar with official slate palette
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=1e293b&color=f8fafc&size=256&bold=true`;
+  // 8. Clean fallback UI Avatar with official slate palette
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=1e293b&color=f8fafc&size=256&bold=true`;
 }
+

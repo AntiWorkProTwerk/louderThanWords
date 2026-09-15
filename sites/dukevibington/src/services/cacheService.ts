@@ -17,44 +17,55 @@ export const CACHE_TTL = {
   GEOCODING: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 
+const CACHE_PREFIX = 'civic_v3_cdn_';
+
 export function getCached<T>(key: string): T | null {
   const now = Date.now();
+  const fullKey = `${CACHE_PREFIX}${key}`;
 
   // 1. Check in-memory Map
-  if (memoryCache.has(key)) {
-    const entry = memoryCache.get(key)!;
+  if (memoryCache.has(fullKey)) {
+    const entry = memoryCache.get(fullKey)!;
     if (now - entry.timestamp < entry.ttlMs) {
-      networkLogger.logEvent({
-        method: 'GET',
-        url: `cache://memory/${key}`,
-        category: 'Cache (Memory/Storage)',
-        status: 'CACHE_HIT',
-        durationMs: 0,
-        responsePayload: { cacheTier: 'In-Memory Map', key, ttlRemainingMs: entry.ttlMs - (now - entry.timestamp) },
-      });
-      return entry.data as T;
+      // Reject any stale object that still has stock images
+      const serialized = JSON.stringify(entry.data);
+      if (!serialized.includes('unsplash.com')) {
+        networkLogger.logEvent({
+          method: 'GET',
+          url: `cache://memory/${key}`,
+          category: 'Cache (Memory/Storage)',
+          status: 'CACHE_HIT',
+          durationMs: 0,
+          responsePayload: { cacheTier: 'In-Memory Map', key, ttlRemainingMs: entry.ttlMs - (now - entry.timestamp) },
+        });
+        return entry.data as T;
+      }
     }
-    memoryCache.delete(key);
+    memoryCache.delete(fullKey);
   }
 
   // 2. Check sessionStorage
   try {
-    const raw = sessionStorage.getItem(`civic_cache_${key}`);
+    const raw = sessionStorage.getItem(fullKey);
     if (raw) {
-      const parsed: CacheEntry<T> = JSON.parse(raw);
-      if (now - parsed.timestamp < parsed.ttlMs) {
-        memoryCache.set(key, parsed);
-        networkLogger.logEvent({
-          method: 'GET',
-          url: `cache://sessionStorage/${key}`,
-          category: 'Cache (Memory/Storage)',
-          status: 'CACHE_HIT',
-          durationMs: 1,
-          responsePayload: { cacheTier: 'SessionStorage', key, sizeBytes: raw.length },
-        });
-        return parsed.data;
+      if (raw.includes('unsplash.com')) {
+        sessionStorage.removeItem(fullKey);
+      } else {
+        const parsed: CacheEntry<T> = JSON.parse(raw);
+        if (now - parsed.timestamp < parsed.ttlMs) {
+          memoryCache.set(fullKey, parsed);
+          networkLogger.logEvent({
+            method: 'GET',
+            url: `cache://sessionStorage/${key}`,
+            category: 'Cache (Memory/Storage)',
+            status: 'CACHE_HIT',
+            durationMs: 1,
+            responsePayload: { cacheTier: 'SessionStorage', key, sizeBytes: raw.length },
+          });
+          return parsed.data;
+        }
+        sessionStorage.removeItem(fullKey);
       }
-      sessionStorage.removeItem(`civic_cache_${key}`);
     }
   } catch (e) {
     // SessionStorage unavailable or full
@@ -64,6 +75,7 @@ export function getCached<T>(key: string): T | null {
 }
 
 export function setCached<T>(key: string, data: T, ttlMs: number = CACHE_TTL.CIVIC_REPRESENTATIVES): void {
+  const fullKey = `${CACHE_PREFIX}${key}`;
   const entry: CacheEntry<T> = {
     data,
     timestamp: Date.now(),
@@ -71,12 +83,12 @@ export function setCached<T>(key: string, data: T, ttlMs: number = CACHE_TTL.CIV
   };
 
   // 1. Write in-memory
-  memoryCache.set(key, entry);
+  memoryCache.set(fullKey, entry);
 
   // 2. Write sessionStorage
   try {
     const serialized = JSON.stringify(entry);
-    sessionStorage.setItem(`civic_cache_${key}`, serialized);
+    sessionStorage.setItem(fullKey, serialized);
     networkLogger.logEvent({
       method: 'SET',
       url: `cache://storage/${key}`,

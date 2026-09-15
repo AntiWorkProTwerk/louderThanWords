@@ -105,9 +105,113 @@ function buildBreadcrumbs(loc: LocationContext): BreadcrumbItem[] {
 
 function getRepresentatives(level: JurisdictionLevel, loc: LocationContext): Representative[] {
   const { city, county, state, stateCode, congressionalDistrict, municipalWard } = loc;
+  const isTX = stateCode === 'TX' || state.toLowerCase().includes('texas');
+  const isWA = stateCode === 'WA' || state.toLowerCase().includes('washington');
+  const isOH = stateCode === 'OH' || state.toLowerCase().includes('ohio');
+  const isCA = stateCode === 'CA' || state.toLowerCase().includes('california');
 
   switch (level) {
     case 'local':
+      if (isTX) {
+        return [
+          {
+            id: `rep-mayor-austin`,
+            name: `Kirk Watson`,
+            title: `Mayor of the City of ${city}`,
+            role: 'Municipal Executive',
+            chamber: `${city} City Council`,
+            jurisdictionLevel: 'local',
+            party: 'Nonpartisan',
+            photoUrl: getHeadshotUrl('Kirk Watson'),
+            termStart: '2023-01-06',
+            termEnd: '2027-01-06',
+            nextElection: 'November 2026',
+            phone: '(512) 978-2100',
+            email: `kirk.watson@austintexas.gov`,
+            websiteUrl: `https://austintexas.gov/department/mayor-kirk-watson`,
+            officeAddress: `Austin City Hall, 301 W 2nd St, Austin, TX 78701`,
+            committeeAssignments: ['Executive Committee (Chair)', 'Capital Area Metropolitan Planning Org'],
+            sponsoredBillsCount: 22,
+            coSponsoredBillsCount: 45,
+            votingAttendanceRate: 99.4,
+            biography: `Mayor of Austin, leading initiatives on transit expansion (Project Connect), housing affordability code modernization, and municipal water conservation.`,
+          },
+          {
+            id: `rep-council-austin-dist9`,
+            name: `Zohaib Qadri`,
+            title: `City Council Member (${municipalWard || 'District 9'})`,
+            role: 'District Council Representative',
+            chamber: `${city} City Council`,
+            jurisdictionLevel: 'local',
+            party: 'Nonpartisan',
+            photoUrl: getHeadshotUrl('Zohaib Qadri'),
+            termStart: '2023-01-06',
+            termEnd: '2027-01-06',
+            nextElection: 'November 2026',
+            phone: '(512) 978-2109',
+            email: `district9@austintexas.gov`,
+            websiteUrl: `https://austintexas.gov/district9`,
+            officeAddress: `Austin City Hall, 301 W 2nd St, Austin, TX`,
+            committeeAssignments: ['Housing & Planning Committee', 'Mobility Committee'],
+            sponsoredBillsCount: 16,
+            coSponsoredBillsCount: 30,
+            votingAttendanceRate: 98.8,
+            biography: `Represents central Austin including downtown and UT campus. Champions tenant protections, protected bike lanes, and urban density.`,
+          },
+        ];
+      }
+      if (isWA) {
+        return [
+          {
+            id: `rep-mayor-seattle`,
+            name: `Bruce Harrell`,
+            title: `Mayor of ${city}`,
+            role: 'Municipal Executive',
+            chamber: `${city} Executive`,
+            jurisdictionLevel: 'local',
+            party: 'Nonpartisan',
+            photoUrl: getHeadshotUrl('Bruce Harrell'),
+            termStart: '2022-01-01',
+            termEnd: '2026-01-01',
+            nextElection: 'November 2025',
+            phone: '(206) 684-4000',
+            email: `bruce.harrell@seattle.gov`,
+            websiteUrl: `https://seattle.gov/mayor`,
+            officeAddress: `Seattle City Hall, 600 4th Ave, 7th Floor, Seattle, WA 98104`,
+            committeeAssignments: ['Puget Sound Regional Council', 'U.S. Conference of Mayors'],
+            sponsoredBillsCount: 29,
+            coSponsoredBillsCount: 60,
+            votingAttendanceRate: 100.0,
+            biography: `53rd Mayor of Seattle. Focuses on downtown activation, regional homelessness response, and clean transit.`,
+          },
+        ];
+      }
+      if (isCA) {
+        return [
+          {
+            id: `rep-mayor-sf`,
+            name: `London Breed`,
+            title: `Mayor of ${city}`,
+            role: 'Municipal Executive',
+            chamber: `City & County of San Francisco`,
+            jurisdictionLevel: 'local',
+            party: 'Democratic',
+            photoUrl: getHeadshotUrl('London Breed'),
+            termStart: '2018-07-11',
+            termEnd: '2025-01-08',
+            nextElection: 'November 2024',
+            phone: '(415) 554-6141',
+            email: `mayorlondonbreed@sfgov.org`,
+            websiteUrl: `https://sf.gov/departments/office-mayor`,
+            officeAddress: `City Hall, 1 Dr Carlton B Goodlett Pl, San Francisco, CA 94102`,
+            committeeAssignments: ['Board of Supervisors Executive Liaison'],
+            sponsoredBillsCount: 35,
+            coSponsoredBillsCount: 78,
+            votingAttendanceRate: 99.1,
+            biography: `Mayor of the City and County of San Francisco directing municipal policy, economic recovery, and public transit.`,
+          },
+        ];
+      }
       return [
         {
           id: `rep-mayor-${city.toLowerCase()}`,
@@ -156,6 +260,32 @@ function getRepresentatives(level: JurisdictionLevel, loc: LocationContext): Rep
       ];
 
     case 'county':
+      if (isTX) {
+        return [
+          {
+            id: `rep-county-judge-travis`,
+            name: `Andy Brown`,
+            title: `${county} Judge (County Chief Executive)`,
+            role: 'County Executive Officer',
+            chamber: `${county} Commissioners Court`,
+            jurisdictionLevel: 'county',
+            party: 'Democratic',
+            photoUrl: getHeadshotUrl('Andy Brown'),
+            termStart: '2020-11-17',
+            termEnd: '2026-12-31',
+            nextElection: 'November 2026',
+            phone: '(512) 854-9555',
+            email: `andy.brown@traviscountytx.gov`,
+            websiteUrl: `https://traviscountytx.gov/county-judge`,
+            officeAddress: `Travis County Administration, 700 Lavaca St, Austin, TX 78701`,
+            committeeAssignments: ['Travis County Commissioners Court (Chair)', 'Emergency Management Director'],
+            sponsoredBillsCount: 30,
+            coSponsoredBillsCount: 55,
+            votingAttendanceRate: 99.0,
+            biography: `Leads Travis County Commissioners Court overseeing county healthcare district (Central Health), civil courthouse, and county road maintenance.`,
+          },
+        ];
+      }
       return [
         {
           id: `rep-county-chair-champaign`,
@@ -204,6 +334,32 @@ function getRepresentatives(level: JurisdictionLevel, loc: LocationContext): Rep
       ];
 
     case 'state':
+      if (isTX) {
+        return [
+          {
+            id: `rep-gov-texas`,
+            name: `Greg Abbott`,
+            title: `Governor of the State of Texas (Austin Capitol)`,
+            role: 'State Chief Executive',
+            chamber: 'Texas Executive Branch',
+            jurisdictionLevel: 'state',
+            party: 'Republican',
+            photoUrl: getHeadshotUrl('Greg Abbott'),
+            termStart: '2015-01-20',
+            termEnd: '2027-01-19',
+            nextElection: 'November 2026',
+            phone: '(512) 463-2000',
+            email: `governor@texas.gov`,
+            websiteUrl: `https://gov.texas.gov`,
+            officeAddress: `Texas State Capitol, 1100 Congress Ave, Austin, TX 78701`,
+            committeeAssignments: ['National Governors Association', 'Interstate Oil and Gas Compact Commission'],
+            sponsoredBillsCount: 48,
+            coSponsoredBillsCount: 95,
+            votingAttendanceRate: 100.0,
+            biography: `48th Governor of Texas. Directs state executive agencies, signs/vetoes legislation from the Texas Legislature in Austin.`,
+          },
+        ];
+      }
       return [
         {
           id: `rep-gov-illinois`,
@@ -274,6 +430,98 @@ function getRepresentatives(level: JurisdictionLevel, loc: LocationContext): Rep
       ];
 
     case 'federal':
+      if (isTX) {
+        return [
+          {
+            id: `rep-president-usa`,
+            name: `President of the United States`,
+            title: `Commander-in-Chief · The White House (Washington, D.C.)`,
+            role: 'Head of State & Head of Government',
+            chamber: 'Executive Branch of the United States',
+            jurisdictionLevel: 'federal',
+            party: 'Democratic',
+            photoUrl: getHeadshotUrl('President of the United States'),
+            termStart: '2025-01-20',
+            termEnd: '2029-01-20',
+            nextElection: 'November 2028',
+            phone: '(202) 456-1414',
+            email: `president@whitehouse.gov`,
+            websiteUrl: `https://whitehouse.gov`,
+            officeAddress: `The White House, 1600 Pennsylvania Avenue NW, Washington, DC 20500`,
+            committeeAssignments: ['National Security Council (Chair)', 'National Economic Council'],
+            sponsoredBillsCount: 14,
+            coSponsoredBillsCount: 0,
+            votingAttendanceRate: 100.0,
+            biography: `Executes federal laws passed by Congress, signs treaties, commands the Armed Forces, and appoints federal judges and cabinet agency secretaries.`,
+          },
+          {
+            id: `rep-us-rep-tx37`,
+            name: `Hon. Lloyd Doggett`,
+            title: `U.S. Representative (TX-37th Congressional District · Austin)`,
+            role: 'Member of the U.S. House of Representatives',
+            chamber: 'U.S. House of Representatives (Washington, D.C.)',
+            jurisdictionLevel: 'federal',
+            party: 'Democratic',
+            photoUrl: getHeadshotUrl('Lloyd Doggett', { bioguideId: 'D000399', stateCode: 'TX', district: '37' }),
+            termStart: '2023-01-03',
+            termEnd: '2027-01-03',
+            nextElection: 'November 2026',
+            phone: '(202) 225-4865',
+            email: `rep.doggett@mail.house.gov`,
+            websiteUrl: `https://doggett.house.gov`,
+            officeAddress: `2307 Rayburn House Office Building, Washington, DC 20515`,
+            committeeAssignments: ['House Committee on Ways and Means', 'Subcommittee on Health (Ranking Member)'],
+            sponsoredBillsCount: 42,
+            coSponsoredBillsCount: 290,
+            votingAttendanceRate: 99.4,
+            biography: `Senior Member of the House Ways and Means Committee representing Austin and Travis County. Champion of healthcare access and clean energy tax credits.`,
+          },
+          {
+            id: `rep-us-sen-ted-cruz`,
+            name: `Hon. Ted Cruz`,
+            title: `U.S. Senator for Texas (Washington, D.C.)`,
+            role: 'United States Senator',
+            chamber: 'United States Senate (Washington, D.C.)',
+            jurisdictionLevel: 'federal',
+            party: 'Republican',
+            photoUrl: getHeadshotUrl('Ted Cruz', { bioguideId: 'C001098' }),
+            termStart: '2013-01-03',
+            termEnd: '2025-01-03',
+            nextElection: 'November 2024',
+            phone: '(202) 224-5922',
+            email: `senator@cruz.senate.gov`,
+            websiteUrl: `https://cruz.senate.gov`,
+            officeAddress: `167 Russell Senate Office Building, Washington, DC 20510`,
+            committeeAssignments: ['Senate Committee on Commerce, Science, and Transportation (Ranking Member)', 'Senate Judiciary Committee'],
+            sponsoredBillsCount: 38,
+            coSponsoredBillsCount: 215,
+            votingAttendanceRate: 98.2,
+            biography: `United States Senator for Texas. Serves as Ranking Member on Commerce, Science, and Transportation.`,
+          },
+          {
+            id: `rep-us-sen-john-cornyn`,
+            name: `Hon. John Cornyn`,
+            title: `Senior U.S. Senator for Texas (Washington, D.C.)`,
+            role: 'Senior United States Senator',
+            chamber: 'United States Senate (Washington, D.C.)',
+            jurisdictionLevel: 'federal',
+            party: 'Republican',
+            photoUrl: getHeadshotUrl('John Cornyn', { bioguideId: 'C001056' }),
+            termStart: '2002-12-02',
+            termEnd: '2027-01-03',
+            nextElection: 'November 2026',
+            phone: '(202) 224-2934',
+            email: `senator@cornyn.senate.gov`,
+            websiteUrl: `https://cornyn.senate.gov`,
+            officeAddress: `517 Hart Senate Office Building, Washington, DC 20510`,
+            committeeAssignments: ['Senate Committee on Finance', 'Senate Judiciary Committee', 'Senate Select Committee on Intelligence'],
+            sponsoredBillsCount: 51,
+            coSponsoredBillsCount: 340,
+            votingAttendanceRate: 99.5,
+            biography: `Senior Senator for Texas. Focuses on federal judiciary, international trade, and national intelligence.`,
+          },
+        ];
+      }
       return [
         {
           id: `rep-president-usa`,
@@ -305,7 +553,7 @@ function getRepresentatives(level: JurisdictionLevel, loc: LocationContext): Rep
           chamber: 'U.S. House of Representatives (Washington, D.C.)',
           jurisdictionLevel: 'federal',
           party: 'Democratic',
-          photoUrl: getHeadshotUrl('Nikki Budzinski', { bioguideId: 'B001315' }),
+          photoUrl: getHeadshotUrl('Nikki Budzinski', { bioguideId: 'B001315', stateCode: 'IL', district: '13' }),
           termStart: '2025-01-03',
           termEnd: '2027-01-03',
           nextElection: 'November 2026',
@@ -331,7 +579,7 @@ function getRepresentatives(level: JurisdictionLevel, loc: LocationContext): Rep
           chamber: 'United States Senate (Washington, D.C.)',
           jurisdictionLevel: 'federal',
           party: 'Democratic',
-          photoUrl: getHeadshotUrl('Dick Durbin', { bioguideId: 'D000563' }),
+          photoUrl: getHeadshotUrl('Dick Durbin', { bioguideId: 'D000563', stateCode: 'IL' }),
           termStart: '2021-01-03',
           termEnd: '2027-01-03',
           nextElection: 'November 2026',
