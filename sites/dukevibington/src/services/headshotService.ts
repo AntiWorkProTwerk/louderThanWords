@@ -1,15 +1,19 @@
 import { CONGRESS_NAME_TO_BIOGUIDE, CONGRESS_DISTRICT_TO_BIOGUIDE } from '../data/congressBioguideData';
 
-// Service providing authentic government headshot URLs using the official @unitedstates CDN
+// Service providing authentic government headshot URLs streamed directly from the official @unitedstates CDN
 // CDN Source: https://unitedstates.github.io/images/congress/
 
 export const CONGRESS_CDN_225x275 = 'https://unitedstates.github.io/images/congress/225x275';
 export const CONGRESS_CDN_450x550 = 'https://unitedstates.github.io/images/congress/450x550';
 export const CONGRESS_CDN_ORIGINAL = 'https://unitedstates.github.io/images/congress/original';
 
-
-// Bioguide ID mapping for U.S. Senators, Representatives, and Leadership
+// Direct Bioguide ID mapping for federal officials, leadership, and executives
 export const BIOGUIDE_MAP: Record<string, string> = {
+  // President & Vice President (served in Congress)
+  'president of the united states': 'B000444', // Joe Biden (B000444)
+  'joe biden': 'B000444',
+  'kamala harris': 'H001075', // Kamala Harris (H001075)
+
   // Illinois
   'nikki budzinski': 'B001315',
   'dick durbin': 'D000563',
@@ -45,7 +49,6 @@ export const BIOGUIDE_MAP: Record<string, string> = {
   'joaquin castro': 'C001115',
   'jasmine crockett': 'C001130',
   'colin allred': 'A000376',
-  'beto o rourke': 'O000170',
 
   // Washington
   'patty murray': 'M001111',
@@ -65,7 +68,6 @@ export const BIOGUIDE_MAP: Record<string, string> = {
   'jim jordan': 'J000289',
   'marcy kaptur': 'K000009',
   'shontel brown': 'B001313',
-  'greg landsman': 'L000601',
 
   // California
   'alex padilla': 'P000145',
@@ -84,7 +86,6 @@ export const BIOGUIDE_MAP: Record<string, string> = {
   'mike johnson': 'J000299',
   'hakeem jeffries': 'J000294',
   'chuck schumer': 'S000148',
-  'charles schumer': 'S000148',
   'mitch mcconnell': 'M000355',
   'john thune': 'T000250',
   'bernie sanders': 'S000033',
@@ -107,43 +108,7 @@ export const BIOGUIDE_MAP: Record<string, string> = {
   'jamie raskin': 'R000606',
 };
 
-// Official Executive & State/Local Portraits (verified official public records)
-export const OFFICIAL_GOVERNMENT_PORTRAITS: Record<string, string> = {
-  // Federal Executive
-  'president of the united states': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Joe_Biden_presidential_portrait_%28cropped%29.jpg/440px-Joe_Biden_presidential_portrait_%28cropped%29.jpg',
-  'joe biden': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Joe_Biden_presidential_portrait_%28cropped%29.jpg/440px-Joe_Biden_presidential_portrait_%28cropped%29.jpg',
-  'kamala harris': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Kamala_Harris_Vice_Presidential_Portrait.jpg/440px-Kamala_Harris_Vice_Presidential_Portrait.jpg',
-
-  // Illinois State & Municipal
-  'jb pritzker': 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/JB_Pritzker_official_portrait.jpg/440px-JB_Pritzker_official_portrait.jpg',
-  'j.b. pritzker': 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/JB_Pritzker_official_portrait.jpg/440px-JB_Pritzker_official_portrait.jpg',
-  'governor of the state of illinois': 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/JB_Pritzker_official_portrait.jpg/440px-JB_Pritzker_official_portrait.jpg',
-  'brandon johnson': 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Mayor_Brandon_Johnson_official_portrait_%28cropped%29.jpg/440px-Mayor_Brandon_Johnson_official_portrait_%28cropped%29.jpg',
-  'mayor of chicago': 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Mayor_Brandon_Johnson_official_portrait_%28cropped%29.jpg/440px-Mayor_Brandon_Johnson_official_portrait_%28cropped%29.jpg',
-  'deborah frank feinen': 'https://champaignil.gov/wp-content/uploads/2015/05/Feinen_Deborah.jpg',
-  'deborah albright': 'https://co.champaign.il.us/images/countyboard/albright.jpg',
-  'dustin heuerman': 'https://co.champaign.il.us/sheriff/images/heuerman.jpg',
-
-  // Texas State & Municipal
-  'greg abbott': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Governor_Greg_Abbott_2015.jpg/440px-Governor_Greg_Abbott_2015.jpg',
-  'kirk watson': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Kirk_Watson_2023.jpg/440px-Kirk_Watson_2023.jpg',
-  'andy brown': 'https://www.traviscountytx.gov/images/county-judge/judge-andy-brown.jpg',
-
-  // Washington State & Municipal
-  'jay inslee': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Jay_Inslee_official_portrait.jpg/440px-Jay_Inslee_official_portrait.jpg',
-  'bruce harrell': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Mayor_Bruce_Harrell_official_portrait.jpg/440px-Mayor_Bruce_Harrell_official_portrait.jpg',
-  'dow constantine': 'https://kingcounty.gov/~/media/elected/executive/constantine/images/dow-constantine-portrait.ashx',
-
-  // Ohio State & Municipal
-  'mike dewine': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Mike_DeWine_official_portrait.jpg/440px-Mike_DeWine_official_portrait.jpg',
-  'andrew ginther': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Andrew_Ginther_2016.jpg/440px-Andrew_Ginther_2016.jpg',
-
-  // California State & Municipal
-  'gavin newsom': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Gavin_Newsom_official_photo_%28cropped%29.jpg/440px-Gavin_Newsom_official_photo_%28cropped%29.jpg',
-  'london breed': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/London_Breed_official_portrait.jpg/440px-London_Breed_official_portrait.jpg',
-};
-
-// Helper to generate a crisp, vector government official portrait as a self-contained SVG Data URI
+// Generates a self-contained SVG civic bust portrait for non-congress state/municipal officials
 export function createCivicPortraitSvg(
   name: string,
   party: 'Democratic' | 'Republican' | 'Nonpartisan' | string = 'Nonpartisan',
@@ -185,28 +150,15 @@ export function createCivicPortraitSvg(
       </linearGradient>
     </defs>
     
-    <!-- Background Frame -->
     <rect width="225" height="275" fill="url(#bg)" />
     <circle cx="112.5" cy="95" r="90" fill="url(#glow)" />
-    
-    <!-- Outer Border -->
     <rect x="3" y="3" width="219" height="269" rx="8" fill="none" stroke="url(#accent)" stroke-width="2.5" stroke-opacity="0.8" />
-    
-    <!-- Tabletop Bust Silhouette -->
-    <!-- Shoulders & Coat -->
     <path d="M 35 275 C 35 205, 70 180, 112.5 180 C 155 180, 190 205, 190 275 Z" fill="url(#suit)" />
-    <!-- Shirt Collar & Tie -->
     <path d="M 98 180 L 112.5 215 L 127 180 Z" fill="#f8fafc" />
     <path d="M 110 186 L 115 186 L 114 235 L 112.5 240 L 111 235 Z" fill="url(#accent)" />
-    
-    <!-- Head Circle -->
     <circle cx="112.5" cy="115" r="46" fill="#cbd5e1" opacity="0.95" />
     <circle cx="112.5" cy="115" r="46" fill="url(#accent)" opacity="0.2" />
-    
-    <!-- Monogram Initial Overlay -->
     <text x="112.5" y="127" font-family="system-ui, -apple-system, sans-serif" font-size="34" font-weight="800" fill="#0f172a" text-anchor="middle" letter-spacing="-1">${initials}</text>
-    
-    <!-- Official Badge Ribbon at Bottom -->
     <rect x="20" y="240" width="185" height="24" rx="12" fill="#0f172a" stroke="url(#accent)" stroke-width="1.5" />
     <circle cx="34" cy="252" r="5" fill="${accentColor}" />
     <text x="118" y="256" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" fill="#e2e8f0" text-anchor="middle" text-transform="uppercase" letter-spacing="1">${role.toUpperCase()}</text>
@@ -216,9 +168,9 @@ export function createCivicPortraitSvg(
 }
 
 /**
- * Resolves headshot URL for any representative, prioritizing the official Congress CDN
+ * Resolves headshot URL for any representative streamed live from the official Congress CDN
  * (https://unitedstates.github.io/images/congress/225x275/{bioguide}.jpg) for federal officials,
- * and reliable local/vector portraits for state and municipal executives.
+ * with vector portraits for municipal/local leaders.
  */
 export function getHeadshotUrl(
   name: string,
@@ -239,17 +191,17 @@ export function getHeadshotUrl(
     .trim();
   const normalized = cleanName.toLowerCase();
 
-  // 1. Direct Bioguide ID passed -> Use official Congress CDN
+  // 1. Direct Bioguide ID passed -> Use official Congress CDN directly
   if (options?.bioguideId) {
     return `https://unitedstates.github.io/images/congress/${size}/${options.bioguideId}.jpg`;
   }
 
-  // 2. Exact match in 539-member Congress Bioguide Registry -> Use official Congress CDN
+  // 2. Exact match in 539-member Congress Bioguide Registry -> Use official Congress CDN directly
   if (CONGRESS_NAME_TO_BIOGUIDE[normalized]) {
     return `https://unitedstates.github.io/images/congress/${size}/${CONGRESS_NAME_TO_BIOGUIDE[normalized]}.jpg`;
   }
 
-  // 3. District match if stateCode + district provided (e.g. IL-13) -> Use official Congress CDN
+  // 3. District match if stateCode + district provided (e.g. IL-13) -> Use official Congress CDN directly
   if (options?.stateCode && options?.district) {
     const distKey = `${options.stateCode.toUpperCase()}-${options.district}`;
     if (CONGRESS_DISTRICT_TO_BIOGUIDE[distKey]) {
@@ -257,7 +209,7 @@ export function getHeadshotUrl(
     }
   }
 
-  // 4. Fuzzy lookup in Congress Bioguide Registry -> Use official Congress CDN
+  // 4. Fuzzy lookup in Congress Bioguide Registry -> Use official Congress CDN directly
   for (const [key, bioguide] of Object.entries(CONGRESS_NAME_TO_BIOGUIDE)) {
     if (key.length > 3 && (normalized.includes(key) || key.includes(normalized))) {
       return `https://unitedstates.github.io/images/congress/${size}/${bioguide}.jpg`;
@@ -271,7 +223,7 @@ export function getHeadshotUrl(
     }
   }
 
-  // 6. Use existing non-stock, non-initials photo URL if valid
+  // 6. Use existing photo URL if valid
   if (
     options?.existingPhotoUrl &&
     !options.existingPhotoUrl.includes('unsplash.com') &&
@@ -282,8 +234,6 @@ export function getHeadshotUrl(
     return options.existingPhotoUrl;
   }
 
-  // 7. Generate crisp official civic portrait SVG badge
+  // 7. Generate official civic vector portrait
   return createCivicPortraitSvg(cleanName, options?.party || 'Nonpartisan', options?.role || 'Executive');
 }
-
-
