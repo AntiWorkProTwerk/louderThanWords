@@ -1,0 +1,18 @@
+{
+  "name": "louder-than-words",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "npm run build",
+    "deploy": "node scripts/deploy.mjs",
+    "deploy:preview": "node scripts/deploy.mjs --preview"
+  },
+  "devDependencies": {
+    "vite": "^7.1.5",
+    "wrangler": "^4.35.0"
+  }
+}

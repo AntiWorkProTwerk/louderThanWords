@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap');
+
+:root {
+  color: #f3f0e7;
+  background: #11110f;
+  font-family: 'DM Mono', monospace;
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+
+body { margin: 0; min-width: 320px; }
+
+main {
+  min-height: 100svh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: clamp(1.25rem, 3vw, 2.5rem);
+  overflow: hidden;
+  position: relative;
+}
+
+main::before {
+  content: '';
+  position: absolute;
+  width: min(64vw, 52rem);
+  aspect-ratio: 1;
+  right: -12vw;
+  top: 6vh;
+  border: 1px solid #d6ff47;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4vw #11110f, 0 0 0 calc(4vw + 1px) #55554c;
+  pointer-events: none;
+}
+
+nav, footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-transform: uppercase;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  z-index: 1;
+}
+
+a { color: inherit; }
+.wordmark { font-weight: 500; text-decoration: none; }
+.wordmark span, em { color: #d6ff47; }
+.repo-link { text-underline-offset: .3em; }
+
+.hero {
+  align-self: center;
+  position: relative;
+  z-index: 1;
+  max-width: 58rem;
+}
+
+.eyebrow {
+  color: #b0aea5;
+  font-size: .72rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+h1 {
+  font: 400 clamp(4.2rem, 12vw, 10rem)/.78 'Instrument Serif', serif;
+  letter-spacing: -.045em;
+  margin: .3em 0;
+}
+
+h1 em { font-weight: 400; }
+
+.lede {
+  max-width: 38rem;
+  color: #c6c3b9;
+  font-size: clamp(.88rem, 1.4vw, 1.05rem);
+  line-height: 1.7;
+}
+
+.button {
+  display: inline-block;
+  margin-top: 1.25rem;
+  padding: .9rem 1.15rem;
+  color: #11110f;
+  background: #d6ff47;
+  text-decoration: none;
+  text-transform: uppercase;
+  font-size: .72rem;
+  font-weight: 500;
+}
+
+footer { color: #77766f; }
+#build-status { cursor: pointer; }
+
+@media (max-width: 640px) {
+  main::before { width: 90vw; right: -42vw; top: 18vh; }
+  .repo-link { max-width: 9rem; text-align: right; }
+  footer { align-items: flex-end; gap: 1rem; }
+}
