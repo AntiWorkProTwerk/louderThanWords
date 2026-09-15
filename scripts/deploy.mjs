@@ -20,6 +20,12 @@ execFileSync('npm', ['run', 'build'], { stdio: 'inherit', shell: process.platfor
 
 const args = production
   ? ['wrangler', 'deploy']
-  : ['wrangler', 'versions', 'upload', '--preview-alias', branch];
+  : [
+      'wrangler',
+      'versions',
+      'upload',
+      '--preview-alias',
+      branch.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-|-$/g, '').slice(0, 63),
+    ];
 
 execFileSync('npx', args, { stdio: 'inherit', shell: process.platform === 'win32' });
