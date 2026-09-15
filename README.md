@@ -2,50 +2,71 @@
 
 A shared repository of independent websites deployed together at [louderthanwords.fyi](https://louderthanwords.fyi/).
 
-Each collaborator owns a complete site:
+Each collaborator owns a complete site. [sites.config.json](sites.config.json) is the single registry of usernames, the default development site, and the shared domain:
 
 ```text
 sites/
-└── AntiWorkProTwerk/  →  louderthanwords.fyi/AntiWorkProTwerk/
+└── <username>/  →  louderthanwords.fyi/<username>/
 ```
 
-Sites may use different designs, dependencies, and code. The root `portal/` is the directory of everyone’s sites.
+Sites may use different designs, dependencies, and code. The build generates the root portal from the registry. Registered sites without a folder show “Coming soon”; no placeholder app is created inside a coworker’s folder.
 
 ## Work on your site
 
 Requirements: Node.js 22.12+ (Node.js 24 recommended) and Git.
 
 ```sh
-git clone https://github.com/AntiWorkProTwerk/louderThanWords.git
+git clone <repository-url>
 cd louderThanWords
 npm ci
 git switch -c your-name/short-description
 ```
 
-Run one site locally by its workspace package name:
+Run the default site, or choose any registered username:
 
 ```sh
-npm run dev --workspace @louder-than-words/antiworkprotwerk
+npm run dev
+npm run dev -- <username>
 ```
 
-The shortcut `npm run dev` currently opens the AntiWorkProTwerk site. Check the complete deployment before pushing:
+The default comes from `sites.config.json`. Extra Vite options can follow the username. Check the complete deployment before pushing:
 
 ```sh
 npm run check
 npm run preview
 ```
 
-`npm run preview` runs the assembled site through the local Cloudflare Worker. Open the URL Wrangler prints and include your site path, such as `/AntiWorkProTwerk/`.
+`npm run preview` runs the assembled site through the local Cloudflare Worker. Open the URL Wrangler prints and include `/<username>/`.
 
 ## Add a teammate’s site
 
 1. Copy an existing folder under `sites/` and rename it to the teammate’s GitHub username.
 2. Give its `package.json` a unique package name.
-3. Make its build output and Vite base path match its public path.
-4. Add it to the site list in `portal/index.html`.
-5. Add `/sites/GitHubUsername/ @GitHubUsername` to `.github/CODEOWNERS`.
+3. Register the username in `sites.config.json` if it is not already listed.
+4. Make its build output and base path match its registered public path. Node-based configs can import `siteForDirectory` from `scripts/site-registry.mjs` to derive both from their own directory.
+5. Run `npm run sites:sync` to regenerate `CODEOWNERS` and the Worker handler imports. Builds and preview startup also refresh handler imports.
 
 Every site must build into `dist/GitHubUsername/`. Never commit `dist/`; the combined build creates it automatically.
+
+## Optional backend for any site
+
+Every registered site gets the same `/<username>/api/*` routing. To add a backend, create `sites/<username>/server.ts` (or `server.js`) exporting:
+
+```ts
+export async function handleApi(request: Request, env: Record<string, unknown>, path: string) {
+  return Response.json({ path });
+}
+```
+
+Run `npm run sites:sync` and restart the shared preview when adding a new entry file. Existing handlers hot reload. A site without an entry keeps its static pages and returns a JSON 404 for API requests. Coworkers do not need to modify `worker/index.js` or adopt SvelteKit.
+
+Worker secrets and bindings are isolated by site: prefix their names with the uppercase username (replace hyphens with underscores), followed by `__`. For example, `<USERNAME>__SUPABASE_URL` is delivered to that site's handler as `SUPABASE_URL`. Unprefixed secrets and other sites' secrets are not forwarded. A site-local dev server can use unprefixed variables in its own ignored `.env` file.
+
+The existing shared `/api/civic/cache` endpoint is preserved separately and continues using the root `DB` binding. It is not a private account API and must not store private or premium data.
+
+An optional `<USERNAME>__DATA` R2 bucket binding serves that site's `/data/*` and `/tiles/*` paths, including HTTP range requests. Without it, the shipped static dataset is used. Public dataset files are cacheable; account handlers must return `Cache-Control: private, no-store`. The shared worker runs before assets so configured R2 releases can supersede bundled data without rebuilding the frontend.
+
+Keep backend migrations, credentials, and dependencies in the owning site. The first site's `docs/implementation.md` describes the civic explorer integrations and acceptance checks.
 
 ## Pull requests and ownership
 
