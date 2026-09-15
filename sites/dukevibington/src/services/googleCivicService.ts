@@ -1,6 +1,8 @@
 import { JurisdictionLevel, Representative } from '../types/civic';
+import { getHeadshotUrl } from './headshotService';
 
 export interface GoogleCivicResponse {
+
   normalizedInput?: {
     line1?: string;
     city?: string;
@@ -105,7 +107,10 @@ export function parseGoogleCivicOfficials(
           chamber: office.name,
           jurisdictionLevel: targetLevel,
           party: official.party || 'Nonpartisan',
-          photoUrl: official.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(official.name)}&background=1e293b&color=f8fafc`,
+          photoUrl: getHeadshotUrl(official.name, {
+            jurisdictionLevel: targetLevel,
+            existingPhotoUrl: official.photoUrl,
+          }),
           termStart: '2023-01-01',
           termEnd: '2027-01-01',
           nextElection: 'November 2026',
