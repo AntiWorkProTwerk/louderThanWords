@@ -1,60 +1,84 @@
 # Louder Than Words
 
-The collaborative source for [louderthanwords.fyi](https://louderthanwords.fyi/).
+A shared repository of independent websites deployed together at [louderthanwords.fyi](https://louderthanwords.fyi/).
 
-## Work locally
+Each collaborator owns a complete site:
 
-Requirements: Node.js 24+ and Git.
-
-```sh
-npm install
-npm run dev
+```text
+sites/
+└── AntiWorkProTwerk/  →  louderthanwords.fyi/AntiWorkProTwerk/
 ```
 
-Vite prints a local URL, normally `http://localhost:5173`. Changes update in the browser as you edit.
+Sites may use different designs, dependencies, and code. The root `portal/` is the directory of everyone’s sites.
 
-## Team workflow
+## Work on your site
 
-1. Create a branch: `git switch -c feature/short-description`
-2. Make and test the change: `npm run check`
-3. Push the branch: `git push -u origin HEAD`
-4. Open a pull request on GitHub.
-5. Review the Cloudflare preview URL on the pull request.
-6. Merge after approval. `main` is the production branch.
-
-Friends should be added under **Repository settings → Collaborators**. They can then work on branches in this repository, which allows Cloudflare to create PR previews. Cloudflare does not create automatic preview URLs for PRs from forks.
-
-## Deploy from a computer
-
-Log into the correct Cloudflare account once:
+Requirements: Node.js 22.12+ (Node.js 24 recommended) and Git.
 
 ```sh
-npx wrangler login
+git clone https://github.com/AntiWorkProTwerk/louderThanWords.git
+cd louderThanWords
+npm ci
+git switch -c your-name/short-description
 ```
 
-Deploy the current branch to a temporary preview URL:
+Run one site locally by its workspace package name:
 
 ```sh
-npm run deploy:preview
+npm run dev --workspace @louder-than-words/antiworkprotwerk
 ```
 
-Deploy to production (intended for `main` only):
+The shortcut `npm run dev` currently opens the AntiWorkProTwerk site. Check the complete deployment before pushing:
 
 ```sh
-npm run deploy
+npm run check
+npm run preview
 ```
 
-The deployment script builds the site first and uploads only `dist/`.
+`npm run preview` runs the assembled site through the local Cloudflare Worker. Open the URL Wrangler prints and include your site path, such as `/AntiWorkProTwerk/`.
 
-## Cloudflare Workers setup
+## Add a teammate’s site
 
-- Project: `louderthanwords`
+1. Copy an existing folder under `sites/` and rename it to the teammate’s GitHub username.
+2. Give its `package.json` a unique package name.
+3. Make its build output and Vite base path match its public path.
+4. Add it to the site list in `portal/index.html`.
+5. Add `/sites/GitHubUsername/ @GitHubUsername` to `.github/CODEOWNERS`.
+
+Every site must build into `dist/GitHubUsername/`. Never commit `dist/`; the combined build creates it automatically.
+
+## Pull requests and ownership
+
+1. Work only on a feature branch—not `main`.
+2. Run `npm run check` and push the branch.
+3. Open a pull request into `main`.
+4. Open the Cloudflare preview URL posted on the pull request. The preview contains every site at its normal path.
+5. Get at least one approval and any required site-owner approval.
+6. Merge the pull request. Cloudflare then builds and deploys `main` to production.
+
+`main` is protected. GitHub requires a pull request, one approving review, successful GitHub and Cloudflare checks, and resolved conversations. New commits dismiss earlier approvals. These rules also apply to repository administrators.
+
+Git cannot stop someone from editing another person’s folder on their feature branch. Once teammates are added, each site should list both its owner and a backup reviewer in `CODEOWNERS`; required code-owner reviews can then prevent that change from merging without an authorized site reviewer. Two owners are necessary because GitHub does not allow a pull request author to approve their own work.
+
+## Automatic deployment
+
+Cloudflare Workers Builds uses:
+
 - Production branch: `main`
 - Build command: `npm run build`
-- Deploy command: `npx wrangler deploy`
-- Non-production branch deploy command: `npx wrangler versions upload`
+- Production deploy command: `npx wrangler deploy`
+- Non-production deploy command: `npx wrangler versions upload`
 - Path: `/`
 
-Connect this GitHub repository from **Cloudflare → Workers & Pages → Create application → Import a repository**. Keep **Builds for non-production branches** enabled. Cloudflare creates a preview version and comments with its URL on pull requests. After checking the preview, add `louderthanwords.fyi` under the Worker's **Domains & Routes** settings.
+Every non-production branch is uploaded as an isolated preview version. Merging to `main` promotes the combined build to production.
 
-The existing domain should not be moved until the Worker preview has been verified.
+## Manual deployment
+
+Automatic deployment is the normal workflow. Manual deployment requires access to the Cloudflare account and `npx wrangler login`.
+
+```sh
+npm run deploy:preview  # current feature branch only
+npm run deploy          # main only; guarded by the script
+```
+
+Never share Cloudflare tokens or commit credentials to the repository.
