@@ -10,8 +10,12 @@ const npmCli = process.env.npm_execpath;
 
 if (!npmCli) throw new Error('Run this build through npm so the npm executable can be located.');
 
-rmSync(dist, { recursive: true, force: true });
 mkdirSync(dist, { recursive: true });
+// Keep the asset root in place: a running preview can hold it open on Windows.
+// Clear generated contents so removed pages and old bundles do not survive a build.
+for (const entry of readdirSync(dist)) {
+  rmSync(join(dist, entry), { recursive: true, force: true, maxRetries: 3 });
+}
 cpSync(join(root, 'portal'), dist, { recursive: true });
 
 const sites = readdirSync(sitesDirectory, { withFileTypes: true })
