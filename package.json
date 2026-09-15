@@ -7,9 +7,10 @@
     "sites/*"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace @louder-than-words/antiworkprotwerk",
+    "dev": "node scripts/dev.mjs",
     "build": "node scripts/build-all.mjs",
-    "preview": "wrangler dev",
+    "preview": "node scripts/preview.mjs",
+    "sites:sync": "node scripts/sync-sites.mjs",
     "check": "npm run build",
     "deploy": "node scripts/deploy.mjs",
     "deploy:preview": "node scripts/deploy.mjs --preview"
@@ -17,5 +18,10 @@
   "devDependencies": {
     "vite": "^7.1.5",
     "wrangler": "^4.35.0"
+  },
+  "overrides": {
+    "@opentelemetry/core": "^2.8.0",
+    "ws": "^8.21.0",
+    "@sveltejs/kit": { "cookie": "^0.7.2" }
   }
 }

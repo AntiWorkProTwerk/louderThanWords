@@ -1,7 +1,12 @@
-@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap");
+@import '@fontsource-variable/inter';
+@import '@fontsource/barlow-condensed/latin-500.css';
+@import '@fontsource/barlow-condensed/latin-600.css';
+@import '@fontsource/barlow-condensed/latin-700.css';
+@import '@fontsource/barlow-condensed/latin-800.css';
+@import '@fontsource/barlow-condensed/latin-900.css';
 
 :root {
-  font-family: Inter, Arial, sans-serif;
+  font-family: 'Inter Variable', Inter, Arial, sans-serif;
   color: #080d11;
   background: #f9fcff;
   font-synthesis: none;
@@ -9,7 +14,7 @@
   --blue: #0065ff;
   --muted: #6488b5;
   --line: #e4eef8;
-  --condensed: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --condensed: 'Barlow Condensed', 'Arial Narrow', sans-serif;
 }
 * {
   box-sizing: border-box;
@@ -46,7 +51,7 @@ button[hidden] {
 button:focus-visible,
 a:focus-visible,
 select:focus-visible,
-[role="button"]:focus-visible {
+[role='button']:focus-visible {
   outline: 3px solid var(--blue);
   outline-offset: 5px;
 }
@@ -284,17 +289,11 @@ h1 {
   pointer-events: none;
 }
 .map-stage::after {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(
-    90deg,
-    #f9fcff 0%,
-    #f9fcff00 22%,
-    #f9fcff00 77%,
-    #f9fcff 100%
-  );
+  background: linear-gradient(90deg, #f9fcff 0%, #f9fcff00 22%, #f9fcff00 77%, #f9fcff 100%);
 }
 .map-canvas,
 .texas-map {
@@ -399,7 +398,7 @@ h1 {
 }
 .map-city:hover .city-marker,
 .map-city:focus-visible .city-marker,
-.map-city[aria-pressed="true"] .city-marker {
+.map-city[aria-pressed='true'] .city-marker {
   fill: #07213b;
   stroke-width: 2.1;
 }
@@ -452,11 +451,7 @@ h1 {
   display: block;
   height: 3px;
   border-bottom: 1px solid #ff3554;
-  background: repeating-linear-gradient(
-    90deg,
-    #ff3554 0 10%,
-    transparent 10% 20%
-  );
+  background: repeating-linear-gradient(90deg, #ff3554 0 10%, transparent 10% 20%);
 }
 .politicians-panel {
   grid-column: 3;
@@ -591,7 +586,7 @@ h1 {
   min-width: 0;
 }
 .metrics > div + div::before {
-  content: "";
+  content: '';
   position: absolute;
   left: 0;
   top: 3px;
@@ -1080,13 +1075,7 @@ meter::-moz-meter-bar {
     margin: -100px -28px -20px -60px;
   }
   .map-stage::after {
-    background: linear-gradient(
-      90deg,
-      #f9fcff 0%,
-      transparent 20%,
-      transparent 92%,
-      #f9fcff 100%
-    );
+    background: linear-gradient(90deg, #f9fcff 0%, transparent 20%, transparent 92%, #f9fcff 100%);
   }
   .texas-map {
     width: 100%;
@@ -1244,13 +1233,7 @@ meter::-moz-meter-bar {
     flex: none;
   }
   .map-stage::after {
-    background: linear-gradient(
-      180deg,
-      #f9fcff 0%,
-      transparent 12%,
-      transparent 88%,
-      #f9fcff 100%
-    );
+    background: linear-gradient(180deg, #f9fcff 0%, transparent 12%, transparent 88%, #f9fcff 100%);
   }
   .texas-map {
     width: 100%;

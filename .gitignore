@@ -6,3 +6,7 @@ dist/
 .env.*
 !.env.example
 *.log
+.svelte-kit/
+test-results/
+playwright-report/
+/.generated/
