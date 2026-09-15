@@ -3,6 +3,12 @@
   "name": "louderthanwords",
   "compatibility_date": "2026-09-14",
   "main": "./worker/index.js",
+  "routes": [
+    {
+      "pattern": "louderthanwords.fyi",
+      "custom_domain": true
+    }
+  ],
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
