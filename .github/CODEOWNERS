@@ -2,6 +2,7 @@
 
 # Each site's final matching rule names its owner. Add one line per teammate.
 /sites/AntiWorkProTwerk/ @AntiWorkProTwerk
+/sites/dukevibington/ @dukevibington
 
 # Only the repository owner may approve changes to the ownership rules.
 /.github/CODEOWNERS @AntiWorkProTwerk

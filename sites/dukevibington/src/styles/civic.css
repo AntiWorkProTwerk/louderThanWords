@@ -1,0 +1,88 @@
+@import 'tailwindcss';
+
+:root {
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #020617;
+  color: #f8fafc;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar for Intelligence Feed */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #090d16;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Leaflet Overrides for Dark Modern Civic Design */
+.leaflet-container {
+  font-family: var(--font-sans) !important;
+  background-color: #090d16 !important;
+}
+
+.leaflet-bar {
+  border: 1px solid #334155 !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
+.leaflet-bar a {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border-bottom: 1px solid #1e293b !important;
+  transition: all 0.15s ease !important;
+}
+
+.leaflet-bar a:hover {
+  background-color: #1e293b !important;
+  color: #818cf8 !important;
+}
+
+.leaflet-custom-tooltip {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  padding: 6px 10px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
+}
+
+.leaflet-custom-tooltip:before {
+  border-top-color: #0f172a !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background-color: #ffffff !important;
+  border-radius: 12px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* No scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
