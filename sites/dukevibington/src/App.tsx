@@ -30,6 +30,7 @@ import {
   ArrowLeft,
   TrendingUp,
   FileCode,
+  FileText,
   Layers,
   Sparkles,
 } from 'lucide-react';
@@ -785,7 +786,7 @@ export function App() {
               className="text-xs bg-transparent font-semibold text-stone-800 focus:outline-none cursor-pointer pr-1"
             >
               <option value="CONTRACT_CREEP">📊 Contract Creep (USAspending)</option>
-              <option value="BILL_DIFF">📜 Bill Diff & Volatility (Congress.gov)</option>
+              <option value="BILL_DIFF" disabled>📜 Bill Diff & Volatility (Congress.gov) — Coming Soon</option>
             </select>
           </div>
 
@@ -1071,7 +1072,28 @@ export function App() {
             {activeMetric === 'CONTRACT_CREEP' ? (
               <ContractCreepPanel {...currentGeoProps} />
             ) : (
-              <BillDiffPanel {...currentGeoProps} />
+              <div className="flex flex-col h-full items-center justify-center p-8 text-center bg-[#fafaf9] space-y-4 border-l border-stone-200 font-sans">
+                <div className="w-12 h-12 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center text-stone-400 shadow-2xs">
+                  <FileText className="w-6 h-6" />
+                </div>
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-bold tracking-wider">
+                    COMING SOON
+                  </span>
+                  <h2 className="font-serif text-lg font-bold text-stone-900 pt-1">
+                    Bill Diff & Volatility
+                  </h2>
+                  <p className="text-xs text-stone-500 font-sans max-w-xs leading-relaxed">
+                    Legislative text churn analysis and congressional amendment diff tracking will be available in the next release.
+                  </p>
+                </div>
+                <button
+                  onClick={() => switchMetric('CONTRACT_CREEP')}
+                  className="text-xs font-serif font-bold text-stone-800 underline hover:text-stone-900 cursor-pointer pt-2"
+                >
+                  ← Return to Contract Creep Audit
+                </button>
+              </div>
             )}
           </aside>
         )}
