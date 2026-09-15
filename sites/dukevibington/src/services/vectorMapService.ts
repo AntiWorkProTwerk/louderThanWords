@@ -148,104 +148,134 @@ export async function fetchCountiesGeoJson(stateFips?: string): Promise<GeoJSON.
 }
 
 const FAMOUS_COUNTY_CITIES: Record<string, string[]> = {
+  // Cook County, IL (17031) - Geographically ordered North-to-South, West-to-East
+  '17031': [
+    // Row 0 (Northwest -> North -> Northeast)
+    'Village of Schaumburg',
+    'Village of Arlington Heights',
+    'City of Evanston',
+    // Row 1 (Upper Mid / North Shore / North Chicago)
+    'Village of Skokie',
+    'North Chicago / Lincoln Park',
+    'City of Chicago (Loop & Central)',
+    // Row 2 (Central West / Inner Suburbs / West Side)
+    'Village of Oak Park',
+    'City of Berwyn',
+    'West Chicago / Garfield Park',
+    // Row 3 (Southwest -> South -> Southeast)
+    'Village of Orland Park',
+    'South Chicago / Hyde Park',
+    'City of Cicero',
+  ],
   // Champaign County, IL (17019)
   '17019': [
+    // Row 0 (North)
+    'Village of Fisher',
+    'Village of Rantoul',
+    'Village of Ogden',
+    // Row 1 (Central-North)
+    'Village of Mahomet',
     'City of Champaign',
     'City of Urbana',
+    // Row 2 (Central-South)
     'Village of Savoy',
-    'Village of Mahomet',
-    'Village of Rantoul',
-    'Village of St. Joseph',
     'Village of Tolono',
-    'Village of Fisher',
+    'Village of St. Joseph',
+    // Row 3 (South)
     'Village of Philo',
     'Village of Sidney',
     'Village of Homer',
-    'Village of Ogden',
-  ],
-  // Cook County, IL (17031)
-  '17031': [
-    'City of Chicago (Loop & Central)',
-    'North Chicago / Lincoln Park',
-    'South Chicago / Hyde Park',
-    'West Chicago / Garfield Park',
-    'City of Evanston',
-    'Village of Skokie',
-    'Village of Oak Park',
-    'Village of Schaumburg',
-    'Village of Arlington Heights',
-    'Village of Orland Park',
-    'City of Berwyn',
-    'City of Cicero',
   ],
   // Travis County, TX (48453)
   '48453': [
-    'City of Austin (Downtown)',
-    'North Austin',
-    'South Austin',
-    'East Austin',
-    'City of Pflugerville',
-    'City of Lakeway',
-    'City of Manor',
-    'City of Rollingwood',
-    'City of West Lake Hills',
-    'City of Bee Cave',
+    // Row 0 (North)
     'Village of Point Venture',
+    'City of Pflugerville',
+    'North Austin',
+    // Row 1 (Central-North)
+    'City of Lakeway',
+    'City of Austin (Downtown)',
+    'East Austin',
+    // Row 2 (Central-South)
+    'City of West Lake Hills',
+    'City of Rollingwood',
+    'City of Manor',
+    // Row 3 (South)
+    'City of Bee Cave',
+    'South Austin',
     'City of Sunset Valley',
   ],
   // Los Angeles County, CA (06037)
   '06037': [
-    'City of Los Angeles (Downtown / Metro)',
-    'Hollywood / West Hollywood',
-    'City of Santa Monica',
-    'City of Long Beach',
-    'City of Pasadena',
-    'City of Glendale',
+    // Row 0 (North)
+    'Santa Clarita',
     'San Fernando Valley / Burbank',
     'San Gabriel Valley / El Monte',
-    'South Bay / Torrance',
-    'Santa Clarita',
-    'Inglewood / Compton',
+    // Row 1 (Central-North)
+    'City of Glendale',
+    'City of Pasadena',
     'Pomona / East Valley',
+    // Row 2 (Central-South)
+    'City of Santa Monica',
+    'Hollywood / West Hollywood',
+    'City of Los Angeles (Downtown / Metro)',
+    // Row 3 (South)
+    'South Bay / Torrance',
+    'Inglewood / Compton',
+    'City of Long Beach',
   ],
   // New York County (Manhattan), NY (36061)
   '36061': [
-    'Lower Manhattan / Financial District',
-    'Greenwich Village & SoHo',
+    // Row 0 (Uptown North)
+    'Washington Heights & Inwood',
+    'Harlem & Morningside Heights',
+    // Row 1 (Upper Manhattan)
+    'Upper West Side',
+    'Upper East Side',
+    // Row 2 (Midtown)
     'Chelsea & Flatiron',
     'Midtown Manhattan',
-    'Upper East Side',
-    'Upper West Side',
-    'Harlem & Morningside Heights',
-    'Washington Heights & Inwood',
+    // Row 3 (Downtown)
+    'Greenwich Village & SoHo',
+    'Lower Manhattan / Financial District',
   ],
   // King County, WA (53033)
   '53033': [
-    'City of Seattle (Downtown / Capitol Hill)',
+    // Row 0 (North)
     'North Seattle / Ballard',
-    'West Seattle',
-    'City of Bellevue',
-    'City of Redmond',
     'City of Kirkland',
+    'City of Redmond',
+    // Row 1 (Central-North)
+    'City of Seattle (Downtown / Capitol Hill)',
+    'City of Bellevue',
+    'City of Issaquah',
+    // Row 2 (Central-South)
+    'West Seattle',
     'City of Renton',
     'City of Kent',
+    // Row 3 (South)
     'City of Federal Way',
-    'City of Issaquah',
+    'City of Auburn',
+    'Maple Valley',
   ],
   // Maricopa County, AZ (04013)
   '04013': [
-    'City of Phoenix (Central)',
+    // Row 0 (North)
+    'City of Surprise',
+    'City of Peoria',
     'North Phoenix / Desert Ridge',
-    'South Phoenix / Laveen',
+    // Row 1 (Central-North)
+    'City of Glendale',
+    'City of Phoenix (Central)',
     'City of Scottsdale',
+    // Row 2 (Central-South)
+    'City of Goodyear',
+    'City of Tempe',
     'City of Mesa',
+    // Row 3 (South)
+    'South Phoenix / Laveen',
     'City of Chandler',
     'City of Gilbert',
-    'City of Tempe',
-    'City of Glendale',
-    'City of Peoria',
-    'City of Surprise',
-    'City of Goodyear',
   ],
 };
 

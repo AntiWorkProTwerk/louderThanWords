@@ -14,8 +14,25 @@ import {
   formatCompactUSD,
   StateCreepAggregate,
 } from './services/stateCreepData';
+import {
+  STATE_BILL_VOLATILITY_DATA,
+  getEditorialVolatilityColor,
+  formatCompactNumber,
+  StateBillVolatilityAggregate,
+} from './services/stateBillData';
+import { useDossierMetric, DOSSIER_METRICS } from './hooks/useDossierMetric';
+import { DossierMetricType, DossierHoverTelemetry } from './types/dossier';
 import { ContractCreepPanel, JurisdictionGeoProps } from './components/ContractCreepPanel';
-import { Loader2, ChevronRight, ArrowLeft, TrendingUp } from 'lucide-react';
+import { BillDiffPanel } from './components/BillDiffPanel';
+import {
+  Loader2,
+  ChevronRight,
+  ArrowLeft,
+  TrendingUp,
+  FileCode,
+  Layers,
+  Sparkles,
+} from 'lucide-react';
 
 export function App() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -28,6 +45,9 @@ export function App() {
   const [isCitiesLoading, setIsCitiesLoading] = useState<boolean>(false);
   const [isDossierOpen, setIsDossierOpen] = useState<boolean>(true);
 
+  // Active Dossier Metric Layer ('CONTRACT_CREEP' | 'BILL_DIFF')
+  const { activeMetric, activeConfig, switchMetric, availableMetrics } = useDossierMetric('CONTRACT_CREEP');
+
   // Navigation State
   const [viewMode, setViewMode] = useState<'national' | 'state' | 'county'>('national');
   const [activeStateFips, setActiveStateFips] = useState<string | null>('17');
@@ -36,18 +56,8 @@ export function App() {
   const [selectedCountyName, setSelectedCountyName] = useState<string | null>(null);
   const [selectedCityName, setSelectedCityName] = useState<string | null>(null);
 
-  // High-Density Hover State Tooltip
-  const [hoveredFeature, setHoveredFeature] = useState<{
-    title: string;
-    subtitle?: string;
-    initialObligation?: number;
-    currentObligation?: number;
-    dollarCreep?: number;
-    percentCreep?: number;
-    category?: string;
-    x: number;
-    y: number;
-  } | null>(null);
+  // High-Density Hover State Tooltip (Unified Telemetry)
+  const [hoveredFeature, setHoveredFeature] = useState<DossierHoverTelemetry | null>(null);
 
   // Resize listener
   useEffect(() => {
@@ -163,8 +173,17 @@ export function App() {
     return US_STATES_FIPS[activeStateFips] || null;
   }, [activeStateFips]);
 
-  // Dynamic Geo Props for Contract Creep Dossier
+  // Dynamic Geo Props for Civic Dossier
   const currentGeoProps: JurisdictionGeoProps = useMemo(() => {
+    // 0. National view without an actively selected state polygon
+    if (viewMode === 'national' && !activeStateFips && !selectedStateName) {
+      return {
+        level: 'federal',
+        stateCode: 'US',
+        stateName: 'United States',
+      };
+    }
+
     const rawStateCode =
       currentStateMeta?.code ||
       (selectedStateName && getStateFipsFromCode(selectedStateName)
@@ -175,15 +194,22 @@ export function App() {
     const rawStateName = currentStateMeta?.name || selectedStateName || undefined;
     const rawCountyFips = activeCountyId ? activeCountyId.slice(2, 5) : undefined;
     const cleanCityName = selectedCityName
-      ? selectedCityName.replace(/^(City of |Village of |Town of |Borough of )/i, '').trim()
+      ? selectedCityName
+          .replace(/^(City of |Village of |Town of |Borough of )/i, '')
+          .replace(/\s*\([^)]*\)/g, '')
+          .split('/')[0]
+          .split('&')[0]
+          .trim()
       : undefined;
 
-    // 1. Municipal / City level (when viewMode is county and a city is active)
-    if (viewMode === 'county' && cleanCityName) {
+    // 1. Municipal / City level (when a city is active)
+    if (selectedCityName && cleanCityName) {
       return {
         level: 'local',
         stateCode: rawStateCode,
         stateName: rawStateName,
+        countyFips: rawCountyFips,
+        countyName: selectedCountyName || undefined,
         city: cleanCityName,
       };
     }
@@ -199,13 +225,13 @@ export function App() {
       };
     }
 
-    // 3. State level (when in national map view or general state view)
+    // 3. State level (when in national map view with active state or general state view)
     return {
       level: 'state',
       stateCode: rawStateCode,
       stateName: rawStateName,
     };
-  }, [currentStateMeta, selectedStateName, activeCountyId, selectedCountyName, selectedCityName, viewMode]);
+  }, [currentStateMeta, selectedStateName, activeStateFips, activeCountyId, selectedCountyName, selectedCityName, viewMode]);
 
   // Projection and SVG paths calculation
   const { renderedPaths, countyOutlinePath } = useMemo(() => {
@@ -237,18 +263,99 @@ export function App() {
           };
 
           const isSelected = selectedStateName === meta.name;
-          const creepData: StateCreepAggregate = STATE_CREEP_DATA[fips] || {
-            fips,
-            stateCode: meta.code,
-            stateName: meta.name,
-            initialObligation: 1000000000,
-            currentObligation: 1200000000,
-            dollarCreep: 200000000,
-            percentCreep: 20.0,
-            activeContractsCount: 500,
-          };
 
-          const colorConfig = getEditorialCreepColor(creepData.percentCreep, isSelected);
+          let fill = '#E5E7EB';
+          let hoverFill = '#D1D5DB';
+          let category = 'Baseline';
+          let telemetry: any = null;
+
+          if (activeMetric === 'CONTRACT_CREEP') {
+            const creepData: StateCreepAggregate = STATE_CREEP_DATA[fips] || {
+              fips,
+              stateCode: meta.code,
+              stateName: meta.name,
+              initialObligation: 1000000000,
+              currentObligation: 1200000000,
+              dollarCreep: 200000000,
+              percentCreep: 20.0,
+              activeContractsCount: 500,
+            };
+
+            const colorConfig = getEditorialCreepColor(creepData.percentCreep, isSelected);
+            fill = colorConfig.fill;
+            hoverFill = colorConfig.hoverFill;
+            category = colorConfig.category;
+
+            telemetry = {
+              title: meta.name,
+              subtitle: `State Aggregate · ${creepData.activeContractsCount || 0} Contracts`,
+              metric1: {
+                label: 'TOTAL INITIAL OBLIGATION',
+                value: formatCompactUSD(creepData.initialObligation),
+              },
+              metric2: {
+                label: 'CURRENT TOTAL',
+                value: formatCompactUSD(creepData.currentObligation),
+              },
+              metric3: {
+                label: 'DOLLAR CREEP',
+                value: `+${formatCompactUSD(creepData.dollarCreep)}`,
+                isHighlight: true,
+                highlightColor: 'text-red-700',
+              },
+              metric4: {
+                label: 'PERCENT CREEP',
+                value: `+${creepData.percentCreep.toFixed(1)}%`,
+                isPill: true,
+                pillColor: 'bg-red-50 text-red-700',
+              },
+              category,
+            };
+          } else {
+            const billData: StateBillVolatilityAggregate = STATE_BILL_VOLATILITY_DATA[fips] || {
+              fips,
+              stateCode: meta.code,
+              stateName: meta.name,
+              totalBillsSponsored: 100,
+              enactedBillsCount: 15,
+              averageVolatilityScore: 35.0,
+              totalWordsAdded: 150000,
+              totalWordsDeleted: 50000,
+              majorSubstitutionsCount: 8,
+              primaryPolicyFocus: 'Public Policy',
+            };
+
+            const colorConfig = getEditorialVolatilityColor(billData.averageVolatilityScore, isSelected);
+            fill = colorConfig.fill;
+            hoverFill = colorConfig.hoverFill;
+            category = colorConfig.category;
+
+            telemetry = {
+              title: meta.name,
+              subtitle: `Congressional Delegation · ${billData.totalBillsSponsored} Sponsored Bills`,
+              metric1: {
+                label: 'SPONSORED BILLS',
+                value: billData.totalBillsSponsored.toString(),
+              },
+              metric2: {
+                label: 'ENACTED MEASURES',
+                value: billData.enactedBillsCount.toString(),
+              },
+              metric3: {
+                label: 'TOTAL WORD CHURN',
+                value: `+${formatCompactNumber(billData.totalWordsAdded + billData.totalWordsDeleted)}`,
+                isHighlight: true,
+                highlightColor: 'text-emerald-800',
+              },
+              metric4: {
+                label: 'REWRITE INDEX',
+                value: `+${billData.averageVolatilityScore.toFixed(1)}%`,
+                isPill: true,
+                pillColor: 'bg-emerald-50 text-emerald-900',
+              },
+              category,
+            };
+          }
 
           return {
             id: fips,
@@ -256,10 +363,10 @@ export function App() {
             code: meta.code,
             d,
             isSelected,
-            creepData,
-            fill: colorConfig.fill,
-            hoverFill: colorConfig.hoverFill,
-            category: colorConfig.category,
+            fill,
+            hoverFill,
+            category,
+            telemetry,
             onClick: () => {
               setSelectedStateName(meta.name);
               setActiveStateFips(fips);
@@ -322,6 +429,7 @@ export function App() {
 
       const pathGenerator = geoPath().projection(projection);
       const stateBaseCreep = activeStateFips ? STATE_CREEP_DATA[activeStateFips]?.percentCreep ?? 30 : 30;
+      const stateBaseVol = activeStateFips ? STATE_BILL_VOLATILITY_DATA[activeStateFips]?.averageVolatilityScore ?? 35 : 35;
 
       const paths = countiesGeoJson.features
         .map((feature: any, idx: number) => {
@@ -331,14 +439,81 @@ export function App() {
           const countyName = feature.properties?.name || `County ${feature.id}`;
           const isSelected = selectedCountyName === countyName;
 
-          // Deterministic county creep variation around state baseline
           const hashVal = (Number(feature.id) * 37 + idx * 13) % 100;
-          const countyPercentCreep = Math.max(0, Math.round(stateBaseCreep * (0.5 + (hashVal / 100))));
-          const countyInitial = 50000000 + (hashVal * 5000000);
-          const countyDollar = Math.round((countyInitial * countyPercentCreep) / 100);
-          const countyCurrent = countyInitial + countyDollar;
+          let fill = '#E5E7EB';
+          let hoverFill = '#D1D5DB';
+          let category = 'Baseline';
+          let telemetry: any = null;
 
-          const colorConfig = getEditorialCreepColor(countyPercentCreep, isSelected);
+          if (activeMetric === 'CONTRACT_CREEP') {
+            const countyPercentCreep = Math.max(0, Math.round(stateBaseCreep * (0.5 + hashVal / 100)));
+            const countyInitial = 50000000 + hashVal * 5000000;
+            const countyDollar = Math.round((countyInitial * countyPercentCreep) / 100);
+            const countyCurrent = countyInitial + countyDollar;
+
+            const colorConfig = getEditorialCreepColor(countyPercentCreep, isSelected);
+            fill = colorConfig.fill;
+            hoverFill = colorConfig.hoverFill;
+            category = colorConfig.category;
+
+            telemetry = {
+              title: countyName,
+              subtitle: `County Jurisdiction · ${currentStateMeta?.name}`,
+              metric1: {
+                label: 'TOTAL INITIAL OBLIGATION',
+                value: formatCompactUSD(countyInitial),
+              },
+              metric2: {
+                label: 'CURRENT TOTAL',
+                value: formatCompactUSD(countyCurrent),
+              },
+              metric3: {
+                label: 'DOLLAR CREEP',
+                value: `+${formatCompactUSD(countyDollar)}`,
+                isHighlight: true,
+                highlightColor: 'text-red-700',
+              },
+              metric4: {
+                label: 'PERCENT CREEP',
+                value: `+${countyPercentCreep.toFixed(1)}%`,
+                isPill: true,
+                pillColor: 'bg-red-50 text-red-700',
+              },
+              category,
+            };
+          } else {
+            const countyVolScore = Math.max(5, Math.round(stateBaseVol * (0.6 + (hashVal / 100) * 0.8)));
+            const colorConfig = getEditorialVolatilityColor(countyVolScore, isSelected);
+            fill = colorConfig.fill;
+            hoverFill = colorConfig.hoverFill;
+            category = colorConfig.category;
+
+            telemetry = {
+              title: countyName,
+              subtitle: `Congressional District Volatility · ${currentStateMeta?.name}`,
+              metric1: {
+                label: 'DISTRICT SPONSORED',
+                value: `${8 + (hashVal % 15)} Bills`,
+              },
+              metric2: {
+                label: 'ENACTED REFORMS',
+                value: `${1 + (hashVal % 4)} Laws`,
+              },
+              metric3: {
+                label: 'WORD CHURN',
+                value: `+${formatCompactNumber(25000 + hashVal * 1200)}`,
+                isHighlight: true,
+                highlightColor: 'text-emerald-800',
+              },
+              metric4: {
+                label: 'REWRITE INDEX',
+                value: `+${countyVolScore.toFixed(1)}%`,
+                isPill: true,
+                pillColor: 'bg-emerald-50 text-emerald-900',
+              },
+              category,
+            };
+          }
 
           return {
             id: feature.id,
@@ -347,19 +522,10 @@ export function App() {
             d,
             isSelected,
             feature,
-            fill: colorConfig.fill,
-            hoverFill: colorConfig.hoverFill,
-            category: colorConfig.category,
-            creepData: {
-              fips: String(feature.id),
-              stateCode: currentStateMeta?.code || '',
-              stateName: countyName,
-              initialObligation: countyInitial,
-              currentObligation: countyCurrent,
-              dollarCreep: countyDollar,
-              percentCreep: countyPercentCreep,
-              activeContractsCount: 15 + (hashVal % 40),
-            },
+            fill,
+            hoverFill,
+            category,
+            telemetry,
             onClick: () => {
               setSelectedCountyName(countyName);
               setActiveCountyId(String(feature.id));
@@ -407,12 +573,80 @@ export function App() {
           const isSelected = selectedCityName === cityName;
 
           const hashVal = ((idx + 1) * 43) % 100;
-          const cityPercentCreep = Math.round(15 + (hashVal * 0.6));
-          const cityInitial = 12000000 + (hashVal * 800000);
-          const cityDollar = Math.round((cityInitial * cityPercentCreep) / 100);
-          const cityCurrent = cityInitial + cityDollar;
+          let fill = '#E5E7EB';
+          let hoverFill = '#D1D5DB';
+          let category = 'Baseline';
+          let telemetry: any = null;
 
-          const colorConfig = getEditorialCreepColor(cityPercentCreep, isSelected);
+          if (activeMetric === 'CONTRACT_CREEP') {
+            const cityPercentCreep = Math.round(15 + hashVal * 0.6);
+            const cityInitial = 12000000 + hashVal * 800000;
+            const cityDollar = Math.round((cityInitial * cityPercentCreep) / 100);
+            const cityCurrent = cityInitial + cityDollar;
+
+            const colorConfig = getEditorialCreepColor(cityPercentCreep, isSelected);
+            fill = colorConfig.fill;
+            hoverFill = colorConfig.hoverFill;
+            category = colorConfig.category;
+
+            telemetry = {
+              title: cityName,
+              subtitle: `Municipal District · ${selectedCountyName}`,
+              metric1: {
+                label: 'TOTAL INITIAL OBLIGATION',
+                value: formatCompactUSD(cityInitial),
+              },
+              metric2: {
+                label: 'CURRENT TOTAL',
+                value: formatCompactUSD(cityCurrent),
+              },
+              metric3: {
+                label: 'DOLLAR CREEP',
+                value: `+${formatCompactUSD(cityDollar)}`,
+                isHighlight: true,
+                highlightColor: 'text-red-700',
+              },
+              metric4: {
+                label: 'PERCENT CREEP',
+                value: `+${cityPercentCreep.toFixed(1)}%`,
+                isPill: true,
+                pillColor: 'bg-red-50 text-red-700',
+              },
+              category,
+            };
+          } else {
+            const cityVolScore = Math.round(10 + hashVal * 0.5);
+            const colorConfig = getEditorialVolatilityColor(cityVolScore, isSelected);
+            fill = colorConfig.fill;
+            hoverFill = colorConfig.hoverFill;
+            category = colorConfig.category;
+
+            telemetry = {
+              title: cityName,
+              subtitle: `Municipal Delegation · ${selectedCountyName}`,
+              metric1: {
+                label: 'MUNICIPAL REFORMS',
+                value: `${2 + (hashVal % 6)} Measures`,
+              },
+              metric2: {
+                label: 'ENACTED',
+                value: `${1 + (hashVal % 3)} Passed`,
+              },
+              metric3: {
+                label: 'WORD CHURN',
+                value: `+${formatCompactNumber(12000 + hashVal * 400)}`,
+                isHighlight: true,
+                highlightColor: 'text-emerald-800',
+              },
+              metric4: {
+                label: 'REWRITE INDEX',
+                value: `+${cityVolScore.toFixed(1)}%`,
+                isPill: true,
+                pillColor: 'bg-emerald-50 text-emerald-900',
+              },
+              category,
+            };
+          }
 
           return {
             id: feature.id || `city-${idx}`,
@@ -420,19 +654,10 @@ export function App() {
             code: currentStateMeta?.code || '',
             d,
             isSelected,
-            fill: colorConfig.fill,
-            hoverFill: colorConfig.hoverFill,
-            category: colorConfig.category,
-            creepData: {
-              fips: `city-${idx}`,
-              stateCode: currentStateMeta?.code || '',
-              stateName: cityName,
-              initialObligation: cityInitial,
-              currentObligation: cityCurrent,
-              dollarCreep: cityDollar,
-              percentCreep: cityPercentCreep,
-              activeContractsCount: 5 + (hashVal % 15),
-            },
+            fill,
+            hoverFill,
+            category,
+            telemetry,
             onClick: () => {
               setSelectedCityName(cityName);
             },
@@ -453,6 +678,7 @@ export function App() {
   }, [
     dimensions,
     viewMode,
+    activeMetric,
     statesGeoJson,
     countiesGeoJson,
     citiesGeoJson,
@@ -468,8 +694,8 @@ export function App() {
 
   return (
     <div className="flex flex-col h-screen w-screen bg-[#fafaf9] text-stone-900 overflow-hidden font-sans select-none">
-      {/* 1. Header Bar with Breadcrumb Navigation & Dossier Toggle */}
-      <header className="bg-white border-b border-stone-200 px-6 py-3.5 flex items-center justify-between flex-shrink-0 z-20 shadow-xs">
+      {/* 1. Header Bar with Breadcrumb Navigation, Metric Layer Selector & Dossier Toggle */}
+      <header className="bg-white border-b border-stone-200 px-6 py-3 flex items-center justify-between flex-shrink-0 z-20 shadow-xs">
         <div className="flex items-center gap-3">
           <div className="w-2.5 h-2.5 rounded-sm bg-blue-900"></div>
           <div className="flex items-center gap-2 text-xs sm:text-sm font-medium">
@@ -523,8 +749,25 @@ export function App() {
           </div>
         </div>
 
-        {/* Action / Back Button & Dossier Inspector Toggle */}
-        <div className="flex items-center gap-3">
+        {/* Action Controls: Metric Layer Selector, Navigation Back & Dossier Toggle */}
+        <div className="flex items-center gap-2.5">
+          {/* Global Metric Layer Selector */}
+          <div className="flex items-center gap-1.5 bg-stone-100 border border-stone-300 rounded px-2.5 py-1 shadow-2xs">
+            <Layers className="w-3.5 h-3.5 text-stone-600" />
+            <span className="text-[10px] uppercase font-semibold tracking-wider text-stone-500 hidden sm:inline">
+              Layer:
+            </span>
+            <select
+              value={activeMetric}
+              onChange={(e) => switchMetric(e.target.value as DossierMetricType)}
+              aria-label="Select civic intelligence metric layer"
+              className="text-xs bg-transparent font-semibold text-stone-800 focus:outline-none cursor-pointer pr-1"
+            >
+              <option value="CONTRACT_CREEP">📊 Contract Creep (USAspending)</option>
+              <option value="BILL_DIFF">📜 Bill Diff & Volatility (Congress.gov)</option>
+            </select>
+          </div>
+
           {viewMode === 'county' ? (
             <button
               onClick={handleZoomOutToState}
@@ -542,24 +785,10 @@ export function App() {
               <span>Back to US Map</span>
             </button>
           ) : null}
-
-          {/* Dossier Toggle Button */}
-          <button
-            onClick={() => setIsDossierOpen((prev) => !prev)}
-            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded border transition-colors cursor-pointer ${
-              isDossierOpen
-                ? 'bg-blue-900 text-white border-blue-900 shadow-xs'
-                : 'bg-white text-stone-700 hover:bg-stone-50 border-stone-300'
-            }`}
-          >
-            <TrendingUp className={`w-3.5 h-3.5 ${isDossierOpen ? 'text-rose-300' : 'text-rose-600'}`} />
-            <span className="hidden sm:inline">Contract Creep Dossier:</span>
-            <span className="font-semibold">{isDossierOpen ? 'ON' : 'OFF'}</span>
-          </button>
         </div>
       </header>
 
-      {/* 2. Main Workspace: Map Canvas + Contract Creep Inspector Sidebar */}
+      {/* 2. Main Workspace: Map Canvas + Civic Dossier Inspector Sidebar */}
       <div className="flex-1 relative flex flex-col md:flex-row overflow-hidden">
         {/* Map Canvas */}
         <main
@@ -613,17 +842,13 @@ export function App() {
                           className="transition-colors duration-150 cursor-pointer hover:opacity-90"
                           onMouseEnter={(e) => {
                             const rect = containerRef.current?.getBoundingClientRect();
-                            setHoveredFeature({
-                              title: item.name,
-                              subtitle: `Municipal District · ${selectedCountyName}`,
-                              initialObligation: item.creepData?.initialObligation,
-                              currentObligation: item.creepData?.currentObligation,
-                              dollarCreep: item.creepData?.dollarCreep,
-                              percentCreep: item.creepData?.percentCreep,
-                              category: item.category,
-                              x: e.clientX - (rect?.left || 0),
-                              y: e.clientY - (rect?.top || 0),
-                            });
+                            if (item.telemetry) {
+                              setHoveredFeature({
+                                ...item.telemetry,
+                                x: e.clientX - (rect?.left || 0),
+                                y: e.clientY - (rect?.top || 0),
+                              });
+                            }
                           }}
                           onMouseMove={(e) => {
                             const rect = containerRef.current?.getBoundingClientRect();
@@ -674,20 +899,13 @@ export function App() {
                         className="transition-colors duration-150 cursor-pointer hover:opacity-90"
                         onMouseEnter={(e) => {
                           const rect = containerRef.current?.getBoundingClientRect();
-                          setHoveredFeature({
-                            title: item.name,
-                            subtitle:
-                              viewMode === 'national'
-                                ? `State Aggregate · ${item.creepData?.activeContractsCount || 0} Contracts`
-                                : `County Jurisdiction · ${currentStateMeta?.name}`,
-                            initialObligation: item.creepData?.initialObligation,
-                            currentObligation: item.creepData?.currentObligation,
-                            dollarCreep: item.creepData?.dollarCreep,
-                            percentCreep: item.creepData?.percentCreep,
-                            category: item.category,
-                            x: e.clientX - (rect?.left || 0),
-                            y: e.clientY - (rect?.top || 0),
-                          });
+                          if (item.telemetry) {
+                            setHoveredFeature({
+                              ...item.telemetry,
+                              x: e.clientX - (rect?.left || 0),
+                              y: e.clientY - (rect?.top || 0),
+                            });
+                          }
                         }}
                         onMouseMove={(e) => {
                           const rect = containerRef.current?.getBoundingClientRect();
@@ -712,101 +930,119 @@ export function App() {
             </svg>
           )}
 
-          {/* Editorial CartoColors Map Legend */}
+          {/* Dynamic Editorial CartoColors Map Legend */}
           <div className="absolute bottom-4 left-4 z-10 bg-white border border-stone-200 shadow-sm px-3.5 py-2.5 rounded-sm text-xs font-sans pointer-events-auto">
             <div className="text-[10px] uppercase tracking-wider font-semibold text-stone-500 mb-1.5 flex items-center justify-between gap-4">
-              <span>Contract Creep Severity</span>
+              <span>{activeConfig.legendTitle}</span>
               <span className="font-mono text-[9px] text-stone-400">CartoColors</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="flex flex-col items-center">
-                <div className="w-7 h-2.5 bg-[#E5E7EB] border border-stone-300 rounded-xs" title="0% Fixed Price / Baseline" />
-                <span className="text-[9px] text-stone-500 font-mono mt-0.5">0%</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <div className="w-7 h-2.5 bg-[#FED7AA] border border-orange-300 rounded-xs" title="1% – 15% Standard" />
-                <span className="text-[9px] text-stone-500 font-mono mt-0.5">1-15%</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <div className="w-7 h-2.5 bg-[#FB923C] border border-orange-500 rounded-xs" title="16% – 35% Elevated" />
-                <span className="text-[9px] text-stone-500 font-mono mt-0.5">16-35%</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <div className="w-7 h-2.5 bg-[#DC2626] border border-red-700 rounded-xs" title="36% – 75% Severe" />
-                <span className="text-[9px] text-stone-500 font-mono mt-0.5">36-75%</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <div className="w-7 h-2.5 bg-[#7F1D1D] border border-red-950 rounded-xs" title="75%+ Critical" />
-                <span className="text-[9px] text-stone-500 font-mono mt-0.5">75%+</span>
-              </div>
+              {activeConfig.legendStops.map((stop, sIdx) => (
+                <div key={sIdx} className="flex flex-col items-center">
+                  <div
+                    className="w-7 h-2.5 rounded-xs border"
+                    style={{ backgroundColor: stop.fill, borderColor: stop.border }}
+                    title={stop.description}
+                  />
+                  <span className="text-[9px] text-stone-500 font-mono mt-0.5">{stop.label}</span>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* High-Density Editorial Floating Hover Tooltip (ProPublica/NYT Style) */}
-          {hoveredFeature && (
-            <div
-              className="absolute z-50 pointer-events-none bg-white border border-stone-200 shadow-lg rounded-sm p-4 w-64 transform -translate-x-1/2 -translate-y-full mb-3"
-              style={{ left: hoveredFeature.x, top: hoveredFeature.y - 10 }}
-            >
-              <div className="font-serif text-lg font-bold text-stone-800 border-b border-stone-100 pb-2 mb-3">
-                {hoveredFeature.title}
+          {/* Unified High-Density Editorial Floating Hover Tooltip (ProPublica/NYT Style) */}
+          {hoveredFeature && (() => {
+            const tooltipWidth = 264; // w-66
+            const estimatedTooltipHeight = 170;
+            const margin = 16;
+            
+            // Flip below if close to the top of the map container
+            const placeBelow = hoveredFeature.y < estimatedTooltipHeight + margin;
+            
+            // Clamp X coordinate so the tooltip never bleeds off the left or right edges
+            const containerWidth = dimensions.width || 800;
+            const halfWidth = tooltipWidth / 2;
+            const clampedX = Math.max(
+              halfWidth + margin,
+              Math.min(hoveredFeature.x, containerWidth - halfWidth - margin)
+            );
+            
+            const topY = placeBelow ? hoveredFeature.y + 14 : hoveredFeature.y - 14;
+
+            return (
+              <div
+                className={`absolute z-50 pointer-events-none bg-white border border-stone-200 shadow-xl rounded-sm p-4 w-66 transform -translate-x-1/2 ${
+                  placeBelow ? 'translate-y-0' : '-translate-y-full'
+                } transition-[left,top] duration-75 ease-out`}
+                style={{ left: `${clampedX}px`, top: `${topY}px` }}
+              >
+                <div className="font-serif text-lg font-bold text-stone-800 border-b border-stone-100 pb-1.5 mb-2.5">
+                  {hoveredFeature.title}
+                  <div className="text-[10px] font-sans font-normal text-stone-500 leading-tight mt-0.5">
+                    {hoveredFeature.subtitle}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-x-3 gap-y-2.5">
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wider text-stone-500 font-sans">
+                      {hoveredFeature.metric1.label}
+                    </div>
+                    <div className="font-mono text-sm text-stone-800">
+                      {hoveredFeature.metric1.value}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wider text-stone-500 font-sans">
+                      {hoveredFeature.metric2.label}
+                    </div>
+                    <div className="font-mono text-sm text-stone-800">
+                      {hoveredFeature.metric2.value}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wider text-stone-500 font-sans">
+                      {hoveredFeature.metric3.label}
+                    </div>
+                    <div
+                      className={`font-mono text-sm font-bold ${
+                        hoveredFeature.metric3.highlightColor || 'text-red-700'
+                      }`}
+                    >
+                      {hoveredFeature.metric3.value}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wider text-stone-500 font-sans">
+                      {hoveredFeature.metric4.label}
+                    </div>
+                    <div className="font-mono text-sm">
+                      <span
+                        className={`px-1 py-0.5 inline-block font-bold rounded-xs ${
+                          hoveredFeature.metric4.pillColor || 'bg-red-50 text-red-700'
+                        }`}
+                      >
+                        {hoveredFeature.metric4.value}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
-
-              <div className="grid grid-cols-2 gap-x-3 gap-y-2.5">
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider text-stone-500 font-sans">
-                    TOTAL INITIAL OBLIGATION
-                  </div>
-                  <div className="font-mono text-sm text-stone-800">
-                    {hoveredFeature.initialObligation !== undefined
-                      ? formatCompactUSD(hoveredFeature.initialObligation)
-                      : 'N/A'}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider text-stone-500 font-sans">
-                    CURRENT TOTAL
-                  </div>
-                  <div className="font-mono text-sm text-stone-800">
-                    {hoveredFeature.currentObligation !== undefined
-                      ? formatCompactUSD(hoveredFeature.currentObligation)
-                      : 'N/A'}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider text-stone-500 font-sans">
-                    DOLLAR CREEP
-                  </div>
-                  <div className="font-mono text-sm text-red-700 font-bold">
-                    {hoveredFeature.dollarCreep !== undefined
-                      ? `+${formatCompactUSD(hoveredFeature.dollarCreep)}`
-                      : 'N/A'}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider text-stone-500 font-sans">
-                    PERCENT CREEP
-                  </div>
-                  <div className="font-mono text-sm">
-                    <span className="bg-red-50 text-red-700 px-1 py-0.5 inline-block font-bold">
-                      {hoveredFeature.percentCreep !== undefined
-                        ? `+${hoveredFeature.percentCreep.toFixed(1)}%`
-                        : '0.0%'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+            );
+          })()}
         </main>
 
-        {/* 3. Contract Creep Dossier Inspector Drawer */}
+        {/* 3. Civic Intelligence Dossier Inspector Drawer */}
         {isDossierOpen && (
           <aside className="w-full md:w-[420px] lg:w-[460px] h-full flex-shrink-0 z-20 border-l border-stone-200 bg-white transition-all duration-200">
-            <ContractCreepPanel {...currentGeoProps} />
+            {activeMetric === 'CONTRACT_CREEP' ? (
+              <ContractCreepPanel {...currentGeoProps} />
+            ) : (
+              <BillDiffPanel {...currentGeoProps} />
+            )}
           </aside>
         )}
       </div>

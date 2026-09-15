@@ -6,7 +6,10 @@ import {
   TrendingUp,
   Search,
   X,
+  Landmark,
+  FileText,
 } from 'lucide-react';
+import { PoliticianCreepPanel } from './PoliticianCreepPanel';
 
 export interface JurisdictionGeoProps {
   level: 'local' | 'county' | 'state' | 'federal';
@@ -319,6 +322,9 @@ export const ContractCreepPanel: React.FC<JurisdictionGeoProps> = ({
   districtNumber,
   city,
 }) => {
+  // View Mode Tab: 'contracts' | 'politicians'
+  const [activeViewTab, setActiveViewTab] = useState<'contracts' | 'politicians'>('contracts');
+
   // View State: 'list' | 'detail'
   const [selectedAward, setSelectedAward] = useState<USAspendingAwardItem | null>(null);
 
@@ -435,12 +441,40 @@ export const ContractCreepPanel: React.FC<JurisdictionGeoProps> = ({
     }).then((res) => (res.ok ? res.json() : { results: [] }));
 
     Promise.all([fetchContracts, fetchIdvs])
-      .then(([contractsData, idvsData]) => {
+      .then(async ([contractsData, idvsData]) => {
         if (!isMounted) return;
         const contractsList: USAspendingAwardItem[] = contractsData?.results || [];
         const idvsList: USAspendingAwardItem[] = idvsData?.results || [];
         const combined = [...contractsList, ...idvsList];
-        const uniqueAwards = deduplicateAwards(combined);
+        let uniqueAwards = deduplicateAwards(combined);
+
+        // Fallback to parent county if local municipal boundary has zero direct prime contracts
+        if (uniqueAwards.length === 0 && level === 'local' && countyFips) {
+          try {
+            const countyLocation = [
+              { country: 'USA', state: stateCode, county: countyFips.padStart(3, '0') },
+            ];
+            const fallbackRes = await fetch(
+              'https://api.usaspending.gov/api/v2/search/spending_by_award/',
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  ...contractsPayload,
+                  filters: {
+                    ...contractsPayload.filters,
+                    place_of_performance_locations: countyLocation,
+                  },
+                }),
+              }
+            ).then((r) => (r.ok ? r.json() : { results: [] }));
+
+            const fallbackList: USAspendingAwardItem[] = fallbackRes?.results || [];
+            uniqueAwards = deduplicateAwards(fallbackList);
+          } catch {
+            // keep empty
+          }
+        }
 
         // Sort descending by Award Amount so largest projects float to top
         uniqueAwards.sort((a, b) => (b['Award Amount'] ?? 0) - (a['Award Amount'] ?? 0));
@@ -736,10 +770,10 @@ export const ContractCreepPanel: React.FC<JurisdictionGeoProps> = ({
   return (
     <div className="flex flex-col h-full bg-white text-stone-900 border-l border-stone-200">
       {/* 1. Header Toolbar */}
-      <div className="p-5 pb-4 border-b border-stone-200 flex-shrink-0">
+      <div className="p-4 pb-3 border-b border-stone-200 flex-shrink-0 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {selectedAward && (
+            {selectedAward && activeViewTab === 'contracts' && (
               <button
                 onClick={() => setSelectedAward(null)}
                 className="p-1 -ml-1 text-stone-500 hover:text-stone-900 hover:bg-stone-100 rounded-sm transition-colors cursor-pointer"
@@ -751,7 +785,7 @@ export const ContractCreepPanel: React.FC<JurisdictionGeoProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="font-serif text-lg font-bold text-stone-900 tracking-tight">
-                  Contract Creep
+                  Contract Creep Dossier
                 </h1>
                 <span className="text-[10px] font-sans uppercase tracking-wider font-semibold px-2 py-0.5 bg-blue-50 text-blue-900 border border-blue-200 rounded-xs">
                   {level.toUpperCase()}
@@ -773,12 +807,55 @@ export const ContractCreepPanel: React.FC<JurisdictionGeoProps> = ({
             </div>
           </div>
         </div>
+
+        {/* View Tabs: Prime Contracts vs Elected Officials */}
+        <div className="flex items-center p-0.5 bg-stone-100 border border-stone-200 rounded-sm">
+          <button
+            onClick={() => setActiveViewTab('contracts')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1 text-xs font-semibold rounded-xs transition-all cursor-pointer ${
+              activeViewTab === 'contracts'
+                ? 'bg-white text-stone-900 shadow-xs border border-stone-200/80 font-bold'
+                : 'text-stone-600 hover:text-stone-900'
+            }`}
+          >
+            <FileText className="w-3.5 h-3.5 text-stone-500" />
+            <span>Prime Contracts</span>
+            <span className="text-[10px] font-mono text-stone-400">({sortedContracts.length})</span>
+          </button>
+          <button
+            onClick={() => setActiveViewTab('politicians')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1 text-xs font-semibold rounded-xs transition-all cursor-pointer ${
+              activeViewTab === 'politicians'
+                ? 'bg-white text-stone-900 shadow-xs border border-stone-200/80 font-bold'
+                : 'text-stone-600 hover:text-stone-900'
+            }`}
+          >
+            <Landmark className="w-3.5 h-3.5 text-stone-700" />
+            <span>Elected Officials</span>
+            <span className="text-[10px] font-mono text-blue-900 font-bold bg-blue-50 px-1 rounded-xs">
+              Accountability
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* 2. Scrollable Body Content */}
-      <div className="flex-1 overflow-y-auto p-5">
-        {/* ======================= STATE 1: CONTRACT LIST VIEW ======================= */}
-        {!selectedAward && (
+      {activeViewTab === 'politicians' ? (
+        <div className="flex-1 overflow-hidden">
+          <PoliticianCreepPanel
+            level={level}
+            stateCode={stateCode}
+            stateName={stateName}
+            countyFips={countyFips}
+            countyName={countyName}
+            districtNumber={districtNumber}
+            city={city}
+          />
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto p-5">
+          {/* ======================= STATE 1: CONTRACT LIST VIEW ======================= */}
+          {!selectedAward && (
           <div className="space-y-4">
             {/* Dev / Test Specific Award Search Bar with Presets */}
             <div className="p-3 bg-stone-50 border border-stone-200 rounded-sm space-y-2">
@@ -1120,6 +1197,7 @@ export const ContractCreepPanel: React.FC<JurisdictionGeoProps> = ({
           </div>
         )}
       </div>
+      )}
 
       {/* 3. Footer Telemetry Tag */}
       <div className="px-5 py-3 bg-stone-50 border-t border-stone-200 flex items-center justify-between text-[11px] text-stone-500 font-sans flex-shrink-0">
