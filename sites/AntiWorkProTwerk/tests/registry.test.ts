@@ -59,3 +59,11 @@ test('static assets are served directly and missing JSON stays a 404', async () 
   );
   assert.equal(missing.status, 404);
 });
+
+test('the existing shared civic cache remains available without a D1 binding', async () => {
+  const url = `https://${registry.domain}/api/civic/cache?key=demo`;
+  const get = await worker.fetch(new Request(url), {});
+  assert.deepEqual(await get.json(), { hit: false });
+  const post = await worker.fetch(new Request(url, { method: 'POST' }), {});
+  assert.deepEqual(await post.json(), { ok: false, error: 'D1 not bound' });
+});

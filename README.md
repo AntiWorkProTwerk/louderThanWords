@@ -62,6 +62,8 @@ Run `npm run sites:sync` and restart the shared preview when adding a new entry 
 
 Worker secrets and bindings are isolated by site: prefix their names with the uppercase username (replace hyphens with underscores), followed by `__`. For example, `<USERNAME>__SUPABASE_URL` is delivered to that site's handler as `SUPABASE_URL`. Unprefixed secrets and other sites' secrets are not forwarded. A site-local dev server can use unprefixed variables in its own ignored `.env` file.
 
+The existing shared `/api/civic/cache` endpoint is preserved separately and continues using the root `DB` binding. It is not a private account API and must not store private or premium data.
+
 An optional `<USERNAME>__DATA` R2 bucket binding serves that site's `/data/*` and `/tiles/*` paths, including HTTP range requests. Without it, the shipped static dataset is used. Public dataset files are cacheable; account handlers must return `Cache-Control: private, no-store`. The shared worker runs before assets so configured R2 releases can supersede bundled data without rebuilding the frontend.
 
 Keep backend migrations, credentials, and dependencies in the owning site. The first site's `docs/implementation.md` describes the civic explorer integrations and acceptance checks.
