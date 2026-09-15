@@ -102,6 +102,17 @@ class NetworkActivityManager {
     console.groupEnd();
   }
 
+  private isTelemetryUrl(url: string): boolean {
+    const u = url.toLowerCase();
+    return (
+      u.includes('gen_204') ||
+      u.includes('csp_test=true') ||
+      u.includes('/maps/api/mapsjs/gen_204') ||
+      u.includes('clients1.google.com/tbproxy') ||
+      u.includes('play.google.com/log')
+    );
+  }
+
   private categorizeUrl(url: string): NetworkLogEntry['category'] {
     const u = url.toLowerCase();
     if (u.includes('civicinfo.googleapis.com')) return 'Google Civic API';
@@ -116,10 +127,23 @@ class NetworkActivityManager {
     if (typeof window === 'undefined' || this.isInitialized) return;
     this.isInitialized = true;
 
+    // Suppress harmless browser ad-blocker console warnings (e.g. ERR_BLOCKED_BY_CLIENT on gen_204)
+    this.suppressBenignConsoleErrors();
+
     const originalFetch = window.fetch.bind(window);
 
     window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
       const urlString = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+
+      // Silently handle harmless CSP test and telemetry beacons blocked by client ad-blockers
+      if (this.isTelemetryUrl(urlString)) {
+        try {
+          return await originalFetch(input, init);
+        } catch {
+          return new Response(null, { status: 204, statusText: 'No Content (Telemetry Suppressed)' });
+        }
+      }
+
       const method = (init?.method || (typeof input === 'object' && 'method' in input ? input.method : 'GET') || 'GET').toUpperCase();
       const category = this.categorizeUrl(urlString);
       const startTime = performance.now();
@@ -144,7 +168,7 @@ class NetworkActivityManager {
           if (contentType.includes('json')) {
             responsePreview = await clone.json();
           }
-        } catch (e) {
+        } catch {
           // Non-JSON or streaming response
         }
 
@@ -167,6 +191,30 @@ class NetworkActivityManager {
       }
     };
   }
+
+  private suppressBenignConsoleErrors() {
+    if (typeof window === 'undefined') return;
+
+    const originalError = console.error.bind(console);
+    const originalWarn = console.warn.bind(console);
+
+    console.error = (...args: any[]) => {
+      const msg = args.map((a) => (typeof a === 'string' ? a : JSON.stringify(a) || '')).join(' ');
+      if (msg.includes('gen_204') || msg.includes('ERR_BLOCKED_BY_CLIENT') || msg.includes('csp_test')) {
+        return; // Suppress harmless ad-blocker blocked beacon error
+      }
+      originalError(...args);
+    };
+
+    console.warn = (...args: any[]) => {
+      const msg = args.map((a) => (typeof a === 'string' ? a : JSON.stringify(a) || '')).join(' ');
+      if (msg.includes('gen_204') || msg.includes('csp_test')) {
+        return; // Suppress harmless telemetry warning
+      }
+      originalWarn(...args);
+    };
+  }
 }
 
 export const networkLogger = new NetworkActivityManager();
+
