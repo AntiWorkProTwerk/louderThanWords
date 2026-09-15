@@ -1,0 +1,10 @@
+{
+  "name": "@louder-than-words/antiworkprotwerk",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --base=/AntiWorkProTwerk/ --outDir=../../dist/AntiWorkProTwerk --emptyOutDir=false"
+  }
+}

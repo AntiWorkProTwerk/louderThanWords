@@ -16,7 +16,11 @@ if (!production) {
   );
 }
 
-execFileSync('npm', ['run', 'build'], { stdio: 'inherit', shell: process.platform === 'win32' });
+const npmCli = process.env.npm_execpath;
+
+if (!npmCli) throw new Error('Run this deployment through npm so the npm executable can be located.');
+
+execFileSync(process.execPath, [npmCli, 'run', 'build'], { stdio: 'inherit' });
 
 const args = production
   ? ['wrangler', 'deploy']
@@ -28,4 +32,4 @@ const args = production
       branch.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-|-$/g, '').slice(0, 63),
     ];
 
-execFileSync('npx', args, { stdio: 'inherit', shell: process.platform === 'win32' });
+execFileSync(process.execPath, [npmCli, 'exec', '--', ...args], { stdio: 'inherit' });
