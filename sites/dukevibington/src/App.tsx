@@ -9,6 +9,8 @@ import { JurisdictionLevelBar } from './components/JurisdictionLevelBar';
 import { CivicMapContainer } from './components/CivicMapContainer';
 import { IntelligenceFeed } from './components/IntelligenceFeed';
 import { LocationConsentModal } from './components/modals/LocationConsentModal';
+import { NetworkActivityHUD } from './components/NetworkActivityHUD';
+import { networkLogger } from './services/networkLogger';
 import {
   PanelLeftClose,
   PanelLeftOpen,
@@ -240,7 +242,11 @@ export function App() {
         onSelectLocation={handleLocationChange}
         onClose={() => setShowLocationModal(false)}
       />
+
+      {/* 5. Real-time Network Activity Inspector HUD */}
+      <NetworkActivityHUD />
     </div>
   );
 }
 export default App;
+
