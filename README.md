@@ -46,14 +46,15 @@ npm run deploy
 
 The deployment script builds the site first and uploads only `dist/`.
 
-## Cloudflare Pages setup
+## Cloudflare Workers setup
 
-- Project: `louder-than-words`
+- Project: `louderthanwords`
 - Production branch: `main`
 - Build command: `npm run build`
-- Build output directory: `dist`
-- Root directory: `/`
+- Deploy command: `npx wrangler deploy`
+- Non-production branch deploy command: `npx wrangler versions upload`
+- Path: `/`
 
-Connect this GitHub repository from **Cloudflare → Workers & Pages → Create → Pages → Connect to Git**. Enable all non-production branches for previews. After checking the Pages preview, add `louderthanwords.fyi` under the project's **Custom domains** tab.
+Connect this GitHub repository from **Cloudflare → Workers & Pages → Create application → Import a repository**. Keep **Builds for non-production branches** enabled. Cloudflare creates a preview version and comments with its URL on pull requests. After checking the preview, add `louderthanwords.fyi` under the Worker's **Domains & Routes** settings.
 
-The existing domain should not be moved until the Pages preview has been verified.
+The existing domain should not be moved until the Worker preview has been verified.

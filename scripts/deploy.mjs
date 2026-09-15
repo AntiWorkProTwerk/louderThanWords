@@ -18,15 +18,8 @@ if (!production) {
 
 execFileSync('npm', ['run', 'build'], { stdio: 'inherit', shell: process.platform === 'win32' });
 
-const args = [
-  'wrangler',
-  'pages',
-  'deploy',
-  'dist',
-  '--project-name',
-  'louder-than-words',
-  '--branch',
-  branch,
-];
+const args = production
+  ? ['wrangler', 'deploy']
+  : ['wrangler', 'versions', 'upload', '--preview-alias', branch];
 
 execFileSync('npx', args, { stdio: 'inherit', shell: process.platform === 'win32' });
