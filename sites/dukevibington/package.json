@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build --base=/dukevibington/ --outDir=../../dist/dukevibington --emptyOutDir=false"
+    "build": "vite build --base=/dukevibington/ --outDir=../../dist/dukevibington --emptyOutDir=false",
+    "validate": "npx tsx scripts/validate_all_data.mjs && node scripts/validate_contract_creep.mjs",
+    "validate:data": "npx tsx scripts/validate_all_data.mjs"
   }
 }

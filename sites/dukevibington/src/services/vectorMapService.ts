@@ -1,4 +1,5 @@
 import * as topojson from 'topojson-client';
+import { civicCache, CACHE_TTL } from './civicCacheService';
 
 export interface StateMetadata {
   fips: string;
@@ -86,8 +87,14 @@ let cachedCountiesTopo: any = null;
 
 export async function fetchStatesGeoJson(): Promise<GeoJSON.FeatureCollection> {
   if (!cachedStatesTopo) {
-    const res = await fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json');
-    cachedStatesTopo = await res.json();
+    cachedStatesTopo = await civicCache.fetchCached<any>(
+      'topojson:states_10m',
+      async () => {
+        const res = await fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json');
+        return res.json();
+      },
+      CACHE_TTL.GEO_BOUNDARIES
+    );
   }
   const geojson = topojson.feature(cachedStatesTopo, cachedStatesTopo.objects.states) as unknown as GeoJSON.FeatureCollection;
   
@@ -109,8 +116,14 @@ export async function fetchStatesGeoJson(): Promise<GeoJSON.FeatureCollection> {
 
 export async function fetchCountiesGeoJson(stateFips?: string): Promise<GeoJSON.FeatureCollection> {
   if (!cachedCountiesTopo) {
-    const res = await fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json');
-    cachedCountiesTopo = await res.json();
+    cachedCountiesTopo = await civicCache.fetchCached<any>(
+      'topojson:counties_10m',
+      async () => {
+        const res = await fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json');
+        return res.json();
+      },
+      CACHE_TTL.GEO_BOUNDARIES
+    );
   }
   const geojson = topojson.feature(cachedCountiesTopo, cachedCountiesTopo.objects.counties) as unknown as GeoJSON.FeatureCollection;
 

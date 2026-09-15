@@ -9,6 +9,7 @@ import {
   Layers,
   Sparkles,
   BookOpen,
+  Loader2,
 } from 'lucide-react';
 import { JurisdictionGeoProps } from './ContractCreepPanel';
 import {
@@ -54,6 +55,8 @@ export const BillDiffPanel: React.FC<JurisdictionGeoProps> = ({
   // Dev / Test Search
   const [searchInput, setSearchInput] = useState<string>('');
   const [searchFeedback, setSearchFeedback] = useState<string | null>(null);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [isDiffComputing, setIsDiffComputing] = useState<boolean>(false);
 
   // Delegation Bills for the active jurisdiction (State, County, or Local)
   const bills = useMemo(() => {
@@ -97,9 +100,18 @@ export const BillDiffPanel: React.FC<JurisdictionGeoProps> = ({
 
   // Handle Selecting a Bill
   const handleSelectBill = (bill: BillMetadataItem) => {
+    setIsDiffComputing(true);
     setSelectedBill(bill);
     setBaseStageIndex(0);
     setCompareStageIndex(Math.max(1, bill.versions.length - 1));
+    setTimeout(() => setIsDiffComputing(false), 120);
+  };
+
+  const handleStageChange = (type: 'base' | 'compare', val: number) => {
+    setIsDiffComputing(true);
+    if (type === 'base') setBaseStageIndex(val);
+    else setCompareStageIndex(val);
+    setTimeout(() => setIsDiffComputing(false), 100);
   };
 
   // Compute Active Diff Chunks
@@ -118,34 +130,39 @@ export const BillDiffPanel: React.FC<JurisdictionGeoProps> = ({
     const q = (customQuery || searchInput).trim().toLowerCase();
     if (!q) return;
 
+    setIsSearching(true);
     setSearchFeedback(null);
 
-    // Check presets first
-    const preset = Object.values(PRESET_TEST_BILLS).find(
-      (p) =>
-        p.displayNumber.toLowerCase().includes(q) ||
-        p.id.toLowerCase().includes(q) ||
-        p.shortTitle.toLowerCase().includes(q)
-    );
+    setTimeout(() => {
+      // Check presets first
+      const preset = Object.values(PRESET_TEST_BILLS).find(
+        (p) =>
+          p.displayNumber.toLowerCase().includes(q) ||
+          p.id.toLowerCase().includes(q) ||
+          p.shortTitle.toLowerCase().includes(q)
+      );
 
-    if (preset) {
-      handleSelectBill(preset);
-      return;
-    }
+      if (preset) {
+        handleSelectBill(preset);
+        setIsSearching(false);
+        return;
+      }
 
-    const match = bills.find(
-      (b) =>
-        b.displayNumber.toLowerCase().includes(q) ||
-        b.id.toLowerCase().includes(q) ||
-        b.shortTitle.toLowerCase().includes(q) ||
-        b.sponsorName.toLowerCase().includes(q)
-    );
+      const match = bills.find(
+        (b) =>
+          b.displayNumber.toLowerCase().includes(q) ||
+          b.id.toLowerCase().includes(q) ||
+          b.shortTitle.toLowerCase().includes(q) ||
+          b.sponsorName.toLowerCase().includes(q)
+      );
 
-    if (match) {
-      handleSelectBill(match);
-    } else {
-      setSearchFeedback(`No sponsored bill record found matching "${q}".`);
-    }
+      if (match) {
+        handleSelectBill(match);
+      } else {
+        setSearchFeedback(`No sponsored bill record found matching "${q}".`);
+      }
+      setIsSearching(false);
+    }, 150);
   };
 
   return (
@@ -217,10 +234,17 @@ export const BillDiffPanel: React.FC<JurisdictionGeoProps> = ({
                 />
                 <button
                   onClick={() => handleSearch()}
-                  disabled={!searchInput.trim()}
-                  className="px-3 py-1 bg-stone-900 hover:bg-stone-800 disabled:bg-stone-300 text-white font-medium text-xs rounded-xs transition-colors cursor-pointer flex items-center gap-1"
+                  disabled={isSearching || !searchInput.trim()}
+                  className="px-3 py-1 bg-stone-900 hover:bg-stone-800 disabled:bg-stone-300 text-white font-medium text-xs rounded-xs transition-colors cursor-pointer flex items-center gap-1.5"
                 >
-                  Inspect
+                  {isSearching ? (
+                    <>
+                      <Loader2 className="w-3 h-3 animate-spin text-white" />
+                      <span>Inspecting</span>
+                    </>
+                  ) : (
+                    'Inspect'
+                  )}
                 </button>
               </div>
               <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-stone-500">
@@ -407,9 +431,9 @@ export const BillDiffPanel: React.FC<JurisdictionGeoProps> = ({
                   </label>
                   <select
                     value={baseStageIndex}
-                    onChange={(e) => setBaseStageIndex(Number(e.target.value))}
+                    onChange={(e) => handleStageChange('base', Number(e.target.value))}
                     aria-label="Select base version"
-                    className="w-full text-xs bg-white border border-stone-300 rounded px-2 py-1 font-medium text-stone-800 focus:outline-none focus:ring-1 focus:ring-emerald-800"
+                    className="w-full text-xs bg-white border border-stone-300 rounded px-2 py-1 font-medium text-stone-800 focus:outline-none focus:ring-1 focus:ring-emerald-800 cursor-pointer"
                   >
                     {selectedBill.versions.map((ver, idx) => (
                       <option key={`base-${idx}`} value={idx}>
@@ -425,9 +449,9 @@ export const BillDiffPanel: React.FC<JurisdictionGeoProps> = ({
                   </label>
                   <select
                     value={compareStageIndex}
-                    onChange={(e) => setCompareStageIndex(Number(e.target.value))}
+                    onChange={(e) => handleStageChange('compare', Number(e.target.value))}
                     aria-label="Select target comparison version"
-                    className="w-full text-xs bg-white border border-stone-300 rounded px-2 py-1 font-medium text-stone-800 focus:outline-none focus:ring-1 focus:ring-emerald-800"
+                    className="w-full text-xs bg-white border border-stone-300 rounded px-2 py-1 font-medium text-stone-800 focus:outline-none focus:ring-1 focus:ring-emerald-800 cursor-pointer"
                   >
                     {selectedBill.versions.map((ver, idx) => (
                       <option key={`comp-${idx}`} value={idx}>
@@ -458,8 +482,16 @@ export const BillDiffPanel: React.FC<JurisdictionGeoProps> = ({
                 </div>
               </div>
 
-              <div className="bg-white border border-stone-200 rounded-sm p-4 font-serif text-sm leading-relaxed text-stone-800 space-y-3 max-h-[420px] overflow-y-auto">
-                {diffChunks.map((chunk, idx) => {
+              {isDiffComputing ? (
+                <div className="py-16 text-center space-y-2 bg-stone-50 border border-stone-200 rounded-sm">
+                  <Loader2 className="w-6 h-6 mx-auto animate-spin text-emerald-800" />
+                  <div className="text-xs font-serif italic text-stone-600">
+                    Computing statutory Myers token diff...
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-white border border-stone-200 rounded-sm p-4 font-serif text-sm leading-relaxed text-stone-800 space-y-3 max-h-[420px] overflow-y-auto">
+                  {diffChunks.map((chunk, idx) => {
                   if (chunk.type === 'added') {
                     return (
                       <div
@@ -492,7 +524,8 @@ export const BillDiffPanel: React.FC<JurisdictionGeoProps> = ({
                     </p>
                   );
                 })}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         )}

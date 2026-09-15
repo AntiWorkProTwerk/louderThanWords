@@ -3,6 +3,7 @@
 // Provides official Bioguide headshot integration from theunitedstates.io
 import { STATE_CREEP_DATA } from './stateCreepData';
 import { getStateFipsFromCode, US_STATES_FIPS } from './vectorMapService';
+import { civicCache, CACHE_TTL } from './civicCacheService';
 
 export type JurisdictionLevel = 'federal' | 'state' | 'county' | 'local';
 export type PoliticalParty = 'Democrat' | 'Republican' | 'Independent' | 'Nonpartisan';
@@ -809,32 +810,38 @@ export const UNIFIED_POLITICIANS_DIRECTORY: PoliticianProfile[] = [
   },
 ];
 
-// Live In-Memory Cache of all 539 Sitting Members of Congress from @unitedstates/congress-legislators
+// Live In-Memory & Session Caching of all 539 Sitting Members of Congress from @unitedstates/congress-legislators
 let cachedCongressLegislators: any[] | null = null;
-let congressFetchPromise: Promise<any[]> | null = null;
 
 export async function fetchLiveCongressLegislators(): Promise<any[]> {
   if (cachedCongressLegislators && cachedCongressLegislators.length > 0) {
     return cachedCongressLegislators;
   }
-  if (congressFetchPromise) {
-    return congressFetchPromise;
-  }
 
-  congressFetchPromise = fetch(
-    'https://raw.githubusercontent.com/unitedstates/congress-legislators/gh-pages/legislators-current.json'
-  )
-    .then((r) => (r.ok ? r.json() : []))
-    .then((data: any[]) => {
-      cachedCongressLegislators = data;
+  return civicCache
+    .fetchCached<any[]>(
+      'bioguide:congress_legislators_current',
+      async () => {
+        const r = await fetch(
+          'https://raw.githubusercontent.com/unitedstates/congress-legislators/gh-pages/legislators-current.json'
+        );
+        if (!r.ok) return [];
+        const data = await r.json();
+        cachedCongressLegislators = data;
+        return data;
+      },
+      CACHE_TTL.CONGRESS_MEMBERS
+    )
+    .then((data) => {
+      if (data && data.length > 0) {
+        cachedCongressLegislators = data;
+      }
       return data;
     })
     .catch((err) => {
       console.warn('Failed to load live congress-legislators:', err);
       return [];
     });
-
-  return congressFetchPromise;
 }
 
 // Convert a live Congress.gov legislator record into a PoliticianProfile with real Bioguide data & linked contracts
@@ -856,8 +863,8 @@ export function mapLiveLegislatorToProfile(leg: any, stateName: string, stateCre
     : `Representative for ${stateName}`;
 
   const startYear = leg.terms && leg.terms.length > 0 ? leg.terms[0].start?.slice(0, 4) : '2021';
-  const initialBase = stateCreep.initialObligation || 3500000000;
-  const pctCreep = stateCreep.percentCreep || 38.0;
+  const initialBase = stateCreep.initialObligation ?? 3500000000;
+  const pctCreep = stateCreep.percentCreep ?? 38.0;
 
   // Realistic linked contract awards with authentic committee & district justifications
   const linkedContracts: PoliticianContractLink[] = [

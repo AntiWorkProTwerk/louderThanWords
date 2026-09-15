@@ -13,13 +13,15 @@ import {
   ChevronRight,
   Sparkles,
   Award,
+  User,
+  Loader2,
 } from 'lucide-react';
 import {
   computeContractAnalytics,
   IndustrySectorStats,
   FullJurisdictionAnalytics,
 } from '../services/contractAnalyticsService';
-import { JurisdictionGeoProps } from './ContractCreepPanel';
+import { JurisdictionGeoProps, USAspendingAwardItem } from './ContractCreepPanel';
 
 // Format compact large USD values
 function formatCurrency(amount: number, compact = true): string {
@@ -38,7 +40,37 @@ function formatCurrency(amount: number, compact = true): string {
   }).format(amount);
 }
 
-export function ContractAnalyticsPanel(geoProps: JurisdictionGeoProps) {
+// Party badge styling helper
+function getPartyBadge(party: string, stateCode: string, district?: string) {
+  const code = district ? `${party ? party[0] : 'I'}-${stateCode}-${district}` : `${party ? party[0] : 'I'}-${stateCode}`;
+  if (party === 'Democrat') {
+    return {
+      label: code,
+      badgeClass: 'bg-blue-50 text-blue-900 border-blue-200 font-semibold',
+      pillClass: 'bg-blue-600',
+    };
+  }
+  if (party === 'Republican') {
+    return {
+      label: code,
+      badgeClass: 'bg-red-50 text-red-900 border-red-200 font-semibold',
+      pillClass: 'bg-red-600',
+    };
+  }
+  return {
+    label: code,
+    badgeClass: 'bg-stone-100 text-stone-800 border-stone-300 font-semibold',
+    pillClass: 'bg-stone-500',
+  };
+}
+
+export interface ContractAnalyticsPanelProps extends JurisdictionGeoProps {
+  contracts?: USAspendingAwardItem[];
+  isLoading?: boolean;
+}
+
+export function ContractAnalyticsPanel(props: ContractAnalyticsPanelProps) {
+  const { contracts, isLoading, ...geoProps } = props;
   const [selectedIndustryId, setSelectedIndustryId] = useState<string | null>(null);
   const [activeGraphTab, setActiveGraphTab] = useState<'all' | 'industries' | 'politicians' | 'contractors'>('all');
 
@@ -51,10 +83,10 @@ export function ContractAnalyticsPanel(geoProps: JurisdictionGeoProps) {
       geoProps.level === 'local'
   );
 
-  // Compute analytics dynamically based on active geographic jurisdiction
+  // Compute analytics dynamically based on active geographic jurisdiction and live contracts
   const analytics: FullJurisdictionAnalytics = useMemo(() => {
-    return computeContractAnalytics(geoProps);
-  }, [geoProps]);
+    return computeContractAnalytics(geoProps, contracts);
+  }, [geoProps, contracts]);
 
   // Highlighted industry (if clicked)
   const activeIndustry = useMemo(() => {
@@ -76,7 +108,7 @@ export function ContractAnalyticsPanel(geoProps: JurisdictionGeoProps) {
             </span>
           </div>
           <span className="text-xs font-mono font-bold bg-blue-50 text-blue-950 px-2 py-0.5 rounded border border-blue-200">
-            {analytics.activeContractsCount.toLocaleString()} Active Awards
+            {isLoading ? 'Querying...' : `${analytics.activeContractsCount.toLocaleString()} Active Awards`}
           </span>
         </div>
 
@@ -96,7 +128,11 @@ export function ContractAnalyticsPanel(geoProps: JurisdictionGeoProps) {
               Initial Baseline
             </div>
             <div className="text-sm font-semibold text-stone-800">
-              {formatCurrency(analytics.totalInitial, true)}
+              {isLoading ? (
+                <span className="text-stone-400 font-sans text-xs italic">Loading...</span>
+              ) : (
+                formatCurrency(analytics.totalInitial, true)
+              )}
             </div>
           </div>
           <div className="border-x border-stone-200">
@@ -104,7 +140,11 @@ export function ContractAnalyticsPanel(geoProps: JurisdictionGeoProps) {
               Dollar Creep Overrun
             </div>
             <div className="text-sm font-bold text-red-700">
-              +{formatCurrency(analytics.totalDollarCreep, true)}
+              {isLoading ? (
+                <span className="text-stone-400 font-sans text-xs italic">Loading...</span>
+              ) : (
+                `+${formatCurrency(analytics.totalDollarCreep, true)}`
+              )}
             </div>
           </div>
           <div>
@@ -112,7 +152,11 @@ export function ContractAnalyticsPanel(geoProps: JurisdictionGeoProps) {
               Avg Cost Escalation
             </div>
             <div className="text-sm font-bold text-red-800">
-              +{analytics.aggregatePercentCreep.toFixed(1)}%
+              {isLoading ? (
+                <span className="text-stone-400 font-sans text-xs italic">Loading...</span>
+              ) : (
+                `+${analytics.aggregatePercentCreep.toFixed(1)}%`
+              )}
             </div>
           </div>
         </div>
@@ -162,8 +206,21 @@ export function ContractAnalyticsPanel(geoProps: JurisdictionGeoProps) {
         </div>
       </div>
 
-      {/* 2. Main Scrollable Visual Charts Body */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* 2. Main Visual Charts Body */}
+      {isLoading ? (
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-3 bg-stone-50">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-900 mx-auto" />
+          <div className="space-y-1">
+            <div className="text-sm font-serif font-bold text-stone-900">
+              Aggregating live federal procurement ledgers...
+            </div>
+            <div className="text-xs text-stone-500 font-sans">
+              Synthesizing sector distributions, contractor concentration & oversight metrics for {analytics.jurisdictionTitle}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* ========================================================================= */}
         {/* GRAPH 1: INDUSTRY SECTOR BREAKDOWN (DUAL BARS: BASELINE VS OVERRUN)     */}
         {/* ========================================================================= */}
@@ -279,98 +336,130 @@ export function ContractAnalyticsPanel(geoProps: JurisdictionGeoProps) {
                   2. Politician ↔ Industry Creep Distribution
                 </h3>
               </div>
-              <span className="text-[10px] text-stone-600 font-mono bg-stone-100 border border-stone-200 px-1.5 py-0.5 rounded">
+              <span className="text-[10px] text-stone-600 bg-stone-100 border border-stone-200 px-1.5 py-0.5 rounded font-medium">
                 🏛️ Legislative & Executive Sponsoring
               </span>
             </div>
 
             <p className="text-xs text-stone-600 leading-relaxed">
-              Distribution of cost overruns linked to each sitting official, categorized by committee authorization and executive department jurisdiction.
+              Cost overrun magnitude attributed to each sitting official, categorized across key commercial sectors under their committee oversight.
             </p>
 
             <div className="space-y-3 pt-1">
-              {(analytics.politicians || []).slice(0, 6).map((p) => {
-                const industries = p.industries || [];
-                return (
-                  <div
-                    key={p.politicianId}
-                    className="p-3 bg-stone-50 hover:bg-white border border-stone-200 rounded transition-all space-y-2"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-7 h-9 bg-stone-200 rounded-xs overflow-hidden border border-stone-300 shrink-0">
-                          <img
-                            src={p.photoUrl}
-                            alt={p.name}
-                            referrerPolicy="no-referrer"
-                            crossOrigin="anonymous"
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLElement).style.display = 'none';
-                            }}
-                          />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-serif font-bold text-stone-900 text-xs truncate">
-                              {p.name}
-                            </span>
-                            <span className="text-[9px] font-mono px-1 py-0.2 bg-stone-100 text-stone-700 rounded border border-stone-300">
-                              {p.party ? p.party[0] : 'I'}-{p.stateCode}
-                            </span>
-                          </div>
-                          <div className="text-[10px] text-stone-500 font-mono truncate">
-                            {p.title} · {industries.length} Key Sectors
-                          </div>
-                        </div>
-                      </div>
+              {(() => {
+                const pols = (analytics.politicians || []).slice(0, 6);
+                const totalGroupCreep = pols.reduce((sum, p) => sum + p.totalDollarCreep, 0) || 1;
 
-                      <div className="text-right shrink-0">
-                        <div className="font-bold text-red-700 text-xs font-mono">
-                          +{formatCurrency(p.totalDollarCreep, true)}
-                        </div>
-                        <div className="text-[10px] text-stone-500 font-mono">
-                          +{p.aggregatePercentCreep.toFixed(1)}% Creep
-                        </div>
-                      </div>
-                    </div>
+                return pols.map((p) => {
+                  const industries = p.industries || [];
+                  const party = getPartyBadge(p.party, p.stateCode, p.district);
+                  const shareOfGroup = ((p.totalDollarCreep / totalGroupCreep) * 100).toFixed(0);
 
-                    {/* Proportional Stacked Multi-Bar */}
-                    <div className="space-y-1">
-                      <div className="w-full bg-stone-200 rounded-xs h-3 overflow-hidden flex shadow-2xs">
-                        {industries.map((sec, sIdx) => {
-                          return (
-                            <div
-                              key={sIdx}
-                              style={{
-                                width: `${sec.percentShare}%`,
-                                backgroundColor: sec.color,
+                  return (
+                    <div
+                      key={p.politicianId}
+                      className="p-3 bg-stone-50 hover:bg-white border border-stone-200 rounded transition-all space-y-2.5 group"
+                    >
+                      {/* Politician Profile Header - THE WHO */}
+                      <div className="flex items-center justify-between gap-2.5">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="relative shrink-0 w-10 h-12 bg-stone-100 border border-stone-300 rounded overflow-hidden shadow-2xs">
+                            <img
+                              src={p.photoUrl}
+                              alt={p.name}
+                              referrerPolicy="no-referrer"
+                              crossOrigin="anonymous"
+                              loading="lazy"
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLElement).style.display = 'none';
                               }}
-                              className="h-full transition-all duration-300 hover:opacity-80"
-                              title={`${sec.industryName}: ${sec.percentShare}% (${formatCurrency(sec.amount, true)})`}
                             />
-                          );
-                        })}
+                            <div className={`absolute bottom-0 inset-x-0 h-0.5 ${party.pillClass}`} />
+                          </div>
+
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <h4 className="font-serif font-bold text-stone-900 text-sm tracking-tight truncate">
+                                {p.name}
+                              </h4>
+                              <span
+                                className={`text-[9px] px-1.5 py-0.2 rounded border shrink-0 ${party.badgeClass}`}
+                              >
+                                {party.label}
+                              </span>
+                            </div>
+
+                            <div className="text-[11px] text-stone-600 truncate mt-0.5 flex items-center gap-1.5">
+                              <span className="font-medium text-stone-700">{p.title}</span>
+                              <span className="text-stone-300">·</span>
+                              <span className="text-stone-500 tabular-nums">{shareOfGroup}% of Delegation Overrun</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Top Right Bloat Figure */}
+                        <div className="text-right shrink-0">
+                          <div className="font-bold text-red-700 text-sm tabular-nums">
+                            +{formatCurrency(p.totalDollarCreep, true)}
+                          </div>
+                          <div className="text-[10px] text-red-800 bg-red-50 border border-red-200 px-1.5 py-0.2 rounded font-semibold inline-block tabular-nums mt-0.5">
+                            +{p.aggregatePercentCreep.toFixed(1)}% Creep
+                          </div>
+                        </div>
                       </div>
 
-                      {/* Mini Legend of Top 3 Sectors */}
-                      <div className="flex flex-wrap items-center gap-2 pt-0.5 text-[10px] text-stone-600 font-mono">
-                        {industries.slice(0, 3).map((sec, sIdx) => (
-                          <div key={sIdx} className="flex items-center gap-1">
-                            <div
-                              className="w-1.5 h-1.5 rounded-full"
-                              style={{ backgroundColor: sec.color }}
-                            />
-                            <span>
-                              {sec.shortName || sec.industryName} ({sec.percentShare}%)
-                            </span>
-                          </div>
-                        ))}
+                      {/* Visual Industry Breakdown Track */}
+                      <div className="space-y-1.5">
+                        {/* Segmented Bar */}
+                        <div className="w-full bg-stone-200 rounded-xs h-3 overflow-hidden flex shadow-2xs">
+                          {industries.map((sec, sIdx) => {
+                            if (sec.percentShare <= 0) return null;
+                            return (
+                              <div
+                                key={sIdx}
+                                style={{
+                                  width: `${sec.percentShare}%`,
+                                  backgroundColor: sec.color,
+                                }}
+                                className="h-full transition-all duration-300 hover:opacity-85 border-r border-white/20 last:border-0"
+                                title={`${sec.industryName}: ${sec.percentShare}% (${formatCurrency(sec.amount, true)})`}
+                              />
+                            );
+                          })}
+                        </div>
+
+                        {/* Detailed Sector Pills Grid */}
+                        <div className="flex flex-wrap gap-1.5 pt-0.5">
+                          {industries.map((sec, sIdx) => {
+                            if (sec.percentShare <= 0) return null;
+                            return (
+                              <div
+                                key={sIdx}
+                                className="flex items-center gap-1.5 bg-white border border-stone-200 rounded px-2 py-0.5 text-[10px] text-stone-700 shadow-2xs"
+                              >
+                                <div
+                                  className="w-2 h-2 rounded-full shrink-0"
+                                  style={{ backgroundColor: sec.color }}
+                                />
+                                <span className="font-medium text-stone-800">
+                                  {sec.shortName || sec.industryName}:
+                                </span>
+                                <span className="tabular-nums font-semibold text-stone-900">
+                                  {formatCurrency(sec.amount, true)}
+                                </span>
+                                <span className="text-stone-400 tabular-nums">
+                                  ({sec.percentShare}%)
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                });
+              })()}
             </div>
           </div>
         )}
@@ -533,7 +622,8 @@ export function ContractAnalyticsPanel(geoProps: JurisdictionGeoProps) {
             </div>
           </div>
         )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

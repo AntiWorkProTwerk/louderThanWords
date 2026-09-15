@@ -221,147 +221,74 @@ export function PoliticianCreepPanel({
 
   return (
     <div className="flex flex-col h-full bg-stone-50 font-sans text-stone-900 overflow-hidden">
-      {/* 1. Header & Context */}
-      <div className="bg-white border-b border-stone-200 p-4 shrink-0 shadow-2xs">
-        <div className="flex items-center justify-between gap-2 mb-1.5">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center justify-center p-1 bg-stone-100 rounded text-stone-700">
-              <Landmark className="w-4 h-4 text-stone-800" />
-            </span>
-            <span className="text-[11px] uppercase tracking-wider font-bold text-stone-500 font-mono">
-              Accountability Index · Elected Officials
-            </span>
-          </div>
-          <span className="text-xs font-mono font-bold bg-stone-100 px-2 py-0.5 rounded text-stone-700 border border-stone-200 flex items-center gap-1.5">
-            {isLoading ? (
-              <>
-                <Loader2 className="w-3 h-3 animate-spin text-blue-900" />
-                <span>Syncing Congress...</span>
-              </>
-            ) : (
-              <span>{politicians.length} Officials Linked</span>
-            )}
-          </span>
+      {/* 1. Slim Aggregate Rollup Ticker */}
+      <div className="bg-stone-100/80 border-b border-stone-200 px-3.5 py-1.5 flex items-center justify-between text-[11px] text-stone-600 shrink-0">
+        <div className="flex items-center gap-1.5">
+          <span>Total Taxpayer Bloat:</span>
+          <strong className="text-red-700 font-bold tabular-nums">
+            +{formatCurrency(delegationTotals.dollarCreep, true)} (+{delegationTotals.percentCreep.toFixed(1)}%)
+          </strong>
         </div>
-
-        <h2 className="text-xl font-serif font-bold text-stone-900 tracking-tight leading-snug">
-          {level === 'federal' || stateCode === 'US' || !stateCode
-            ? 'United States Congressional Leadership'
-            : city
-            ? `${city} & ${stateName || stateCode}`
-            : countyName
-            ? `${countyName} Delegation`
-            : `${stateName || stateCode} Delegation`}
-        </h2>
-        <p className="text-xs text-stone-600 mt-0.5">
-          Contract creep and Community Project Funding (CPF) earmark cost growth associated with sitting representatives.
-        </p>
-
-        {/* Aggregate Rollup Strip */}
-        <div className="mt-3.5 grid grid-cols-3 gap-2 bg-stone-50 border border-stone-200 rounded p-2.5 text-center font-mono">
-          <div>
-            <div className="text-[9px] uppercase tracking-wider text-stone-500 font-sans">
-              Total Creep Growth
-            </div>
-            <div className="text-sm font-bold text-red-700">
-              +{formatCurrency(delegationTotals.dollarCreep, true)}
-            </div>
-          </div>
-          <div className="border-x border-stone-200">
-            <div className="text-[9px] uppercase tracking-wider text-stone-500 font-sans">
-              Delegation Creep %
-            </div>
-            <div className="text-sm font-bold text-stone-900">
-              +{delegationTotals.percentCreep.toFixed(1)}%
-            </div>
-          </div>
-          <div>
-            <div className="text-[9px] uppercase tracking-wider text-stone-500 font-sans">
-              PAC Donor Overlap
-            </div>
-            <div className="text-sm font-bold text-blue-900">
-              {formatCurrency(delegationTotals.pacTotal, true)}
-            </div>
-          </div>
+        <div className="flex items-center gap-1.5">
+          <span>Corporate PACs:</span>
+          <strong className="text-blue-900 font-bold tabular-nums">
+            {formatCurrency(delegationTotals.pacTotal, true)}
+          </strong>
         </div>
       </div>
 
-      {/* 2. Controls Bar: Search & Multi-Metric Sorting */}
-      <div className="bg-white border-b border-stone-200 px-4 py-2.5 shrink-0 space-y-2">
-        {/* Search */}
-        <div className="relative">
+      {/* 2. Compact Search & Filter Row */}
+      <div className="bg-white border-b border-stone-200 px-3 py-1.5 shrink-0 flex items-center gap-2">
+        <div className="relative flex-1">
           <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400" />
           <input
             type="text"
-            placeholder="Search elected official, contractor, or title..."
+            placeholder="Filter representatives or contractors..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 text-xs bg-stone-50 border border-stone-200 rounded focus:bg-white focus:border-stone-400 focus:outline-none placeholder-stone-400"
+            className="w-full pl-7 pr-2 py-1 text-xs bg-stone-50 border border-stone-200 rounded focus:bg-white focus:border-stone-400 focus:outline-none placeholder-stone-400"
           />
         </div>
-
-        {/* Industry Standard 3-Metric Sorting Button Strip */}
-        <div className="flex items-center justify-between gap-1 overflow-x-auto text-[11px] pt-0.5">
-          <span className="text-[10px] uppercase font-semibold text-stone-500 shrink-0 mr-1 flex items-center gap-1">
-            <ArrowUpDown className="w-3 h-3" /> Sort:
-          </span>
-
-          <button
-            onClick={() => handleSortToggle('dollarCreep')}
-            className={`px-2 py-1 rounded border text-xs font-mono transition-colors shrink-0 ${
-              sortBy === 'dollarCreep'
-                ? 'bg-stone-900 text-white border-stone-900 font-bold'
-                : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
-            }`}
+        <div className="flex items-center gap-1 shrink-0">
+          <select
+            value={sortBy}
+            onChange={(e) => {
+              setSortBy(e.target.value as PoliticianSortMetric);
+              setSortDirection('desc');
+            }}
+            aria-label="Sort elected officials by"
+            className="text-xs bg-stone-50 border border-stone-200 rounded px-2 py-1 font-medium text-stone-800 focus:outline-none cursor-pointer"
           >
-            Dollar Creep {sortBy === 'dollarCreep' && (sortDirection === 'desc' ? '↓' : '↑')}
-          </button>
-
-          <button
-            onClick={() => handleSortToggle('percentCreep')}
-            className={`px-2 py-1 rounded border text-xs font-mono transition-colors shrink-0 ${
-              sortBy === 'percentCreep'
-                ? 'bg-stone-900 text-white border-stone-900 font-bold'
-                : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
-            }`}
-          >
-            Creep % {sortBy === 'percentCreep' && (sortDirection === 'desc' ? '↓' : '↑')}
-          </button>
-
-          <button
-            onClick={() => handleSortToggle('initialValue')}
-            className={`px-2 py-1 rounded border text-xs font-mono transition-colors shrink-0 ${
-              sortBy === 'initialValue'
-                ? 'bg-stone-900 text-white border-stone-900 font-bold'
-                : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
-            }`}
-          >
-            Total Award {sortBy === 'initialValue' && (sortDirection === 'desc' ? '↓' : '↑')}
-          </button>
-
-          <button
-            onClick={() => handleSortToggle('pacDonor')}
-            className={`px-2 py-1 rounded border text-xs font-mono transition-colors shrink-0 ${
-              sortBy === 'pacDonor'
-                ? 'bg-stone-900 text-white border-stone-900 font-bold'
-                : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
-            }`}
-          >
-            PAC Donors {sortBy === 'pacDonor' && (sortDirection === 'desc' ? '↓' : '↑')}
-          </button>
+            <option value="dollarCreep">Bloat ($) ↓</option>
+            <option value="percentCreep">Creep (%) ↓</option>
+            <option value="initialValue">Budget ($) ↓</option>
+            <option value="pacDonor">PAC ($) ↓</option>
+          </select>
         </div>
       </div>
 
       {/* 3. Main Politician Card Feed / Detail Drawer */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {selectedPoliticianId && activePolitician ? (
+      <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+        {isLoading ? (
+          <div className="py-24 text-center space-y-3">
+            <Loader2 className="w-8 h-8 mx-auto animate-spin text-blue-900" />
+            <div className="space-y-1">
+              <div className="text-xs font-serif font-bold text-stone-800">
+                Resolving 118th Congress official delegation roster...
+              </div>
+              <div className="text-[11px] text-stone-500 font-sans">
+                Connecting Bioguide identifiers, district representation & committee oversight
+              </div>
+            </div>
+          </div>
+        ) : selectedPoliticianId && activePolitician ? (
           /* Politician Detail Drawer View */
-          <div className="bg-white border border-stone-300 rounded shadow-sm p-4 space-y-4">
+          <div className="bg-white border border-stone-300 rounded-sm shadow-sm p-4 space-y-4">
             <button
               onClick={() => setSelectedPoliticianId(null)}
               className="flex items-center gap-1.5 text-xs text-blue-900 hover:underline font-semibold cursor-pointer mb-1"
             >
-              <ArrowLeft className="w-3.5 h-3.5" /> Back to Official Leaderboard
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to Representatives List
             </button>
 
             {/* Profile Header */}
@@ -397,7 +324,7 @@ export function PoliticianCreepPanel({
                     {activePolitician.name}
                   </h3>
                   <span
-                    className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
+                    className={`text-[10px] px-1.5 py-0.5 rounded border ${
                       getPartyBadge(
                         activePolitician.party,
                         activePolitician.stateCode,
@@ -415,15 +342,15 @@ export function PoliticianCreepPanel({
                 <div className="text-xs text-stone-600 font-medium mt-0.5">
                   {activePolitician.officialRole}
                 </div>
-                <div className="text-[11px] text-stone-500 font-mono mt-0.5">
-                  Terms: {activePolitician.termsInOffice}
+                <div className="text-[11px] text-stone-500 mt-0.5">
+                  In Office: {activePolitician.termsInOffice}
                 </div>
                 {activePolitician.committees && activePolitician.committees.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-1.5">
                     {activePolitician.committees.map((c, idx) => (
                       <span
                         key={idx}
-                        className="text-[9px] bg-stone-100 text-stone-700 px-1.5 py-0.5 rounded border border-stone-200"
+                        className="text-[10px] bg-stone-100 text-stone-700 px-1.5 py-0.5 rounded border border-stone-200"
                       >
                         {c}
                       </span>
@@ -433,29 +360,48 @@ export function PoliticianCreepPanel({
               </div>
             </div>
 
+            {/* Plain English Constituent Accountability Summary */}
+            <div className="bg-amber-50/60 border border-amber-200/80 rounded-sm p-3 text-xs text-stone-800 space-y-1">
+              <div className="font-bold text-stone-900 flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-amber-800" />
+                Constituent Accountability Check
+              </div>
+              <p className="text-[11px] text-stone-700 leading-relaxed">
+                During their tenure, contracts within {activePolitician.name}&apos;s oversight expanded by{' '}
+                <strong className="text-red-700 font-bold tabular-nums">
+                  +{formatCurrency(activePolitician.metrics.totalDollarCreep, true)} (+{activePolitician.metrics.aggregatePercentCreep.toFixed(1)}%)
+                </strong>
+                . Over this period, linked corporate contractors contributed{' '}
+                <strong className="text-blue-900 font-bold tabular-nums">
+                  {formatCurrency(activePolitician.metrics.pacDonorTotal, true)}
+                </strong>{' '}
+                in political PAC campaign funds.
+              </p>
+            </div>
+
             {/* Official Metrics Ledger Rollup */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-stone-50 border border-stone-200 rounded p-3 text-center font-mono">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-stone-50 border border-stone-200 rounded p-3 text-center">
               <div>
-                <div className="text-[9px] uppercase font-sans text-stone-500">Initial Obligation</div>
-                <div className="text-xs font-bold text-stone-800">
+                <div className="text-[9px] uppercase font-medium text-stone-500">Promised Budget</div>
+                <div className="text-xs font-bold text-stone-800 tabular-nums">
                   {formatCurrency(activePolitician.metrics.totalInitialObligation, true)}
                 </div>
               </div>
               <div>
-                <div className="text-[9px] uppercase font-sans text-stone-500">Current Total</div>
-                <div className="text-xs font-bold text-stone-900">
+                <div className="text-[9px] uppercase font-medium text-stone-500">Current Cost</div>
+                <div className="text-xs font-bold text-stone-900 tabular-nums">
                   {formatCurrency(activePolitician.metrics.totalCurrentObligation, true)}
                 </div>
               </div>
               <div>
-                <div className="text-[9px] uppercase font-sans text-stone-500">Total Dollar Creep</div>
-                <div className="text-xs font-bold text-red-700">
+                <div className="text-[9px] uppercase font-medium text-stone-500">Taxpayer Bloat</div>
+                <div className="text-xs font-bold text-red-700 tabular-nums">
                   +{formatCurrency(activePolitician.metrics.totalDollarCreep, true)}
                 </div>
               </div>
               <div>
-                <div className="text-[9px] uppercase font-sans text-stone-500">Creep Growth %</div>
-                <div className="text-xs font-bold text-red-800">
+                <div className="text-[9px] uppercase font-medium text-stone-500">Creep %</div>
+                <div className="text-xs font-bold text-red-800 tabular-nums">
                   +{activePolitician.metrics.aggregatePercentCreep.toFixed(1)}%
                 </div>
               </div>
@@ -464,10 +410,10 @@ export function PoliticianCreepPanel({
             {/* Linked Contract Receipts */}
             <div className="space-y-2.5">
               <div className="flex items-center justify-between border-b border-stone-200 pb-1">
-                <span className="text-xs uppercase tracking-wider font-bold text-stone-700 font-mono">
-                  Linked Contract Receipts ({activePolitician.linkedContracts.length})
+                <span className="text-xs uppercase tracking-wider font-bold text-stone-700 font-sans">
+                  Benefiting Contractors & Projects ({activePolitician.linkedContracts.length})
                 </span>
-                <span className="text-[10px] text-stone-500 font-mono">Verified Receipts</span>
+                <span className="text-[10px] text-stone-500 font-medium">Public Records</span>
               </div>
 
               {activePolitician.linkedContracts.map((link, idx) => {
@@ -482,7 +428,7 @@ export function PoliticianCreepPanel({
                         {link.recipientName}
                       </div>
                       <span
-                        className={`text-[10px] font-mono px-1.5 py-0.5 rounded border shrink-0 ${color.bg}`}
+                        className={`text-[10px] tabular-nums px-1.5 py-0.5 rounded border shrink-0 ${color.bg}`}
                       >
                         +{link.percentCreep.toFixed(1)}%
                       </span>
@@ -494,30 +440,30 @@ export function PoliticianCreepPanel({
 
                     {/* Link Reason / Accountability Tag */}
                     <div className="flex items-center gap-1.5 text-[10px] text-stone-700 bg-white border border-stone-200 px-2 py-1 rounded">
-                      <ShieldCheck className="w-3 h-3 text-emerald-700 shrink-0" />
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
                       <span className="font-semibold text-stone-900">
                         {link.linkType === 'EARMARK_SPONSOR'
-                          ? 'Direct Earmark Request'
+                          ? 'Direct Community Earmark'
                           : link.linkType === 'DISTRICT_REP'
-                          ? 'District Representation'
-                          : 'Appropriations Authorizer'}:
+                          ? 'District Mandate'
+                          : 'Committee Oversight'}:
                       </span>
                       <span className="truncate">{link.linkReason}</span>
                     </div>
 
                     {/* Financial Rollup */}
-                    <div className="grid grid-cols-3 gap-2 pt-1 border-t border-stone-200 text-center font-mono text-[11px]">
+                    <div className="grid grid-cols-3 gap-2 pt-1 border-t border-stone-200 text-center text-[11px]">
                       <div>
-                        <div className="text-[9px] font-sans text-stone-500">Initial</div>
-                        <div>{formatCurrency(link.initialObligation, true)}</div>
+                        <div className="text-[9px] text-stone-500 font-medium">Promised</div>
+                        <div className="tabular-nums font-medium">{formatCurrency(link.initialObligation, true)}</div>
                       </div>
                       <div>
-                        <div className="text-[9px] font-sans text-stone-500">Current</div>
-                        <div>{formatCurrency(link.currentObligation, true)}</div>
+                        <div className="text-[9px] text-stone-500 font-medium">Billed</div>
+                        <div className="tabular-nums font-medium">{formatCurrency(link.currentObligation, true)}</div>
                       </div>
                       <div>
-                        <div className="text-[9px] font-sans text-stone-500">Dollar Growth</div>
-                        <div className="font-bold text-red-700">
+                        <div className="text-[9px] text-stone-500 font-medium">Cost Bloat</div>
+                        <div className="font-bold text-red-700 tabular-nums">
                           +{formatCurrency(link.dollarCreep, true)}
                         </div>
                       </div>
@@ -540,11 +486,11 @@ export function PoliticianCreepPanel({
                 <div
                   key={p.id}
                   onClick={() => setSelectedPoliticianId(p.id)}
-                  className="bg-white border border-stone-200 hover:border-stone-400 rounded-sm p-3.5 shadow-2xs hover:shadow-sm transition-all cursor-pointer space-y-3"
+                  className="bg-white border border-stone-200 hover:border-blue-900/50 hover:shadow-xs rounded-sm p-3 transition-all cursor-pointer space-y-2 group"
                 >
                   {/* Header: Photo + Name + Party + Role */}
-                  <div className="flex items-start gap-3">
-                    <div className="relative shrink-0 w-12 h-14 bg-stone-100 border border-stone-300 rounded-xs overflow-hidden shadow-2xs">
+                  <div className="flex items-center gap-2.5">
+                    <div className="relative shrink-0 w-10 h-12 bg-stone-100 border border-stone-300 rounded overflow-hidden shadow-2xs">
                       {!imageErrorMap[p.id] ? (
                         <img
                           src={p.photoUrl}
@@ -557,99 +503,76 @@ export function PoliticianCreepPanel({
                         />
                       ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center text-stone-400 bg-stone-100">
-                          <User className="w-6 h-6" />
+                          <User className="w-5 h-5" />
                         </div>
                       )}
-                      <div className={`absolute bottom-0 inset-x-0 h-1 ${party.pillClass}`} />
+                      <div className={`absolute bottom-0 inset-x-0 h-0.5 ${party.pillClass}`} />
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-1">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <h4 className="font-serif font-bold text-stone-900 text-sm tracking-tight truncate">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <h4 className="font-serif font-bold text-stone-900 group-hover:text-blue-900 transition-colors text-sm tracking-tight truncate">
                             {p.name}
                           </h4>
                           <span
-                            className={`text-[9px] font-mono px-1 py-0.2 rounded border ${party.badgeClass}`}
+                            className={`text-[9px] px-1.5 py-0.2 rounded border shrink-0 ${party.badgeClass}`}
                           >
                             {party.label}
                           </span>
                           {isSubStateView && (
                             <span
-                              className={`text-[9px] font-mono px-1.5 py-0.2 rounded border ${
+                              className={`text-[9px] px-1.5 py-0.2 rounded border shrink-0 ${
                                 isStateWideScope
                                   ? 'bg-stone-100 text-stone-600 border-stone-200'
                                   : 'bg-blue-50 text-blue-900 border-blue-200 font-semibold'
                               }`}
                             >
-                              {isStateWideScope ? 'State-Wide Overlap' : 'Direct Mandate'}
+                              {isStateWideScope ? 'State' : 'District'}
                             </span>
                           )}
                         </div>
-                        <ChevronRight className="w-4 h-4 text-stone-400 shrink-0" />
+                        <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-blue-900 transition-colors shrink-0" />
                       </div>
 
-                      <div className="text-[11px] text-stone-600 font-medium truncate mt-0.5">
-                        {p.officialRole}
-                      </div>
-
-                      <div className="text-[10px] text-stone-500 font-mono mt-0.5">
-                        {p.metrics.linkedContractsCount} Linked Awards · {p.termsInOffice}
+                      <div className="text-[11px] text-stone-600 truncate mt-0.5 flex items-center gap-1.5">
+                        <span className="font-medium text-stone-700">{p.officialRole}</span>
+                        <span className="text-stone-300">·</span>
+                        <span className="text-stone-500 tabular-nums">{p.metrics.linkedContractsCount} Linked Awards</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* 4-Metric Data Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-stone-50 border border-stone-200 rounded-xs p-2 text-center font-mono">
-                    <div>
-                      <div className="text-[8px] uppercase tracking-wider text-stone-500 font-sans">
-                        Initial Obligation
-                      </div>
-                      <div className="text-xs font-semibold text-stone-800">
-                        {formatCurrency(p.metrics.totalInitialObligation, true)}
-                      </div>
+                  {/* Compact High-Density Financial Strip */}
+                  <div className="flex items-center justify-between bg-stone-50 border border-stone-200/80 rounded px-2.5 py-1.5 text-xs">
+                    <div className="flex items-center gap-1.5 text-stone-600 font-medium">
+                      <span className="text-[10px] text-stone-500">Budget:</span>
+                      <span className="tabular-nums text-stone-700">{formatCurrency(p.metrics.totalInitialObligation, true)}</span>
+                      <span className="text-stone-300">→</span>
+                      <span className="tabular-nums text-stone-900 font-semibold">{formatCurrency(p.metrics.totalCurrentObligation, true)}</span>
                     </div>
 
-                    <div>
-                      <div className="text-[8px] uppercase tracking-wider text-stone-500 font-sans">
-                        Current Total
-                      </div>
-                      <div className="text-xs font-semibold text-stone-900">
-                        {formatCurrency(p.metrics.totalCurrentObligation, true)}
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="text-[8px] uppercase tracking-wider text-stone-500 font-sans">
-                        Dollar Creep
-                      </div>
-                      <div className="text-xs font-bold text-red-700">
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-[10px] text-stone-500 font-medium">Bloat:</span>
+                      <span className="font-bold text-red-700 tabular-nums">
                         +{formatCurrency(p.metrics.totalDollarCreep, true)}
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="text-[8px] uppercase tracking-wider text-stone-500 font-sans">
-                        Creep %
-                      </div>
-                      <div>
-                        <span
-                          className={`text-[10px] font-mono px-1 py-0.2 rounded border inline-block ${color.bg}`}
-                        >
-                          +{p.metrics.aggregatePercentCreep.toFixed(1)}%
-                        </span>
-                      </div>
+                      </span>
+                      <span
+                        className={`text-[10px] tabular-nums px-1.5 py-0.2 rounded font-semibold border ${color.bg}`}
+                      >
+                        +{p.metrics.aggregatePercentCreep.toFixed(0)}%
+                      </span>
                     </div>
                   </div>
 
-                  {/* Bottom Receipt Highlight Strip */}
-                  <div className="flex items-center justify-between text-[10px] text-stone-500 pt-0.5 font-sans border-t border-stone-100">
+                  {/* Corporate Beneficiary vs PAC Money Strip */}
+                  <div className="flex items-center justify-between text-[11px] text-stone-600 pt-0.5">
                     <div className="truncate pr-2">
-                      <span className="font-semibold text-stone-700">Top Linked:</span>{' '}
-                      <span className="text-stone-600 font-medium">{p.metrics.topRecipient}</span>
+                      <span className="text-stone-500">Beneficiary:</span>{' '}
+                      <span className="font-medium text-stone-800">{p.metrics.topRecipient}</span>
                     </div>
                     {p.metrics.pacDonorTotal > 0 && (
-                      <span className="font-mono text-blue-900 font-semibold shrink-0 bg-blue-50 border border-blue-200 px-1 py-0.2 rounded">
+                      <span className="tabular-nums text-blue-900 font-semibold shrink-0 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded text-[10px]">
                         PAC: {formatCurrency(p.metrics.pacDonorTotal, true)}
                       </span>
                     )}
@@ -689,16 +612,16 @@ export function PoliticianCreepPanel({
                       <div className="flex items-center justify-between border-b border-stone-200 pb-1.5 pt-0.5">
                         <div className="flex items-center gap-1.5">
                           <MapPin className="w-3.5 h-3.5 text-blue-900" />
-                          <span className="text-[11px] uppercase tracking-wider font-bold text-stone-800 font-mono">
-                            Direct District & Local Governance
+                          <span className="text-[11px] uppercase tracking-wider font-bold text-stone-800 font-sans">
+                            Direct District & Local Representatives
                           </span>
                         </div>
-                        <span className="text-[10px] bg-blue-50 text-blue-900 border border-blue-200 px-1.5 py-0.5 rounded font-mono font-semibold">
+                        <span className="text-[10px] bg-blue-50 text-blue-900 border border-blue-200 px-1.5 py-0.5 rounded font-medium">
                           Direct Mandate ({directOfficials.length})
                         </span>
                       </div>
                       <p className="text-[11px] text-stone-500 leading-tight">
-                        Elected officials with direct representative boundaries over {city || countyName || districtNumber}.
+                        Elected officials with direct constituent representation over {city || countyName || districtNumber}.
                       </p>
                       <div className="space-y-3">
                         {directOfficials.map((p) => renderPoliticianCard(p, false))}
@@ -712,11 +635,11 @@ export function PoliticianCreepPanel({
                       <div className="flex items-center justify-between border-b border-stone-200 pb-1.5">
                         <div className="flex items-center gap-1.5">
                           <Landmark className="w-3.5 h-3.5 text-stone-600" />
-                          <span className="text-[11px] uppercase tracking-wider font-bold text-stone-700 font-mono">
-                            Overlapping State-Wide Delegation
+                          <span className="text-[11px] uppercase tracking-wider font-bold text-stone-700 font-sans">
+                            State-Wide Delegation & Senate Leadership
                           </span>
                         </div>
-                        <span className="text-[10px] bg-stone-100 text-stone-700 border border-stone-200 px-1.5 py-0.5 rounded font-mono font-semibold">
+                        <span className="text-[10px] bg-stone-100 text-stone-700 border border-stone-200 px-1.5 py-0.5 rounded font-medium">
                           Concurrent Oversight ({stateWideOfficials.length})
                         </span>
                       </div>

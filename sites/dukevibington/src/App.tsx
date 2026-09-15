@@ -72,7 +72,19 @@ export function App() {
     };
     updateSize();
     window.addEventListener('resize', updateSize);
-    return () => window.removeEventListener('resize', updateSize);
+
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined' && containerRef.current) {
+      resizeObserver = new ResizeObserver(() => {
+        updateSize();
+      });
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateSize);
+      resizeObserver?.disconnect();
+    };
   }, [isDossierOpen]);
 
   // Fetch National States & Prefetch Counties GeoJSON for instant transitions
@@ -281,7 +293,7 @@ export function App() {
               activeContractsCount: 500,
             };
 
-            const colorConfig = getEditorialCreepColor(creepData.percentCreep, isSelected);
+            const colorConfig = getEditorialCreepColor(creepData.percentCreep);
             fill = colorConfig.fill;
             hoverFill = colorConfig.hoverFill;
             category = colorConfig.category;
@@ -325,7 +337,7 @@ export function App() {
               primaryPolicyFocus: 'Public Policy',
             };
 
-            const colorConfig = getEditorialVolatilityColor(billData.averageVolatilityScore, isSelected);
+            const colorConfig = getEditorialVolatilityColor(billData.averageVolatilityScore);
             fill = colorConfig.fill;
             hoverFill = colorConfig.hoverFill;
             category = colorConfig.category;
@@ -451,7 +463,7 @@ export function App() {
             const countyDollar = Math.round((countyInitial * countyPercentCreep) / 100);
             const countyCurrent = countyInitial + countyDollar;
 
-            const colorConfig = getEditorialCreepColor(countyPercentCreep, isSelected);
+            const colorConfig = getEditorialCreepColor(countyPercentCreep);
             fill = colorConfig.fill;
             hoverFill = colorConfig.hoverFill;
             category = colorConfig.category;
@@ -483,7 +495,7 @@ export function App() {
             };
           } else {
             const countyVolScore = Math.max(5, Math.round(stateBaseVol * (0.6 + (hashVal / 100) * 0.8)));
-            const colorConfig = getEditorialVolatilityColor(countyVolScore, isSelected);
+            const colorConfig = getEditorialVolatilityColor(countyVolScore);
             fill = colorConfig.fill;
             hoverFill = colorConfig.hoverFill;
             category = colorConfig.category;
@@ -584,7 +596,7 @@ export function App() {
             const cityDollar = Math.round((cityInitial * cityPercentCreep) / 100);
             const cityCurrent = cityInitial + cityDollar;
 
-            const colorConfig = getEditorialCreepColor(cityPercentCreep, isSelected);
+            const colorConfig = getEditorialCreepColor(cityPercentCreep);
             fill = colorConfig.fill;
             hoverFill = colorConfig.hoverFill;
             category = colorConfig.category;
@@ -616,7 +628,7 @@ export function App() {
             };
           } else {
             const cityVolScore = Math.round(10 + hashVal * 0.5);
-            const colorConfig = getEditorialVolatilityColor(cityVolScore, isSelected);
+            const colorConfig = getEditorialVolatilityColor(cityVolScore);
             fill = colorConfig.fill;
             hoverFill = colorConfig.hoverFill;
             category = colorConfig.category;
@@ -751,6 +763,15 @@ export function App() {
 
         {/* Action Controls: Metric Layer Selector, Navigation Back & Dossier Toggle */}
         <div className="flex items-center gap-2.5">
+          {(isLoading || isCitiesLoading) && (
+            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-50 text-blue-900 border border-blue-200 rounded text-[11px] font-medium animate-pulse">
+              <Loader2 className="w-3 h-3 animate-spin text-blue-900 shrink-0" />
+              <span className="hidden sm:inline">
+                {isCitiesLoading ? 'Pulling municipal vectors...' : 'Loading vector map...'}
+              </span>
+            </div>
+          )}
+
           {/* Global Metric Layer Selector */}
           <div className="flex items-center gap-1.5 bg-stone-100 border border-stone-300 rounded px-2.5 py-1 shadow-2xs">
             <Layers className="w-3.5 h-3.5 text-stone-600" />
@@ -804,9 +825,16 @@ export function App() {
         >
           {isLoading || isCitiesLoading ? (
             <div className="text-center space-y-3 text-stone-500">
-              <Loader2 className="w-7 h-7 mx-auto animate-spin text-blue-900" />
-              <div className="text-xs font-medium tracking-wide">
-                {isCitiesLoading ? 'Loading municipal boundaries...' : 'Loading geographic data...'}
+              <Loader2 className="w-8 h-8 mx-auto animate-spin text-blue-900" />
+              <div className="space-y-1">
+                <div className="text-xs font-serif font-bold text-stone-800">
+                  {isCitiesLoading
+                    ? `Loading municipal subdivisions for ${selectedCountyName || 'County'}...`
+                    : 'Loading nationwide vector topology...'}
+                </div>
+                <div className="text-[11px] text-stone-500">
+                  Rendering high-resolution CartoColors chloropleth data
+                </div>
               </div>
             </div>
           ) : (
@@ -836,9 +864,10 @@ export function App() {
                           key={item.id}
                           d={item.d}
                           fill={item.fill}
-                          stroke="#ffffff"
-                          strokeWidth={item.isSelected ? '2.5' : '1'}
+                          stroke={item.isSelected ? '#0f172a' : '#ffffff'}
+                          strokeWidth={item.isSelected ? '2' : '0.8'}
                           strokeLinejoin="round"
+                          strokeLinecap="round"
                           className="transition-colors duration-150 cursor-pointer hover:opacity-90"
                           onMouseEnter={(e) => {
                             const rect = containerRef.current?.getBoundingClientRect();
@@ -893,9 +922,10 @@ export function App() {
                         key={item.id}
                         d={item.d}
                         fill={item.fill}
-                        stroke="#ffffff"
-                        strokeWidth={item.isSelected ? '2.5' : '1'}
+                        stroke={item.isSelected ? '#0f172a' : '#ffffff'}
+                        strokeWidth={item.isSelected ? '2' : '0.8'}
                         strokeLinejoin="round"
+                        strokeLinecap="round"
                         className="transition-colors duration-150 cursor-pointer hover:opacity-90"
                         onMouseEnter={(e) => {
                           const rect = containerRef.current?.getBoundingClientRect();
@@ -931,10 +961,10 @@ export function App() {
           )}
 
           {/* Dynamic Editorial CartoColors Map Legend */}
-          <div className="absolute bottom-4 left-4 z-10 bg-white border border-stone-200 shadow-sm px-3.5 py-2.5 rounded-sm text-xs font-sans pointer-events-auto">
+          <div className="absolute bottom-4 left-4 z-10 bg-white border border-stone-200 shadow-sm px-3.5 py-2.5 rounded text-xs font-sans pointer-events-auto">
             <div className="text-[10px] uppercase tracking-wider font-semibold text-stone-500 mb-1.5 flex items-center justify-between gap-4">
               <span>{activeConfig.legendTitle}</span>
-              <span className="font-mono text-[9px] text-stone-400">CartoColors</span>
+              <span className="text-[9px] text-stone-400">CartoColors</span>
             </div>
             <div className="flex items-center gap-1.5">
               {activeConfig.legendStops.map((stop, sIdx) => (
@@ -944,7 +974,7 @@ export function App() {
                     style={{ backgroundColor: stop.fill, borderColor: stop.border }}
                     title={stop.description}
                   />
-                  <span className="text-[9px] text-stone-500 font-mono mt-0.5">{stop.label}</span>
+                  <span className="text-[9px] text-stone-500 mt-0.5 tabular-nums">{stop.label}</span>
                 </div>
               ))}
             </div>
@@ -971,7 +1001,7 @@ export function App() {
 
             return (
               <div
-                className={`absolute z-50 pointer-events-none bg-white border border-stone-200 shadow-xl rounded-sm p-4 w-66 transform -translate-x-1/2 ${
+                className={`absolute z-50 pointer-events-none bg-white border border-stone-200 shadow-xl rounded p-4 w-66 transform -translate-x-1/2 ${
                   placeBelow ? 'translate-y-0' : '-translate-y-full'
                 } transition-[left,top] duration-75 ease-out`}
                 style={{ left: `${clampedX}px`, top: `${topY}px` }}
@@ -985,29 +1015,29 @@ export function App() {
 
                 <div className="grid grid-cols-2 gap-x-3 gap-y-2.5">
                   <div>
-                    <div className="text-[10px] uppercase tracking-wider text-stone-500 font-sans">
+                    <div className="text-[10px] uppercase tracking-wider text-stone-500 font-sans font-medium">
                       {hoveredFeature.metric1.label}
                     </div>
-                    <div className="font-mono text-sm text-stone-800">
+                    <div className="text-sm text-stone-800 font-medium tabular-nums">
                       {hoveredFeature.metric1.value}
                     </div>
                   </div>
 
                   <div>
-                    <div className="text-[10px] uppercase tracking-wider text-stone-500 font-sans">
+                    <div className="text-[10px] uppercase tracking-wider text-stone-500 font-sans font-medium">
                       {hoveredFeature.metric2.label}
                     </div>
-                    <div className="font-mono text-sm text-stone-800">
+                    <div className="text-sm text-stone-800 font-medium tabular-nums">
                       {hoveredFeature.metric2.value}
                     </div>
                   </div>
 
                   <div>
-                    <div className="text-[10px] uppercase tracking-wider text-stone-500 font-sans">
+                    <div className="text-[10px] uppercase tracking-wider text-stone-500 font-sans font-medium">
                       {hoveredFeature.metric3.label}
                     </div>
                     <div
-                      className={`font-mono text-sm font-bold ${
+                      className={`text-sm font-bold tabular-nums ${
                         hoveredFeature.metric3.highlightColor || 'text-red-700'
                       }`}
                     >
@@ -1016,12 +1046,12 @@ export function App() {
                   </div>
 
                   <div>
-                    <div className="text-[10px] uppercase tracking-wider text-stone-500 font-sans">
+                    <div className="text-[10px] uppercase tracking-wider text-stone-500 font-sans font-medium">
                       {hoveredFeature.metric4.label}
                     </div>
-                    <div className="font-mono text-sm">
+                    <div className="text-sm">
                       <span
-                        className={`px-1 py-0.5 inline-block font-bold rounded-xs ${
+                        className={`px-1 py-0.5 inline-block font-bold rounded text-xs tabular-nums ${
                           hoveredFeature.metric4.pillColor || 'bg-red-50 text-red-700'
                         }`}
                       >
@@ -1037,7 +1067,7 @@ export function App() {
 
         {/* 3. Civic Intelligence Dossier Inspector Drawer */}
         {isDossierOpen && (
-          <aside className="w-full md:w-[420px] lg:w-[460px] h-full flex-shrink-0 z-20 border-l border-stone-200 bg-white transition-all duration-200">
+          <aside className="w-full md:w-1/3 h-full flex-shrink-0 z-20 border-l border-stone-200 bg-white transition-all duration-200">
             {activeMetric === 'CONTRACT_CREEP' ? (
               <ContractCreepPanel {...currentGeoProps} />
             ) : (

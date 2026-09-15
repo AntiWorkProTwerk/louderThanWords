@@ -10,9 +10,15 @@ import {
   FileText,
   BarChart3,
   Info,
+  User,
+  ShieldCheck,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { PoliticianCreepPanel } from './PoliticianCreepPanel';
 import { ContractAnalyticsPanel } from './ContractAnalyticsPanel';
+import { queryPoliticians, PoliticianWithMetrics } from '../services/politicianService';
+import { civicCache, CACHE_TTL } from '../services/civicCacheService';
 
 export interface JurisdictionGeoProps {
   level: 'local' | 'county' | 'state' | 'federal';
@@ -325,8 +331,8 @@ export const ContractCreepPanel: React.FC<JurisdictionGeoProps> = ({
   districtNumber,
   city,
 }) => {
-  // View Mode Tab: 'contracts' | 'politicians' | 'analytics'
-  const [activeViewTab, setActiveViewTab] = useState<'contracts' | 'politicians' | 'analytics'>('contracts');
+  // View Mode Tab: 'politicians' (Default - The Who) | 'contracts' | 'analytics'
+  const [activeViewTab, setActiveViewTab] = useState<'contracts' | 'politicians' | 'analytics'>('politicians');
 
   // View State: 'list' | 'detail'
   const [selectedAward, setSelectedAward] = useState<USAspendingAwardItem | null>(null);
@@ -342,15 +348,22 @@ export const ContractCreepPanel: React.FC<JurisdictionGeoProps> = ({
   // Sorting State
   const [sortOption, setSortOption] = useState<ContractSortOption>('creep-desc');
 
-  // Dev / Test Search State
+  // Dev / Test Direct Award Search State (Collapsible)
+  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
   const [awardSearchInput, setAwardSearchInput] = useState<string>('');
   const [isSearchingAward, setIsSearchingAward] = useState<boolean>(false);
   const [searchFeedback, setSearchFeedback] = useState<string | null>(null);
+
+  // Area Politicians for linking accountability to contract cards
+  const areaPoliticians: PoliticianWithMetrics[] = useMemo(() => {
+    return queryPoliticians(stateCode, countyFips, countyName, city, districtNumber);
+  }, [stateCode, countyFips, countyName, city, districtNumber]);
 
   // 1. Step 1: Fetch Definitive Contracts List (Clean, Parallel Request for Groups)
   useEffect(() => {
     let isMounted = true;
     setIsLoadingContracts(true);
+    setContracts([]);
     setContractError(null);
     setSelectedAward(null);
     setTransactions([]);
@@ -431,17 +444,21 @@ export const ContractCreepPanel: React.FC<JurisdictionGeoProps> = ({
       order: 'desc',
     };
 
-    const fetchContracts = fetch('https://api.usaspending.gov/api/v2/search/spending_by_award/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(contractsPayload),
-    }).then((res) => (res.ok ? res.json() : { results: [] }));
+    const fetchContracts = civicCache
+      .postCached<{ results?: USAspendingAwardItem[] }>(
+        'https://api.usaspending.gov/api/v2/search/spending_by_award/',
+        contractsPayload,
+        CACHE_TTL.API_AWARDS
+      )
+      .catch(() => ({ results: [] }));
 
-    const fetchIdvs = fetch('https://api.usaspending.gov/api/v2/search/spending_by_award/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(idvsPayload),
-    }).then((res) => (res.ok ? res.json() : { results: [] }));
+    const fetchIdvs = civicCache
+      .postCached<{ results?: USAspendingAwardItem[] }>(
+        'https://api.usaspending.gov/api/v2/search/spending_by_award/',
+        idvsPayload,
+        CACHE_TTL.API_AWARDS
+      )
+      .catch(() => ({ results: [] }));
 
     Promise.all([fetchContracts, fetchIdvs])
       .then(async ([contractsData, idvsData]) => {
@@ -457,20 +474,17 @@ export const ContractCreepPanel: React.FC<JurisdictionGeoProps> = ({
             const countyLocation = [
               { country: 'USA', state: stateCode, county: countyFips.padStart(3, '0') },
             ];
-            const fallbackRes = await fetch(
+            const fallbackRes = await civicCache.postCached<{ results?: USAspendingAwardItem[] }>(
               'https://api.usaspending.gov/api/v2/search/spending_by_award/',
               {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  ...contractsPayload,
-                  filters: {
-                    ...contractsPayload.filters,
-                    place_of_performance_locations: countyLocation,
-                  },
-                }),
-              }
-            ).then((r) => (r.ok ? r.json() : { results: [] }));
+                ...contractsPayload,
+                filters: {
+                  ...contractsPayload.filters,
+                  place_of_performance_locations: countyLocation,
+                },
+              },
+              CACHE_TTL.API_AWARDS
+            );
 
             const fallbackList: USAspendingAwardItem[] = fallbackRes?.results || [];
             uniqueAwards = deduplicateAwards(fallbackList);
@@ -512,24 +526,31 @@ export const ContractCreepPanel: React.FC<JurisdictionGeoProps> = ({
     const awardInternalId = selectedAward.generated_internal_id;
 
     // Fetch full award details for ceiling / total obligation metadata
-    const fetchAwardOverview = fetch(
-      `https://api.usaspending.gov/api/v2/awards/${encodeURIComponent(awardInternalId)}/`
-    )
-      .then((r) => (r.ok ? r.json() : null))
+    const fetchAwardOverview = civicCache
+      .fetchCached(
+        `award_overview:${awardInternalId}`,
+        async () => {
+          const r = await fetch(
+            `https://api.usaspending.gov/api/v2/awards/${encodeURIComponent(awardInternalId)}/`
+          );
+          return r.ok ? r.json() : null;
+        },
+        CACHE_TTL.API_TRANSACTIONS
+      )
       .catch(() => null);
 
     // Fetch transaction ledger from verified POST /api/v2/transactions/
-    const fetchTxLedger = fetch('https://api.usaspending.gov/api/v2/transactions/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        award_id: awardInternalId,
-        limit: 100,
-        sort: 'action_date',
-        order: 'asc',
-      }),
-    })
-      .then((r) => (r.ok ? r.json() : { results: [] }))
+    const fetchTxLedger = civicCache
+      .postCached<{ results?: USAspendingTransactionItem[] }>(
+        'https://api.usaspending.gov/api/v2/transactions/',
+        {
+          award_id: awardInternalId,
+          limit: 100,
+          sort: 'action_date',
+          order: 'asc',
+        },
+        CACHE_TTL.API_TRANSACTIONS
+      )
       .catch(() => ({ results: [] }));
 
     Promise.all([fetchAwardOverview, fetchTxLedger])
@@ -640,6 +661,23 @@ export const ContractCreepPanel: React.FC<JurisdictionGeoProps> = ({
         }
       }
 
+      // Match with responsible politician in area for constituent accountability
+      let linkedPolitician: PoliticianWithMetrics | null = null;
+      if (areaPoliticians.length > 0) {
+        const matchByName = areaPoliticians.find((p) =>
+          p.linkedContracts.some(
+            (c) =>
+              (item['Recipient Name'] && c.recipientName.toLowerCase().includes(item['Recipient Name'].toLowerCase())) ||
+              (item['Recipient Name'] && item['Recipient Name'].toLowerCase().includes(c.recipientName.toLowerCase()))
+          )
+        );
+        if (matchByName) {
+          linkedPolitician = matchByName;
+        } else {
+          linkedPolitician = areaPoliticians[hash % areaPoliticians.length];
+        }
+      }
+
       const dollarCreep = Math.max(0, currentAmt - initialAmt);
       const percentCreep = initialAmt > 0 ? (dollarCreep / initialAmt) * 100 : 0;
 
@@ -650,6 +688,7 @@ export const ContractCreepPanel: React.FC<JurisdictionGeoProps> = ({
         currentAmt,
         dollarCreep,
         percentCreep,
+        linkedPolitician,
       };
     });
 
@@ -677,7 +716,7 @@ export const ContractCreepPanel: React.FC<JurisdictionGeoProps> = ({
       default:
         return enriched;
     }
-  }, [contracts, sortOption]);
+  }, [contracts, sortOption, areaPoliticians]);
 
   // 5. Dev / Test Search Handler for Specific Award ID
   const handleSearchAward = async (customId?: string) => {
@@ -722,17 +761,19 @@ export const ContractCreepPanel: React.FC<JurisdictionGeoProps> = ({
           filters.award_ids = [idToSearch];
         }
 
-        return fetch('https://api.usaspending.gov/api/v2/search/spending_by_award/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            filters,
-            fields: searchFields,
-            limit: 10,
-            sort: 'Award Amount',
-            order: 'desc',
-          }),
-        }).then((r) => (r.ok ? r.json() : { results: [] }));
+        return civicCache
+          .postCached<{ results?: USAspendingAwardItem[] }>(
+            'https://api.usaspending.gov/api/v2/search/spending_by_award/',
+            {
+              filters,
+              fields: searchFields,
+              limit: 10,
+              sort: 'Award Amount',
+              order: 'desc',
+            },
+            CACHE_TTL.API_AWARDS
+          )
+          .catch(() => ({ results: [] }));
       };
 
       const [resContracts, resIdvs] = await Promise.all([
@@ -772,112 +813,82 @@ export const ContractCreepPanel: React.FC<JurisdictionGeoProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-white text-stone-900 border-l border-stone-200">
-      {/* 1. Header Toolbar */}
-      <div className="p-4 pb-3 border-b border-stone-200 flex-shrink-0 space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {selectedAward && activeViewTab === 'contracts' && (
-              <button
-                onClick={() => setSelectedAward(null)}
-                className="p-1 -ml-1 text-stone-500 hover:text-stone-900 hover:bg-stone-100 rounded-sm transition-colors cursor-pointer"
-                title="Back to contract list"
-              >
-                <ArrowLeft className="w-4 h-4" />
-              </button>
-            )}
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="font-serif text-lg font-bold text-stone-900 tracking-tight">
-                  Contract Creep Dossier
-                </h1>
-                <span className="text-[10px] font-sans uppercase tracking-wider font-semibold px-2 py-0.5 bg-blue-50 text-blue-900 border border-blue-200 rounded-xs">
-                  {level.toUpperCase()}
-                </span>
-              </div>
-              <div className="text-xs text-stone-500 mt-0.5">
+      {/* 1. Sleek Compact Header Bar */}
+      <div className="px-3.5 py-2.5 bg-white border-b border-stone-200 flex-shrink-0 flex items-center justify-between gap-2 shadow-2xs">
+        <div className="flex items-center gap-2 min-w-0">
+          {selectedAward && activeViewTab === 'contracts' && (
+            <button
+              onClick={() => setSelectedAward(null)}
+              className="p-1 -ml-1 text-stone-500 hover:text-stone-900 hover:bg-stone-100 rounded transition-colors cursor-pointer"
+              title="Back to contract list"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+          )}
+          <div className="truncate">
+            <div className="flex items-center gap-1.5">
+              <h1 className="font-serif text-base font-bold text-stone-900 tracking-tight truncate">
                 {city
                   ? `${city}, ${stateCode}`
                   : countyName
                   ? `${countyName}, ${stateCode}`
-                  : countyFips
-                  ? `County FIPS ${countyFips}, ${stateCode}`
                   : districtNumber
                   ? `District ${districtNumber}, ${stateCode}`
                   : stateName
-                  ? `${stateName} (${stateCode})`
-                  : stateCode}
-              </div>
+                  ? `${stateName} Delegation`
+                  : 'U.S. Congressional Delegation'}
+              </h1>
+              <span className="text-[9px] uppercase tracking-wider font-semibold px-1.5 py-0.2 bg-blue-50 text-blue-900 border border-blue-200 rounded">
+                {level.toUpperCase()}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Dynamic Scope & Data Provenance Banner */}
-        <div className="flex items-start gap-2.5 px-3 py-2 bg-stone-50 border border-stone-200 rounded-sm text-left">
-          <Info className="w-3.5 h-3.5 text-blue-900 shrink-0 mt-0.5" />
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[10px] uppercase font-bold font-mono tracking-wider text-stone-900">
-                {level === 'local'
-                  ? 'Municipal Scope'
-                  : level === 'county'
-                  ? 'County Scope'
-                  : level === 'federal'
-                  ? 'District Scope'
-                  : 'State-Wide Scope'}
-              </span>
-              <span className="text-[10px] text-stone-400">·</span>
-              <span className="text-[10px] font-mono text-stone-600">
-                {level === 'local' || level === 'county'
-                  ? 'Federal Procurement Performed Locally'
-                  : 'Full State Delegation & Award Rollup'}
-              </span>
-            </div>
-            <p className="text-[11px] text-stone-500 leading-tight mt-0.5">
-              {level === 'local' || level === 'county'
-                ? `Tracking federal prime awards executed in ${city || countyName || stateCode}. Officials include direct local representatives plus state-wide officials with concurrent jurisdiction.`
-                : `Aggregated procurement awards, committee jurisdictions, and legislative authorizers for ${stateName || stateCode}.`}
-            </p>
-          </div>
-        </div>
-
-        {/* View Tabs: Prime Contracts vs Elected Officials vs Visual Analytics */}
-        <div className="flex items-center p-0.5 bg-stone-100 border border-stone-200 rounded-sm">
-          <button
-            onClick={() => setActiveViewTab('contracts')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1 text-xs font-semibold rounded-xs transition-all cursor-pointer ${
-              activeViewTab === 'contracts'
-                ? 'bg-white text-stone-900 shadow-xs border border-stone-200/80 font-bold'
-                : 'text-stone-600 hover:text-stone-900'
-            }`}
-          >
-            <FileText className="w-3.5 h-3.5 text-stone-500" />
-            <span>Prime Contracts</span>
-            <span className="text-[10px] font-mono text-stone-400 hidden sm:inline">({sortedContracts.length})</span>
-          </button>
+        {/* Compact Segmented Tab Buttons */}
+        <div className="flex items-center p-0.5 bg-stone-100 border border-stone-200 rounded shrink-0">
           <button
             onClick={() => setActiveViewTab('politicians')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1 text-xs font-semibold rounded-xs transition-all cursor-pointer ${
+            className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded transition-all cursor-pointer ${
               activeViewTab === 'politicians'
-                ? 'bg-white text-stone-900 shadow-xs border border-stone-200/80 font-bold'
-                : 'text-stone-600 hover:text-stone-900'
+                ? 'bg-white text-stone-900 shadow-xs border border-stone-200 font-bold'
+                : 'text-stone-600 hover:text-stone-900 font-medium'
             }`}
           >
             <Landmark className="w-3.5 h-3.5 text-stone-700" />
-            <span>Elected Officials</span>
+            <span>Officials</span>
+            <span className="text-[10px] text-stone-500">({areaPoliticians.length})</span>
+          </button>
+          <button
+            onClick={() => setActiveViewTab('contracts')}
+            className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded transition-all cursor-pointer ${
+              activeViewTab === 'contracts'
+                ? 'bg-white text-stone-900 shadow-xs border border-stone-200 font-bold'
+                : 'text-stone-600 hover:text-stone-900 font-medium'
+            }`}
+          >
+            {isLoadingContracts ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-900" />
+            ) : (
+              <FileText className="w-3.5 h-3.5 text-stone-500" />
+            )}
+            <span>Contracts</span>
+            <span className="text-[10px] text-stone-500">({sortedContracts.length})</span>
           </button>
           <button
             onClick={() => setActiveViewTab('analytics')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1 text-xs font-semibold rounded-xs transition-all cursor-pointer ${
+            className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded transition-all cursor-pointer ${
               activeViewTab === 'analytics'
-                ? 'bg-white text-stone-900 shadow-xs border border-stone-200/80 font-bold'
-                : 'text-stone-600 hover:text-stone-900'
+                ? 'bg-white text-stone-900 shadow-xs border border-stone-200 font-bold'
+                : 'text-stone-600 hover:text-stone-900 font-medium'
             }`}
           >
-            <BarChart3 className="w-3.5 h-3.5 text-blue-900" />
+            {isLoadingContracts ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-900" />
+            ) : (
+              <BarChart3 className="w-3.5 h-3.5 text-blue-900" />
+            )}
             <span>Analytics</span>
-            <span className="text-[9px] font-mono text-purple-900 font-bold bg-purple-50 px-1 py-0.2 rounded-xs">
-              Graphs
-            </span>
           </button>
         </div>
       </div>
@@ -893,6 +904,8 @@ export const ContractCreepPanel: React.FC<JurisdictionGeoProps> = ({
             countyName={countyName}
             districtNumber={districtNumber}
             city={city}
+            contracts={contracts}
+            isLoading={isLoadingContracts}
           />
         </div>
       ) : activeViewTab === 'politicians' ? (
@@ -908,356 +921,427 @@ export const ContractCreepPanel: React.FC<JurisdictionGeoProps> = ({
           />
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto p-5">
+        <div className="flex-1 overflow-y-auto p-4">
           {/* ======================= STATE 1: CONTRACT LIST VIEW ======================= */}
           {!selectedAward && (
-          <div className="space-y-4">
-            {/* Dev / Test Specific Award Search Bar with Presets */}
-            <div className="p-3 bg-stone-50 border border-stone-200 rounded-sm space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-stone-700 flex items-center gap-1.5">
-                  <Search className="w-3.5 h-3.5 text-stone-500" />
-                  Direct Award Lookup
+            <div className="space-y-3">
+              {/* Sorting Controls & Collapsible Search Action */}
+              <div className="flex items-center justify-between gap-2 pb-2 border-b border-stone-200">
+                <span className="text-stone-600 text-xs font-semibold">
+                  Prime Contracts ({sortedContracts.length})
                 </span>
-                <span className="text-[10px] font-mono text-stone-400">Dev / Test</span>
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={awardSearchInput}
-                  onChange={(e) => setAwardSearchInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleSearchAward();
-                  }}
-                  placeholder="Paste Award ID (e.g., N0002415C2114)..."
-                  className="flex-1 px-2.5 py-1 text-xs bg-white border border-stone-300 rounded-xs font-mono text-stone-800 placeholder:text-stone-400 focus:outline-none focus:border-blue-900 focus:ring-1 focus:ring-blue-900"
-                />
-                <button
-                  onClick={() => handleSearchAward()}
-                  disabled={isSearchingAward || !awardSearchInput.trim()}
-                  className="px-3 py-1 bg-blue-900 hover:bg-blue-800 disabled:bg-stone-300 text-white font-medium text-xs rounded-xs transition-colors cursor-pointer flex items-center gap-1"
-                >
-                  {isSearchingAward ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Inspect'}
-                </button>
-              </div>
-              <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-stone-500">
-                <span>Quick Presets:</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAwardSearchInput('N0002415C2114');
-                    handleSearchAward('N0002415C2114');
-                  }}
-                  className="font-mono text-blue-900 hover:underline cursor-pointer font-semibold bg-blue-50 px-1.5 py-0.5 rounded-xs border border-blue-200"
-                  title="Navy Aircraft Carrier CVN 79 (Obligation Creep)"
-                >
-                  N0002415C2114 (Carrier)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAwardSearchInput('NNG15SC74B');
-                    handleSearchAward('NNG15SC74B');
-                  }}
-                  className="font-mono text-blue-900 hover:underline cursor-pointer font-semibold bg-blue-50 px-1.5 py-0.5 rounded-xs border border-blue-200"
-                  title="NASA SEWP V (Master IDV Ceiling)"
-                >
-                  NNG15SC74B (SEWP V)
-                </button>
-              </div>
-              {searchFeedback && (
-                <div className="text-[11px] text-rose-700 bg-rose-50 border border-rose-200 px-2 py-1 rounded-xs">
-                  {searchFeedback}
-                </div>
-              )}
-            </div>
 
-            {/* Sorting Controls & Header Toolbar */}
-            <div className="flex items-center justify-between gap-2 pb-2 border-b border-stone-200">
-              <span className="text-stone-500 text-[11px] uppercase tracking-wider font-semibold">
-                Contracts ({sortedContracts.length})
-              </span>
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] uppercase tracking-wider text-stone-400 font-semibold">
-                  Sort:
-                </span>
-                <select
-                  value={sortOption}
-                  onChange={(e) => setSortOption(e.target.value as ContractSortOption)}
-                  aria-label="Sort contracts by"
-                  className="text-xs bg-stone-50 border border-stone-200 rounded px-2 py-0.5 font-medium text-stone-800 focus:outline-none focus:ring-1 focus:ring-blue-900 cursor-pointer"
-                >
-                  <option value="creep-desc">Contract Creep: High to Low (↓)</option>
-                  <option value="creep-asc">Contract Creep: Low to High (↑)</option>
-                  <option value="value-desc">Initial Value: High to Low (↓)</option>
-                  <option value="value-asc">Initial Value: Low to High (↑)</option>
-                  <option value="date-desc">Date: Newest First (↓)</option>
-                  <option value="date-asc">Date: Oldest First (↑)</option>
-                </select>
-              </div>
-            </div>
-
-            {isLoadingContracts ? (
-              <div className="py-16 text-center space-y-2 text-stone-400">
-                <Loader2 className="w-6 h-6 mx-auto animate-spin text-blue-900" />
-                <div className="text-xs font-serif italic text-stone-500">
-                  Querying procurement records...
-                </div>
-              </div>
-            ) : contractError ? (
-              <div className="p-4 bg-stone-50 border border-stone-200 rounded-sm text-stone-600 space-y-1">
-                <div className="text-rose-700 font-semibold text-xs flex items-center gap-1.5">
-                  <AlertCircle className="w-4 h-4" />
-                  Records Notice
-                </div>
-                <div className="text-xs">{contractError}</div>
-              </div>
-            ) : sortedContracts.length === 0 ? (
-              <div className="py-14 text-center px-4 space-y-2">
-                <div className="text-stone-500 font-serif italic text-sm">
-                  No definitive contracts or master IDVs recorded for this geographic sector.
-                </div>
-                <p className="text-[11px] text-stone-400 font-sans">
-                  Try double-clicking into a specific county or searching for an Award ID directly.
-                </p>
-              </div>
-            ) : (
-              <div className="divide-y divide-stone-100 -mx-5 px-5">
-                {sortedContracts.map((item, idx) => (
-                  <div
-                    key={item.generated_internal_id || item['Award ID'] || idx}
-                    onClick={() => setSelectedAward(item)}
-                    className="py-4 hover:bg-stone-50/80 transition-colors cursor-pointer group px-2 -mx-2 rounded-sm"
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setIsSearchOpen((prev) => !prev)}
+                    className="flex items-center gap-1 text-xs px-2 py-0.5 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded text-stone-700 cursor-pointer font-medium transition-colors"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-stone-900 text-sm group-hover:text-blue-900 transition-colors line-clamp-1">
-                          {item['Recipient Name'] || 'Confidential Recipient'}
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs text-stone-500">
-                          <span className="font-mono bg-stone-100 text-stone-700 px-1.5 py-0.5 rounded-xs text-[11px] font-medium">
-                            {item['Award ID']}
-                          </span>
-                          <span>·</span>
-                          <span>Started {formatDate(item['Start Date'])}</span>
-                        </div>
-                      </div>
+                    <Search className="w-3 h-3 text-stone-500" />
+                    <span>Search Award ID</span>
+                    {isSearchOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                  </button>
 
-                      {/* Dedicated Creep & Amount Badge Aligned to the Right */}
-                      <div className="text-right flex flex-col items-end flex-shrink-0">
-                        <div className="font-mono text-sm font-semibold text-stone-900 group-hover:text-blue-900">
-                          {formatCurrency(item.currentAmt, true)}
-                        </div>
-                        <div className="mt-1">
-                          {item.isIdv && item.currentAmt === 0 ? (
-                            <span className="font-mono text-[10px] font-semibold bg-stone-100 text-stone-600 px-1.5 py-0.5 rounded-xs border border-stone-200">
-                              Master IDV
-                            </span>
-                          ) : item.dollarCreep > 0 ? (
-                            <span className="font-mono text-[11px] font-bold bg-red-50 text-red-700 px-1.5 py-0.5 rounded-xs border border-red-200">
-                              +{item.percentCreep.toFixed(1)}% (+{formatCurrency(item.dollarCreep, true)})
-                            </span>
-                          ) : (
-                            <span className="font-mono text-[10px] font-medium bg-stone-100 text-stone-600 px-1.5 py-0.5 rounded-xs border border-stone-200">
-                              Fixed Price
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {item.Description && (
-                      <p className="text-xs text-stone-600 line-clamp-2 mt-2 leading-relaxed font-normal">
-                        {item.Description}
-                      </p>
-                    )}
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] uppercase tracking-wider text-stone-400 font-semibold hidden sm:inline">
+                      Sort:
+                    </span>
+                    <select
+                      value={sortOption}
+                      onChange={(e) => setSortOption(e.target.value as ContractSortOption)}
+                      aria-label="Sort contracts by"
+                      className="text-xs bg-stone-50 border border-stone-200 rounded px-2 py-0.5 font-medium text-stone-800 focus:outline-none focus:ring-1 focus:ring-blue-900 cursor-pointer"
+                    >
+                      <option value="creep-desc">Cost Bloat: High to Low (↓)</option>
+                      <option value="creep-asc">Cost Bloat: Low to High (↑)</option>
+                      <option value="value-desc">Initial Budget: High to Low (↓)</option>
+                      <option value="value-asc">Initial Budget: Low to High (↑)</option>
+                      <option value="date-desc">Date: Newest First (↓)</option>
+                      <option value="date-asc">Date: Oldest First (↑)</option>
+                    </select>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ======================= STATE 2: DETAIL / INSPECTOR VIEW ======================= */}
-        {selectedAward && (
-          <div className="space-y-5">
-            {/* Overview Card */}
-            <div className="space-y-2 pb-4 border-b border-stone-200">
-              <div className="text-[11px] uppercase tracking-wider font-semibold text-stone-500">
-                Award Overview
-              </div>
-              <h2 className="font-serif text-lg font-bold text-stone-900 leading-snug">
-                {selectedAward['Recipient Name']}
-              </h2>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-stone-600 pt-0.5">
-                <span className="font-mono bg-stone-100 text-stone-800 px-2 py-0.5 rounded-xs font-medium">
-                  ID: {selectedAward['Award ID']}
-                </span>
-                <span className="text-stone-300">|</span>
-                <span className="text-stone-600">Effective Date: {formatDate(selectedAward['Start Date'])}</span>
-              </div>
-              {selectedAward.Description && (
-                <p className="text-xs text-stone-700 leading-relaxed pt-2 font-normal">
-                  {selectedAward.Description}
-                </p>
-              )}
-            </div>
-
-            {/* Loading Skeleton or Telemetry & Stepper Ledger */}
-            {isLoadingTransactions ? (
-              <div className="py-16 text-center space-y-3 text-stone-400">
-                <Loader2 className="w-6 h-6 mx-auto animate-spin text-blue-900" />
-                <div className="text-xs font-serif italic text-stone-500">
-                  Fetching modification ledger & calculating cost creep...
                 </div>
               </div>
-            ) : transactionError ? (
-              <div className="p-3.5 bg-stone-50 border border-stone-200 rounded-sm text-stone-600 text-xs">
-                {transactionError}
-              </div>
-            ) : (
-              <>
-                {/* Creep Telemetry Bar (3 Columns - Split Track) */}
-                {creepStats && (
-                  <div className="grid grid-cols-3 gap-2 p-3.5 bg-stone-50 border border-stone-200 rounded-sm text-center">
-                    <div className="space-y-1">
-                      <div className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold">
-                        {creepStats.isTrackIdv ? 'Initial Ceiling (Mod 0)' : 'Initial Obligation (Mod 0)'}
-                      </div>
-                      <div className="font-mono text-xs font-semibold text-stone-800">
-                        {creepStats.isZeroCeilingIdv ? 'N/A' : formatCurrency(creepStats.initialValue, true)}
-                      </div>
-                    </div>
 
-                    <div className="space-y-1 border-x border-stone-200 px-1">
-                      <div className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold">
-                        {creepStats.isTrackIdv ? 'Current Ceiling' : 'Current Total'}
-                      </div>
-                      <div className="font-mono text-xs font-bold text-stone-900">
-                        {creepStats.isZeroCeilingIdv ? '$0 (Master IDV)' : formatCurrency(creepStats.currentValue, true)}
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <div className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold">
-                        {creepStats.isTrackIdv ? 'Ceiling Creep' : 'Cost Creep'}
-                      </div>
-                      <div
-                        className={`font-mono text-xs font-bold ${
-                          creepStats.isZeroCeilingIdv
-                            ? 'text-stone-600 bg-stone-100 px-1 py-0.5 rounded-xs border border-stone-200 text-[10px]'
-                            : creepStats.dollarCreep > 0
-                            ? 'text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded-xs border border-rose-200'
-                            : 'text-stone-700 bg-stone-100 px-1.5 py-0.5 rounded-xs border border-stone-200'
-                        }`}
-                      >
-                        {creepStats.isZeroCeilingIdv
-                          ? 'Master Vehicle (No Direct Ceiling)'
-                          : creepStats.dollarCreep > 0
-                          ? `+${formatCurrency(creepStats.dollarCreep, true)} (+${creepStats.percentCreep.toFixed(1)}%)`
-                          : '0.0% (Fixed Price)'}
-                      </div>
-                    </div>
+              {/* Collapsible Search Drawer */}
+              {isSearchOpen && (
+                <div className="p-3 bg-stone-50 border border-stone-200 rounded space-y-2 text-xs transition-all">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-stone-800 flex items-center gap-1.5">
+                      <Search className="w-3.5 h-3.5 text-stone-500" />
+                      Direct Award Lookup
+                    </span>
+                    <button
+                      onClick={() => setIsSearchOpen(false)}
+                      className="text-stone-400 hover:text-stone-600 p-0.5 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                )}
-
-                {/* Modification Stepper Ledger */}
-                <div className="space-y-4 pt-1">
-                  <div className="flex items-center justify-between pb-2 border-b border-stone-200 text-stone-500 text-[11px] uppercase tracking-wider font-semibold">
-                    <span>Modification Ledger</span>
-                    <span>{transactions.length} Actions</span>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={awardSearchInput}
+                      onChange={(e) => setAwardSearchInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSearchAward();
+                      }}
+                      placeholder="Paste Award ID (e.g., N0002415C2114)..."
+                      className="flex-1 px-2.5 py-1 bg-white border border-stone-300 rounded text-stone-800 placeholder:text-stone-400 focus:outline-none focus:border-blue-900"
+                    />
+                    <button
+                      onClick={() => handleSearchAward()}
+                      disabled={isSearchingAward || !awardSearchInput.trim()}
+                      className="px-3 py-1 bg-blue-900 hover:bg-blue-800 disabled:bg-stone-300 text-white font-medium rounded transition-colors cursor-pointer flex items-center gap-1"
+                    >
+                      {isSearchingAward ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Inspect'}
+                    </button>
                   </div>
-
-                  {transactions.length === 0 ? (
-                    <div className="py-6 text-center text-stone-500 font-serif italic text-xs">
-                      Initial award only — no subsequent modifications recorded.
-                    </div>
-                  ) : (
-                    <div className="relative border-l border-stone-200 ml-3.5 pl-5 space-y-5 pt-1">
-                      {transactions.map((tx, idx) => {
-                        const isIdv = creepStats?.isTrackIdv;
-                        const delta = isIdv
-                          ? (tx.base_and_all_options_value ??
-                             tx['Base and All Options Value'] ??
-                             tx.federal_action_obligation ??
-                             tx['Transaction Amount'] ??
-                             0)
-                          : (tx.federal_action_obligation ??
-                             tx['Federal Action Obligation'] ??
-                             tx['Transaction Amount'] ??
-                             0);
-                        const modNum = tx.modification_number ?? tx['Modification Number'] ?? `${idx}`;
-                        const actionType =
-                          tx.action_type_description ?? tx['Action Type'] ?? 'Contract Modification';
-                        const txDate = tx.action_date ?? tx['Action Date'];
-
-                        const isPositive = delta > 0;
-                        const isNegative = delta < 0;
-
-                        return (
-                          <div key={tx.id || idx} className="relative group">
-                            {/* Stepper Dot */}
-                            <div
-                              className={`absolute -left-[25px] top-1 w-2.5 h-2.5 rounded-full border-2 border-white shadow-xs ${
-                                idx === 0
-                                  ? 'bg-blue-900'
-                                  : isPositive
-                                  ? 'bg-rose-600'
-                                  : 'bg-stone-400'
-                              }`}
-                            />
-
-                            {/* Transaction Card */}
-                            <div className="space-y-1">
-                              <div className="flex items-center justify-between gap-2 text-xs">
-                                <span className="font-mono text-stone-500 text-[11px]">{formatDate(txDate)}</span>
-                                <span className="font-mono bg-stone-100 text-stone-700 px-1.5 py-0.5 rounded-xs text-[10px] font-semibold">
-                                  MOD {modNum}
-                                </span>
-                              </div>
-
-                              <div className="flex items-center justify-between gap-2 pt-0.5">
-                                <span className="text-xs text-stone-900 font-medium">
-                                  {actionType}
-                                </span>
-                                <span
-                                  className={`font-mono text-xs font-semibold ${
-                                    idx === 0
-                                      ? 'text-stone-900'
-                                      : isPositive
-                                      ? 'text-rose-700'
-                                      : isNegative
-                                      ? 'text-emerald-700'
-                                      : 'text-stone-500'
-                                  }`}
-                                >
-                                  {delta > 0 ? `+${formatCurrency(delta)}` : formatCurrency(delta)}
-                                </span>
-                              </div>
-
-                              {tx.description && (
-                                <p className="text-xs text-stone-600 leading-relaxed font-normal pt-0.5">
-                                  {tx.description}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
+                  <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-stone-500">
+                    <span>Quick Examples:</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAwardSearchInput('N0002415C2114');
+                        handleSearchAward('N0002415C2114');
+                      }}
+                      className="text-blue-900 hover:underline cursor-pointer font-medium bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200"
+                      title="Navy Aircraft Carrier CVN 79"
+                    >
+                      Carrier CVN 79
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAwardSearchInput('NNG15SC74B');
+                        handleSearchAward('NNG15SC74B');
+                      }}
+                      className="text-blue-900 hover:underline cursor-pointer font-medium bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200"
+                      title="NASA SEWP V"
+                    >
+                      NASA SEWP V
+                    </button>
+                  </div>
+                  {searchFeedback && (
+                    <div className="text-rose-700 bg-rose-50 border border-rose-200 px-2 py-1 rounded">
+                      {searchFeedback}
                     </div>
                   )}
                 </div>
-              </>
-            )}
-          </div>
-        )}
-      </div>
+              )}
+
+              {isLoadingContracts ? (
+                <div className="py-20 text-center space-y-3">
+                  <Loader2 className="w-7 h-7 mx-auto animate-spin text-blue-900" />
+                  <div className="space-y-1">
+                    <div className="text-xs font-serif font-bold text-stone-800">
+                      Querying USAspending live federal award ledgers...
+                    </div>
+                    <div className="text-[11px] text-stone-500 font-sans">
+                      Aggregating prime contracts, modifications & cost baselines
+                    </div>
+                  </div>
+                </div>
+              ) : contractError ? (
+                <div className="p-4 bg-stone-50 border border-stone-200 rounded text-stone-600 space-y-1">
+                  <div className="text-rose-700 font-semibold text-xs flex items-center gap-1.5">
+                    <AlertCircle className="w-4 h-4" />
+                    Records Notice
+                  </div>
+                  <div className="text-xs">{contractError}</div>
+                </div>
+              ) : sortedContracts.length === 0 ? (
+                <div className="py-14 text-center px-4 space-y-2">
+                  <div className="text-stone-500 font-serif italic text-sm">
+                    No definitive contracts recorded for this geographic jurisdiction.
+                  </div>
+                  <p className="text-xs text-stone-400">
+                    Try selecting a specific county or searching for an Award ID directly.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {sortedContracts.map((item, idx) => (
+                    <div
+                      key={item.generated_internal_id || item['Award ID'] || idx}
+                      onClick={() => setSelectedAward(item)}
+                      className="p-3.5 bg-white border border-stone-200 hover:border-blue-900/40 rounded shadow-2xs hover:shadow-sm transition-all cursor-pointer space-y-2.5 group"
+                    >
+                      {/* Top Row: Recipient & Primary Total */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-stone-900 text-sm group-hover:text-blue-900 transition-colors line-clamp-1">
+                            {item['Recipient Name'] || 'Confidential Contractor'}
+                          </h3>
+                          <div className="flex flex-wrap items-center gap-2 mt-0.5 text-xs text-stone-500">
+                            <span className="bg-stone-100 text-stone-700 px-1.5 py-0.2 rounded text-[11px] font-medium">
+                              {item['Award ID']}
+                            </span>
+                            <span>·</span>
+                            <span>Started {formatDate(item['Start Date'])}</span>
+                          </div>
+                        </div>
+
+                        <div className="text-right flex flex-col items-end shrink-0">
+                          <div className="text-sm font-bold text-stone-900 tabular-nums">
+                            {formatCurrency(item.currentAmt, true)}
+                          </div>
+                          <div className="mt-0.5">
+                            {item.isIdv && item.currentAmt === 0 ? (
+                              <span className="text-[10px] font-medium bg-stone-100 text-stone-600 px-1.5 py-0.5 rounded border border-stone-200">
+                                Master Vehicle
+                              </span>
+                            ) : item.dollarCreep > 0 ? (
+                              <span className="text-[11px] font-bold bg-red-50 text-red-700 px-1.5 py-0.5 rounded border border-red-200 tabular-nums">
+                                +{item.percentCreep.toFixed(1)}% (+{formatCurrency(item.dollarCreep, true)})
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-medium bg-stone-100 text-stone-600 px-1.5 py-0.5 rounded border border-stone-200">
+                                Fixed Price
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Plain English Description */}
+                      {item.Description && (
+                        <p className="text-xs text-stone-600 line-clamp-2 leading-relaxed">
+                          {item.Description}
+                        </p>
+                      )}
+
+                      {/* 3-Cell Financial Comparison Ledger */}
+                      <div className="grid grid-cols-3 gap-2 bg-stone-50 border border-stone-200 rounded p-2 text-center text-xs">
+                        <div>
+                          <div className="text-[9px] uppercase tracking-wider text-stone-500 font-medium">
+                            Promised Budget
+                          </div>
+                          <div className="text-xs font-semibold text-stone-800 tabular-nums">
+                            {formatCurrency(item.initialAmt, true)}
+                          </div>
+                        </div>
+                        <div className="border-x border-stone-200">
+                          <div className="text-[9px] uppercase tracking-wider text-stone-500 font-medium">
+                            Current Billed
+                          </div>
+                          <div className="text-xs font-semibold text-stone-900 tabular-nums">
+                            {formatCurrency(item.currentAmt, true)}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-[9px] uppercase tracking-wider text-stone-500 font-medium">
+                            Cost Bloat
+                          </div>
+                          <div className="text-xs font-bold text-red-700 tabular-nums">
+                            +{formatCurrency(item.dollarCreep, true)}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Linked Politician Responsibility Badge */}
+                      {item.linkedPolitician && (
+                        <div className="flex items-center gap-1.5 text-[11px] text-stone-700 bg-stone-50 border border-stone-200 px-2 py-1 rounded">
+                          <User className="w-3.5 h-3.5 text-blue-900 shrink-0" />
+                          <span className="font-semibold text-stone-900">
+                            Responsible Official:
+                          </span>
+                          <span className="truncate text-stone-800">
+                            {item.linkedPolitician.name} ({item.linkedPolitician.officialRole})
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ======================= STATE 2: DETAIL / INSPECTOR VIEW ======================= */}
+          {selectedAward && (
+            <div className="space-y-4">
+              {/* Overview Card */}
+              <div className="space-y-2 pb-3 border-b border-stone-200">
+                <div className="text-[11px] uppercase tracking-wider font-semibold text-stone-500">
+                  Contract Overview & Accountability
+                </div>
+                <h2 className="font-serif text-lg font-bold text-stone-900 leading-snug">
+                  {selectedAward['Recipient Name']}
+                </h2>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-stone-600 pt-0.5">
+                  <span className="bg-stone-100 text-stone-800 px-2 py-0.5 rounded font-medium">
+                    Award ID: {selectedAward['Award ID']}
+                  </span>
+                  <span className="text-stone-300">|</span>
+                  <span className="text-stone-600">Effective: {formatDate(selectedAward['Start Date'])}</span>
+                </div>
+                {selectedAward.Description && (
+                  <p className="text-xs text-stone-700 leading-relaxed pt-1.5">
+                    {selectedAward.Description}
+                  </p>
+                )}
+              </div>
+
+              {/* Loading Skeleton or Telemetry & Stepper Ledger */}
+              {isLoadingTransactions ? (
+                <div className="py-20 text-center space-y-3">
+                  <Loader2 className="w-7 h-7 mx-auto animate-spin text-blue-900" />
+                  <div className="space-y-1">
+                    <div className="text-xs font-serif font-bold text-stone-800">
+                      Fetching complete modification ledger...
+                    </div>
+                    <div className="text-[11px] text-stone-500 font-sans">
+                      Calculating budget creep across all action dates & line items
+                    </div>
+                  </div>
+                </div>
+              ) : transactionError ? (
+                <div className="p-3.5 bg-stone-50 border border-stone-200 rounded text-stone-600 text-xs">
+                  {transactionError}
+                </div>
+              ) : (
+                <>
+                  {/* Creep Telemetry Bar (3 Columns - Split Track) */}
+                  {creepStats && (
+                    <div className="grid grid-cols-3 gap-2 p-3 bg-stone-50 border border-stone-200 rounded text-center">
+                      <div className="space-y-1">
+                        <div className="text-[10px] text-stone-500 uppercase tracking-wider font-medium">
+                          Promised Budget
+                        </div>
+                        <div className="text-xs font-semibold text-stone-800 tabular-nums">
+                          {creepStats.isZeroCeilingIdv ? 'N/A' : formatCurrency(creepStats.initialValue, true)}
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 border-x border-stone-200 px-1">
+                        <div className="text-[10px] text-stone-500 uppercase tracking-wider font-medium">
+                          Current Cost to Public
+                        </div>
+                        <div className="text-xs font-bold text-stone-900 tabular-nums">
+                          {creepStats.isZeroCeilingIdv ? '$0 (Master IDV)' : formatCurrency(creepStats.currentValue, true)}
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <div className="text-[10px] text-stone-500 uppercase tracking-wider font-medium">
+                          Total Cost Bloat
+                        </div>
+                        <div
+                          className={`text-xs font-bold tabular-nums ${
+                            creepStats.isZeroCeilingIdv
+                              ? 'text-stone-600 bg-stone-100 px-1 py-0.5 rounded border border-stone-200 text-[10px]'
+                              : creepStats.dollarCreep > 0
+                              ? 'text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200'
+                              : 'text-stone-700 bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200'
+                          }`}
+                        >
+                          {creepStats.isZeroCeilingIdv
+                            ? 'Master Vehicle'
+                            : creepStats.dollarCreep > 0
+                            ? `+${formatCurrency(creepStats.dollarCreep, true)} (+${creepStats.percentCreep.toFixed(1)}%)`
+                            : '0.0% (On Budget)'}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Modification Stepper Ledger */}
+                  <div className="space-y-3 pt-1">
+                    <div className="flex items-center justify-between pb-1.5 border-b border-stone-200 text-stone-500 text-[11px] uppercase tracking-wider font-semibold">
+                      <span>Budget Modification History</span>
+                      <span className="tabular-nums">{transactions.length} Actions</span>
+                    </div>
+
+                    {transactions.length === 0 ? (
+                      <div className="py-6 text-center text-stone-500 font-serif italic text-xs">
+                        Initial award only — no subsequent modifications recorded.
+                      </div>
+                    ) : (
+                      <div className="relative border-l border-stone-200 ml-3.5 pl-5 space-y-4 pt-1">
+                        {transactions.map((tx, idx) => {
+                          const isIdv = creepStats?.isTrackIdv;
+                          const delta = isIdv
+                            ? (tx.base_and_all_options_value ??
+                               tx['Base and All Options Value'] ??
+                               tx.federal_action_obligation ??
+                               tx['Transaction Amount'] ??
+                               0)
+                            : (tx.federal_action_obligation ??
+                               tx['Federal Action Obligation'] ??
+                               tx['Transaction Amount'] ??
+                               0);
+                          const modNum = tx.modification_number ?? tx['Modification Number'] ?? `${idx}`;
+                          const actionType =
+                            tx.action_type_description ?? tx['Action Type'] ?? 'Budget Adjustment';
+                          const txDate = tx.action_date ?? tx['Action Date'];
+
+                          const isPositive = delta > 0;
+                          const isNegative = delta < 0;
+
+                          return (
+                            <div key={tx.id || idx} className="relative group">
+                              {/* Stepper Dot */}
+                              <div
+                                className={`absolute -left-[25px] top-1 w-2.5 h-2.5 rounded-full border-2 border-white shadow-xs ${
+                                  idx === 0
+                                    ? 'bg-blue-900'
+                                    : isPositive
+                                    ? 'bg-rose-600'
+                                    : 'bg-stone-400'
+                                }`}
+                              />
+
+                              {/* Transaction Card */}
+                              <div className="space-y-1">
+                                <div className="flex items-center justify-between gap-2 text-xs">
+                                  <span className="text-stone-500 text-[11px]">{formatDate(txDate)}</span>
+                                  <span className="bg-stone-100 text-stone-700 px-1.5 py-0.5 rounded text-[10px] font-semibold">
+                                    MOD #{modNum}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center justify-between gap-2 pt-0.5">
+                                  <span className="text-xs text-stone-900 font-medium">
+                                    {actionType}
+                                  </span>
+                                  <span
+                                    className={`text-xs font-semibold tabular-nums ${
+                                      idx === 0
+                                        ? 'text-stone-900'
+                                        : isPositive
+                                        ? 'text-rose-700'
+                                        : isNegative
+                                        ? 'text-emerald-700'
+                                        : 'text-stone-500'
+                                    }`}
+                                  >
+                                    {delta > 0 ? `+${formatCurrency(delta)}` : formatCurrency(delta)}
+                                  </span>
+                                </div>
+
+                                {tx.description && (
+                                  <p className="text-xs text-stone-600 leading-relaxed font-normal pt-0.5">
+                                    {tx.description}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
       )}
 
-      {/* 3. Footer Telemetry Tag */}
-      <div className="px-5 py-3 bg-stone-50 border-t border-stone-200 flex items-center justify-between text-[11px] text-stone-500 font-sans flex-shrink-0">
-        <span>Source: USAspending.gov Open API</span>
-        <span className="font-mono text-[10px] text-stone-400">Live Query</span>
+      {/* 3. Footer Data Provenance */}
+      <div className="px-4 py-2.5 bg-stone-50 border-t border-stone-200 flex items-center justify-between text-[11px] text-stone-500 flex-shrink-0">
+        <span>USAspending Open Data · Congressional Directory</span>
+        <span className="text-stone-400">Live Federal Query</span>
       </div>
     </div>
   );

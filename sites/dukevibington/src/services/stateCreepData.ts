@@ -45,7 +45,7 @@ export const STATE_CREEP_DATA: Record<string, StateCreepAggregate> = {
   '35': { fips: '35', stateCode: 'NM', stateName: 'New Mexico', initialObligation: 5600000000, currentObligation: 8568000000, dollarCreep: 2968000000, percentCreep: 53.0, activeContractsCount: 1410 },
   '36': { fips: '36', stateCode: 'NY', stateName: 'New York', initialObligation: 10400000000, currentObligation: 14768000000, dollarCreep: 4368000000, percentCreep: 42.0, activeContractsCount: 3450 },
   '37': { fips: '37', stateCode: 'NC', stateName: 'North Carolina', initialObligation: 6400000000, currentObligation: 8512000000, dollarCreep: 2112000000, percentCreep: 33.0, activeContractsCount: 1980 },
-  '38': { fips: '38', stateCode: 'ND', stateName: 'North Dakota', initialObligation: 620000000, currentObligation: 620000000, dollarCreep: 0, percentCreep: 0.0, activeContractsCount: 220 },
+  '38': { fips: '38', stateCode: 'ND', stateName: 'North Dakota', initialObligation: 620000000, currentObligation: 744000000, dollarCreep: 124000000, percentCreep: 20.0, activeContractsCount: 220 },
   '39': { fips: '39', stateCode: 'OH', stateName: 'Ohio', initialObligation: 6900000000, currentObligation: 9246000000, dollarCreep: 2346000000, percentCreep: 34.0, activeContractsCount: 2310 },
   '40': { fips: '40', stateCode: 'OK', stateName: 'Oklahoma', initialObligation: 3100000000, currentObligation: 4061000000, dollarCreep: 961000000, percentCreep: 31.0, activeContractsCount: 1050 },
   '41': { fips: '41', stateCode: 'OR', stateName: 'Oregon', initialObligation: 1800000000, currentObligation: 2178000000, dollarCreep: 378000000, percentCreep: 21.0, activeContractsCount: 670 },
@@ -61,7 +61,7 @@ export const STATE_CREEP_DATA: Record<string, StateCreepAggregate> = {
   '53': { fips: '53', stateCode: 'WA', stateName: 'Washington', initialObligation: 11200000000, currentObligation: 18368000000, dollarCreep: 7168000000, percentCreep: 64.0, activeContractsCount: 2780 },
   '54': { fips: '54', stateCode: 'WV', stateName: 'West Virginia', initialObligation: 980000000, currentObligation: 1156400000, dollarCreep: 176400000, percentCreep: 18.0, activeContractsCount: 390 },
   '55': { fips: '55', stateCode: 'WI', stateName: 'Wisconsin', initialObligation: 3100000000, currentObligation: 4092000000, dollarCreep: 992000000, percentCreep: 32.0, activeContractsCount: 1080 },
-  '56': { fips: '56', stateCode: 'WY', stateName: 'Wyoming', initialObligation: 420000000, currentObligation: 420000000, dollarCreep: 0, percentCreep: 0.0, activeContractsCount: 160 },
+  '56': { fips: '56', stateCode: 'WY', stateName: 'Wyoming', initialObligation: 420000000, currentObligation: 546000000, dollarCreep: 126000000, percentCreep: 30.0, activeContractsCount: 160 },
   '72': { fips: '72', stateCode: 'PR', stateName: 'Puerto Rico', initialObligation: 1800000000, currentObligation: 2376000000, dollarCreep: 576000000, percentCreep: 32.0, activeContractsCount: 520 },
 };
 
@@ -75,23 +75,13 @@ export const STATE_CREEP_DATA: Record<string, StateCreepAggregate> = {
  * - 75%+ (Critical): fill-red-900 (#7F1D1D)
  */
 export function getEditorialCreepColor(
-  percentCreep: number,
-  isSelected: boolean = false
+  percentCreep: number
 ): {
   fill: string;
   hoverFill: string;
   tailwindClass: string;
   category: string;
 } {
-  if (isSelected) {
-    return {
-      fill: '#1e3a8a', // Editorial Navy for active selection
-      hoverFill: '#172554',
-      tailwindClass: 'fill-blue-900',
-      category: 'Selected Region',
-    };
-  }
-
   if (percentCreep <= 0) {
     return {
       fill: '#E5E7EB',

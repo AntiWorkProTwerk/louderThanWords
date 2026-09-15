@@ -76,23 +76,13 @@ export const STATE_BILL_VOLATILITY_DATA: Record<string, StateBillVolatilityAggre
  * - 76%+ (Omnibus Substitutions / Extreme Volatility): fill-red-900 (#7F1D1D)
  */
 export function getEditorialVolatilityColor(
-  volatilityScore: number,
-  isSelected: boolean = false
+  volatilityScore: number
 ): {
   fill: string;
   hoverFill: string;
   tailwindClass: string;
   category: string;
 } {
-  if (isSelected) {
-    return {
-      fill: '#1e3a8a', // Editorial Navy
-      hoverFill: '#172554',
-      tailwindClass: 'fill-blue-900',
-      category: 'Selected Delegation',
-    };
-  }
-
   if (volatilityScore <= 15) {
     return {
       fill: '#E5E7EB',
