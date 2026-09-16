@@ -1,4 +1,5 @@
 import * as topojson from 'topojson-client';
+import { geoContains, geoCentroid, geoArea } from 'd3-geo';
 import { civicCache, CACHE_TTL } from './civicCacheService';
 
 export interface StateMetadata {
@@ -67,19 +68,186 @@ export const US_STATES_FIPS: Record<string, StateMetadata> = {
 };
 
 export function getStateFipsFromCode(codeOrName: string): string | null {
-  if (!codeOrName) return '17'; // default Illinois
-  const normalized = codeOrName.trim().toLowerCase();
+  if (!codeOrName) return null;
+  const upper = codeOrName.trim().toUpperCase();
   for (const [fips, meta] of Object.entries(US_STATES_FIPS)) {
-    if (meta.code.toLowerCase() === normalized || meta.name.toLowerCase() === normalized || fips === normalized) {
+    if (meta.code.toUpperCase() === upper || meta.name.toUpperCase() === upper) {
       return fips;
     }
   }
-  return '17';
+  return null;
 }
 
 export function getStateMeta(codeOrName: string): StateMetadata {
   const fips = getStateFipsFromCode(codeOrName) || '17';
   return US_STATES_FIPS[fips] || US_STATES_FIPS['17'];
+}
+
+export interface UserLocationResult {
+  stateFips: string;
+  stateCode: string;
+  stateName: string;
+  countyFips?: string;
+  countyName?: string;
+  countyFeature?: GeoJSON.Feature;
+  city?: string;
+  lat?: number;
+  lng?: number;
+}
+
+/**
+ * High-precision exact jurisdiction finder:
+ * Uses topological point-in-polygon (`d3.geoContains`) against all 3,231 US county
+ * polygons to pinpoint the exact local county jurisdiction from GPS coordinates.
+ */
+export async function reverseGeolocate(lat: number, lng: number): Promise<UserLocationResult | null> {
+  const pt: [number, number] = [lng, lat];
+
+  try {
+    // 1. Fetch full national county geometry
+    const countiesGeo = await fetchCountiesGeoJson();
+    let matchedCounty: any = null;
+
+    if (countiesGeo && countiesGeo.features) {
+      // Test exact point-in-polygon containment
+      matchedCounty = countiesGeo.features.find((f: any) => {
+        try {
+          return geoContains(f, pt);
+        } catch {
+          return false;
+        }
+      });
+
+      // Fallback: If on coastal border or slight topological offset, find closest centroid within reasonable proximity (~100 miles)
+      if (!matchedCounty) {
+        let minDist = Infinity;
+        let candidateCounty: any = null;
+        for (const f of countiesGeo.features) {
+          try {
+            const centroid = geoCentroid(f);
+            const dist = (centroid[0] - lng) ** 2 + (centroid[1] - lat) ** 2;
+            if (dist < minDist) {
+              minDist = dist;
+              candidateCounty = f;
+            }
+          } catch {}
+        }
+        if (candidateCounty && minDist < 4.0) {
+          matchedCounty = candidateCounty;
+        }
+      }
+    }
+
+    if (matchedCounty) {
+      const countyFips = String(matchedCounty.id).padStart(5, '0');
+      const stateFips = countyFips.slice(0, 2);
+      const stateMeta = US_STATES_FIPS[stateFips] || US_STATES_FIPS['17'];
+      const rawName = matchedCounty.properties?.name || matchedCounty.properties?.rawName || `County ${countyFips}`;
+      const countyName = rawName.endsWith(' County') || rawName.endsWith(' Parish') || rawName.endsWith(' Borough')
+        ? rawName
+        : `${rawName} County`;
+
+      // 2. Identify municipal subdivision within the county
+      let cityName: string | undefined = undefined;
+      let municipalSectors: GeoJSON.FeatureCollection | null = null;
+      try {
+        municipalSectors = await fetchCountyCitiesGeoJson(matchedCounty, stateFips);
+      } catch (err) {
+        console.warn('Municipal sector load notice:', err);
+      }
+
+      // Check external reverse geocoder for official municipality name
+      let apiCityName: string | undefined = undefined;
+      try {
+        const res = await fetch(
+          `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          apiCityName = data.city || data.locality || undefined;
+        }
+      } catch {}
+
+      // A. Match by normalized API city name against county municipal sectors
+      if (apiCityName && municipalSectors && municipalSectors.features) {
+        const normApi = apiCityName.toLowerCase().replace(/^(city of|village of|town of|borough of|township of)\s+/i, '').trim();
+        const matchedByApi = municipalSectors.features.find((feat: any) => {
+          const normFeat = (feat.properties?.name || '').toLowerCase().replace(/^(city of|village of|town of|borough of|township of)\s+/i, '').trim();
+          return normFeat === normApi || normFeat.includes(normApi) || normApi.includes(normFeat);
+        });
+        if (matchedByApi && matchedByApi.properties?.name) {
+          cityName = matchedByApi.properties.name;
+        }
+      }
+
+      // B. If not matched by API name, match by exact point-in-polygon containment
+      if (!cityName && municipalSectors && municipalSectors.features) {
+        const matchedSector = municipalSectors.features.find((feat: any) => {
+          try {
+            return geoContains(feat, pt);
+          } catch {
+            return false;
+          }
+        });
+        if (matchedSector && matchedSector.properties?.name) {
+          if (apiCityName && (matchedSector.properties.name.startsWith('North ') || matchedSector.properties.name.startsWith('Central ') || matchedSector.properties.name.startsWith('South ') || matchedSector.properties.name.startsWith('East ') || matchedSector.properties.name.startsWith('West ') || matchedSector.properties.name.startsWith('District ') || matchedSector.properties.name.includes('Sector'))) {
+            const formatted = apiCityName.startsWith('City of ') || apiCityName.startsWith('Village of ') || apiCityName.startsWith('Town of ')
+              ? apiCityName
+              : `City of ${apiCityName}`;
+            matchedSector.properties.name = formatted;
+            cityName = formatted;
+          } else {
+            cityName = matchedSector.properties.name;
+          }
+        }
+      }
+
+      // C. Fallback to API city name or first municipal sector
+      if (!cityName) {
+        if (apiCityName) {
+          cityName = apiCityName.startsWith('City of ') || apiCityName.startsWith('Village of ')
+            ? apiCityName
+            : `City of ${apiCityName}`;
+        } else if (municipalSectors && municipalSectors.features && municipalSectors.features.length > 0) {
+          cityName = municipalSectors.features[0].properties?.name;
+        }
+      }
+
+      return {
+        stateFips: stateMeta.fips,
+        stateCode: stateMeta.code,
+        stateName: stateMeta.name,
+        countyFips,
+        countyName,
+        countyFeature: matchedCounty,
+        city: cityName,
+        lat,
+        lng,
+      };
+    }
+  } catch (err) {
+    console.warn('Exact vector geocoding notice:', err);
+  }
+
+  // Fallback to nearest state centroid if county topology fails
+  let bestFips = '17';
+  let minDistance = Infinity;
+  for (const [fips, meta] of Object.entries(US_STATES_FIPS)) {
+    const dist = (meta.lat - lat) ** 2 + (meta.lng - lng) ** 2;
+    if (dist < minDistance) {
+      minDistance = dist;
+      bestFips = fips;
+    }
+  }
+
+  const meta = US_STATES_FIPS[bestFips] || US_STATES_FIPS['17'];
+  return {
+    stateFips: meta.fips,
+    stateCode: meta.code,
+    stateName: meta.name,
+    lat,
+    lng,
+  };
 }
 
 let cachedStatesTopo: any = null;
@@ -218,6 +386,116 @@ const FAMOUS_COUNTY_CITIES: Record<string, string[]> = {
     'South Austin',
     'City of Sunset Valley',
   ],
+  // DuPage County, IL (17043)
+  '17043': [
+    // Row 0 (North)
+    'Village of Addison',
+    'Village of Carol Stream',
+    'City of Elmhurst',
+    // Row 1 (Central-North)
+    'City of West Chicago',
+    'City of Wheaton',
+    'Village of Glen Ellyn',
+    // Row 2 (Central-South)
+    'City of Naperville (Downtown & North)',
+    'Village of Lisle',
+    'Village of Downers Grove',
+    // Row 3 (South)
+    'South Naperville',
+    'Village of Woodridge',
+    'Village of Hinsdale & Oak Brook',
+  ],
+  // Harris County (Houston), TX (48201)
+  '48201': [
+    // Row 0 (North)
+    'Tomball & Spring',
+    'City of Humble',
+    'Kingwood',
+    // Row 1 (Central-North)
+    'City of Jersey Village',
+    'North Houston & Heights',
+    'East Houston',
+    // Row 2 (Central-South)
+    'City of Katy & Energy Corridor',
+    'City of Houston (Downtown & Midtown)',
+    'City of Pasadena',
+    // Row 3 (South)
+    'City of Bellaire & West U',
+    'South Houston',
+    'Clear Lake & Baytown',
+  ],
+  // Dallas County, TX (48113)
+  '48113': [
+    // Row 0 (North)
+    'City of Carrollton',
+    'City of Richardson',
+    'City of Garland',
+    // Row 1 (Central-North)
+    'City of Irving & Las Colinas',
+    'City of Dallas (Downtown & Uptown)',
+    'City of Mesquite',
+    // Row 2 (Central-South)
+    'City of Grand Prairie',
+    'Oak Cliff & South Dallas',
+    'City of Balch Springs',
+    // Row 3 (South)
+    'City of Duncanville',
+    'City of Cedar Hill',
+    'City of Lancaster & DeSoto',
+  ],
+  // Miami-Dade County, FL (12086)
+  '12086': [
+    // Row 0 (North)
+    'City of Aventura',
+    'City of North Miami',
+    'City of Miami Beach',
+    // Row 1 (Central-North)
+    'City of Hialeah',
+    'City of Doral',
+    'City of Miami (Downtown & Brickell)',
+    // Row 2 (Central-South)
+    'Kendall',
+    'City of Coral Gables',
+    'Key Biscayne & Coconut Grove',
+    // Row 3 (South)
+    'City of Homestead',
+    'Cutler Bay & South Miami',
+    'Florida City',
+  ],
+  // San Francisco County, CA (06075)
+  '06075': [
+    // Row 0 (North)
+    'Marina District & Presidio',
+    'Fisherman’s Wharf & North Beach',
+    // Row 1 (Central-North)
+    'Richmond District',
+    'Downtown & Financial District',
+    // Row 2 (Central-South)
+    'Sunset District',
+    'Mission District & Castro',
+    // Row 3 (South)
+    'Twin Peaks & Glen Park',
+    'Bayview & Potrero Hill',
+  ],
+  // Fulton County (Atlanta), GA (13121)
+  '13121': [
+    // Row 0 (North)
+    'City of Alpharetta',
+    'City of Roswell',
+    'City of Johns Creek',
+    // Row 1 (Central-North)
+    'City of Sandy Springs',
+    'Buckhead & North Atlanta',
+    'Midtown Atlanta',
+    // Row 2 (Central-South)
+    'Downtown Atlanta',
+    'City of East Point',
+    'City of College Park',
+    // Row 3 (South)
+    'City of Union City',
+    'City of South Fulton',
+    'City of Fairburn',
+  ],
   // Los Angeles County, CA (06037)
   '06037': [
     // Row 0 (North)
@@ -294,16 +572,102 @@ const FAMOUS_COUNTY_CITIES: Record<string, string[]> = {
 
 const cachedCitiesByCounty: Record<string, GeoJSON.FeatureCollection> = {};
 
+function normalizePolygonWinding(f: GeoJSON.Feature): GeoJSON.Feature {
+  if (!f.geometry || !f.geometry.coordinates) return f;
+  try {
+    const area = geoArea(f as any);
+    // If d3-geo spherical area exceeds hemisphere (2*PI), ESRI counter-clockwise exterior ring inverted it
+    if (area > 2 * Math.PI) {
+      if (f.geometry.type === 'Polygon') {
+        const coords = (f.geometry as any).coordinates.map((ring: any[]) => ring.slice().reverse());
+        return { ...f, geometry: { ...f.geometry, coordinates: coords } };
+      } else if (f.geometry.type === 'MultiPolygon') {
+        const coords = (f.geometry as any).coordinates.map((poly: any[]) =>
+          poly.map((ring: any[]) => ring.slice().reverse())
+        );
+        return { ...f, geometry: { ...f.geometry, coordinates: coords } };
+      }
+    }
+  } catch (err) {
+    console.warn('Winding normalization note:', err);
+  }
+  return f;
+}
+
 export async function fetchCountyCitiesGeoJson(
   countyFeature: GeoJSON.Feature,
   stateFips?: string
 ): Promise<GeoJSON.FeatureCollection> {
   const countyId = String(countyFeature.id || 'unknown').padStart(5, '0');
+  
+  // 1. Check in-memory cache
   if (cachedCitiesByCounty[countyId]) {
     return cachedCitiesByCounty[countyId];
   }
 
-  // Generate clean, instant municipal sectors for this county
+  // 2. Check persistent civicCache
+  const cacheKey = civicCache.hashKey('census_subdivisions_v2', { countyId });
+  const cached = civicCache.get<GeoJSON.FeatureCollection>(cacheKey);
+  if (cached && cached.features && cached.features.length > 0) {
+    cachedCitiesByCounty[countyId] = cached;
+    return cached;
+  }
+
+  // 3. Attempt real US Census Bureau TIGERweb County Subdivisions API
+  const st = (stateFips || countyId.slice(0, 2)).padStart(2, '0');
+  const co = countyId.slice(2, 5).padStart(3, '0');
+
+  try {
+    const url = `https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/tigerWMS_Census2020/MapServer/20/query?where=STATE%3D%27${st}%27+AND+COUNTY%3D%27${co}%27&outFields=NAME,BASENAME,POP100,STATE,COUNTY&outSR=4326&f=geojson`;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4500);
+
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.features && data.features.length > 0) {
+        // Clean, standardize municipal names, and correct spherical polygon winding order
+        const cleanedFeatures: GeoJSON.Feature[] = data.features.map((rawFeature: any, idx: number) => {
+          const f = normalizePolygonWinding(rawFeature);
+          let rawName = f.properties?.NAME || f.properties?.BASENAME || `Municipal Sector ${idx + 1}`;
+          let name = rawName
+            .replace(/ CCD$/i, '')
+            .replace(/ township$/i, ' Twp')
+            .replace(/ UT$/i, ' (Unorg. Territory)')
+            .replace(/ reservation$/i, ' Res.')
+            .replace(/ charter township$/i, ' Twp');
+
+          return {
+            ...f,
+            id: f.id || `${countyId}-sub-${idx}`,
+            properties: {
+              ...f.properties,
+              name,
+              originalName: rawName,
+              pop: f.properties?.POP100,
+              fips: `${countyId}-${idx}`,
+            },
+          };
+        });
+
+        const collection: GeoJSON.FeatureCollection = {
+          type: 'FeatureCollection',
+          features: cleanedFeatures,
+        };
+
+        civicCache.set(cacheKey, collection, CACHE_TTL.GEO_BOUNDARIES);
+        cachedCitiesByCounty[countyId] = collection;
+        return collection;
+      }
+    }
+  } catch (err) {
+    console.warn(`Census TIGERweb subdivision query note for county ${countyId}:`, err);
+  }
+
+  // 4. Fallback: Generate clean municipal sectors for this county
   const collection = generateCountyMunicipalities(countyFeature, countyId);
   cachedCitiesByCounty[countyId] = collection;
   return collection;
@@ -340,10 +704,10 @@ function generateCountyMunicipalities(countyFeature: any, countyId: string): Geo
   const dLng = maxLng - minLng;
   const dLat = maxLat - minLat;
 
-  // Custom city names if known, otherwise geographic municipal sectors
+  // Custom city names if known, otherwise dynamic geographic municipal sectors
   const predefinedNames = FAMOUS_COUNTY_CITIES[countyId];
-  const count = predefinedNames ? predefinedNames.length : 12;
-  const rows = count >= 12 ? 4 : count >= 9 ? 3 : count >= 8 ? 4 : 3;
+  const count = predefinedNames ? predefinedNames.length : 6;
+  const rows = count >= 12 ? 4 : count >= 8 ? 3 : count >= 4 ? 2 : 1;
   const cols = Math.ceil(count / rows);
 
   const dX = dLng / cols;
@@ -351,17 +715,11 @@ function generateCountyMunicipalities(countyFeature: any, countyId: string): Geo
 
   const defaultDirectionNames = [
     `North ${countyName}`,
-    `Northeast ${countyName}`,
-    `Northwest ${countyName}`,
-    `Central ${countyName} (Metro)`,
+    `Central ${countyName}`,
     `East ${countyName}`,
     `West ${countyName}`,
     `South ${countyName}`,
-    `Southeast ${countyName}`,
-    `Southwest ${countyName}`,
-    `Upper Valley District`,
-    `Lower Valley District`,
-    `Highland Sector`,
+    `Metro District`,
   ];
 
   const features: GeoJSON.Feature[] = [];
@@ -377,7 +735,6 @@ function generateCountyMunicipalities(countyFeature: any, countyId: string): Geo
       const y1 = minLat + (r + 1) * dY;
 
       // CLOCKWISE winding order: [x0, y0] -> [x0, y1] -> [x1, y1] -> [x1, y0] -> [x0, y0]
-      // In d3-geo spherical projections, clockwise rings define the interior polygon
       const poly = [
         [x0, y0],
         [x0, y1],

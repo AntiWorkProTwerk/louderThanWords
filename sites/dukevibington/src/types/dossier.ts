@@ -20,6 +20,7 @@ export interface DossierMetricConfig {
 }
 
 export interface DossierHoverTelemetry {
+  id?: string;
   title: string;
   subtitle: string;
   badgeLabel?: string;
