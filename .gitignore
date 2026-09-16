@@ -12,3 +12,7 @@ dist/
 servers/dukevibington/seed_data/
 servers/dukevibington/bundles/
 states/
+
+# Lockfiles
+package-lock.json
+
