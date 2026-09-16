@@ -21,6 +21,7 @@ import {
   Layers,
   ArrowUpRight,
   Info,
+  Filter,
 } from 'lucide-react';
 import { CivicEdgeApiClient } from '../services/civicEdgeApiClient';
 import { civicCache, CACHE_TTL } from '../services/civicCacheService';
@@ -62,6 +63,7 @@ export interface USAspendingTransactionItem {
   desc?: string;
   modification_number?: string;
   mod?: string;
+  m?: string;
   action_type_description?: string;
 }
 
@@ -149,10 +151,10 @@ export type LedgerCategory = 'contracts' | 'vendors' | 'offices';
 
 export const GLOSSARY_DEFINITIONS = {
   'initial-obligation': {
-    title: 'Initial Mod #0 Obligation (Definitive Baseline)',
+    title: 'Initial Obligated Baseline (Inception Value)',
     category: 'Baseline Accounting',
     description:
-      'The legally binding public funding committed at contract inception (Modification 0). All taxpayer cost overrun math is measured against this real baseline.',
+      'The legally binding public funding committed at contract inception (Modification 0 or initial funding action). For agreements executed at $0 administrative baseline (such as M&O contracts), this reflects the initial funding obligation.',
   },
   'current-total': {
     title: 'Current Total Obligated (Cumulative Award)',
@@ -718,10 +720,24 @@ export const StateHqBadge: React.FC<{ hqState?: string; isOutState?: boolean }> 
   );
 };
 
+export interface ContractSplitTrackStats {
+  initialValue: number;
+  currentValue: number;
+  dollarCreep: number;
+  percentCreep: number;
+  isTrackIdv: boolean;
+  initialLabel: string;
+  currentLabel: string;
+  isZeroInceptionMod?: boolean;
+  inceptionModNumber?: string;
+  firstFundingModNumber?: string;
+  baselineExplanation?: string;
+}
+
 export const calculateContractSplitTrackCreep = (
   award: USAspendingAwardItem,
   transactions: USAspendingTransactionItem[] = []
-) => {
+): ContractSplitTrackStats => {
   const piid = award['Award ID'] || award.award_id_piid || award.piid || award.generated_internal_id || '';
   const isTrackIdv = Boolean(
     piid.startsWith('IDV') ||
@@ -732,6 +748,10 @@ export const calculateContractSplitTrackCreep = (
 
   let initialValue = 0;
   let currentValue = 0;
+  let isZeroInceptionMod = false;
+  let inceptionModNumber = '0';
+  let firstFundingModNumber = '';
+  let baselineExplanation: string | undefined = undefined;
 
   if (transactions && transactions.length > 0) {
     const sortedTxs = [...transactions].sort((a, b) => {
@@ -740,8 +760,61 @@ export const calculateContractSplitTrackCreep = (
       return da - db;
     });
 
-    const mod0 = sortedTxs.find((t) => (t.modification_number || t.mod || '').trim() === '0') || sortedTxs[0];
-    initialValue = Number(mod0.federal_action_obligation ?? mod0.o ?? award.initial_obligation ?? award['Initial Obligation'] ?? 0);
+    const mod0 =
+      sortedTxs.find((t) => {
+        const m = (t.modification_number || t.mod || t.m || '').trim();
+        return m === '0' || m === '00' || m === 'P00000';
+      }) || sortedTxs[0];
+
+    inceptionModNumber = (mod0.modification_number || mod0.mod || mod0.m || '0').trim();
+    const mod0Amt = Number(mod0.federal_action_obligation ?? mod0.o ?? 0);
+
+    if (mod0Amt > 0) {
+      initialValue = mod0Amt;
+    } else {
+      // Mod 0 was executed with $0 (administrative inception agreement).
+      isZeroInceptionMod = true;
+      const inceptionDate = mod0.action_date || mod0.d || sortedTxs[0]?.action_date || sortedTxs[0]?.d;
+      const inceptionDateTxs = sortedTxs.filter((t) => (t.action_date || t.d) === inceptionDate);
+      const day1Sum = inceptionDateTxs.reduce(
+        (sum, t) => sum + Number(t.federal_action_obligation ?? t.o ?? 0),
+        0
+      );
+
+      const firstFundingTx = sortedTxs.find(
+        (t) => Number(t.federal_action_obligation ?? t.o ?? 0) > 0
+      );
+      if (firstFundingTx) {
+        firstFundingModNumber = (
+          firstFundingTx.modification_number ||
+          firstFundingTx.mod ||
+          firstFundingTx.m ||
+          ''
+        ).trim();
+      }
+
+      if (day1Sum > 0) {
+        initialValue = day1Sum;
+        baselineExplanation = `Inception Mod ${inceptionModNumber} executed at $0; initial obligation of ${formatCurrency(
+          day1Sum,
+          true
+        )} commenced on award date (${formatDate(inceptionDate)}).`;
+      } else if (firstFundingTx) {
+        initialValue = Number(firstFundingTx.federal_action_obligation ?? firstFundingTx.o ?? 0);
+        const fDate = firstFundingTx.action_date || firstFundingTx.d;
+        baselineExplanation = `Inception Mod ${inceptionModNumber} executed at $0; initial obligation commenced with Mod ${
+          firstFundingModNumber || '1'
+        } (${formatCurrency(initialValue, true)}) on ${formatDate(fDate)}.`;
+      } else {
+        initialValue = Number(
+          award.initial_obligation ??
+            award['Initial Obligation'] ??
+            award['Base and Exercised Options Value'] ??
+            award['Base and All Options Value'] ??
+            0
+        );
+      }
+    }
 
     const netCumulative = sortedTxs.reduce(
       (sum, t) => sum + Number(t.federal_action_obligation ?? t.o ?? 0),
@@ -749,18 +822,24 @@ export const calculateContractSplitTrackCreep = (
     );
     currentValue = Math.max(
       netCumulative,
-      Number(award.current_obligation ?? award['Award Amount'] ?? award['Base and All Options Value'] ?? 0)
+      Number(
+        award.current_obligation ??
+          award['Award Amount'] ??
+          award['Base and All Options Value'] ??
+          0
+      )
     );
   } else {
-    initialValue = Number(
+    const baseVal = Number(
       award.initial_obligation ??
         award['Initial Obligation'] ??
         award['Base and Exercised Options Value'] ??
-        award['Base and All Options Value'] ??
-        award.current_obligation ??
-        award['Award Amount'] ??
         0
     );
+    initialValue =
+      baseVal > 0
+        ? baseVal
+        : Number(award.current_obligation ?? award['Award Amount'] ?? 0);
     currentValue = Number(
       award.current_obligation ??
         award['Award Amount'] ??
@@ -771,15 +850,21 @@ export const calculateContractSplitTrackCreep = (
   }
 
   const dollarCreep =
-    award.dollar_creep !== undefined
+    award.dollar_creep !== undefined && !isZeroInceptionMod
       ? Number(award.dollar_creep)
       : Math.max(0, currentValue - initialValue);
   const percentCreep =
-    award.percent_creep !== undefined
+    award.percent_creep !== undefined && !isZeroInceptionMod
       ? Number(award.percent_creep)
       : initialValue > 0
       ? (dollarCreep / initialValue) * 100
       : 0;
+
+  const initialLabel = isTrackIdv
+    ? 'Ceiling Baseline'
+    : isZeroInceptionMod
+    ? 'Initial Funding Baseline'
+    : 'Mod #0 Initial Baseline';
 
   return {
     initialValue,
@@ -787,8 +872,12 @@ export const calculateContractSplitTrackCreep = (
     dollarCreep,
     percentCreep,
     isTrackIdv,
-    initialLabel: isTrackIdv ? 'Ceiling Baseline' : 'Mod #0 Initial Baseline',
+    initialLabel,
     currentLabel: 'Current Obligated',
+    isZeroInceptionMod,
+    inceptionModNumber,
+    firstFundingModNumber,
+    baselineExplanation,
   };
 };
 
@@ -1451,7 +1540,7 @@ const ItemizedLedgerView: React.FC<ItemizedLedgerViewProps> = ({
                     <div className="bg-stone-50 dark:bg-[#18191c] p-3 rounded-xs border border-stone-100 dark:border-[#2e313a] flex items-center justify-between gap-3">
                       <div>
                         <div className="text-[10px] font-bold text-stone-500 dark:text-zinc-400 uppercase tracking-wide">
-                          Mod #0 Initial
+                          {stats.initialLabel}
                         </div>
                         <div className="text-xs sm:text-sm font-mono font-bold text-stone-800 dark:text-zinc-200">
                           {formatCurrency(stats.initialValue, true)}
@@ -1690,6 +1779,7 @@ const ContractDetailView: React.FC<ContractDetailViewProps> = ({
   onBack,
   displayName,
 }) => {
+  const [stepperFilter, setStepperFilter] = useState<'funding' | 'all'>('funding');
   const stats = calculateContractSplitTrackCreep(award, transactions);
   const piid =
     award['Award ID'] ||
@@ -1729,6 +1819,70 @@ const ContractDetailView: React.FC<ContractDetailViewProps> = ({
       recipientName
     );
   const isIdv = stats.isTrackIdv;
+
+  // Process itemized transaction history with running balances and classification
+  const processedTransactions = useMemo(() => {
+    let runningCumulative = 0;
+    return transactions.map((tx, idx) => {
+      const modNum = (tx.modification_number || tx.mod || tx.m || `${idx}`).trim();
+      const amt = Number(tx.federal_action_obligation ?? tx.o ?? 0);
+      const date = tx.action_date || tx.d || '';
+      runningCumulative += amt;
+
+      let actionType: 'BASE' | 'FUNDING' | 'DEOBLIGATION' | 'ADMIN' = 'FUNDING';
+      let actionDesc = tx.description || tx.desc || tx.action_type_description || '';
+
+      if (modNum === '0' || modNum === '00' || modNum === 'P00000') {
+        actionType = 'BASE';
+        if (!actionDesc || actionDesc === 'Scope Action') {
+          actionDesc =
+            amt === 0
+              ? 'Base contract vehicle executed at inception ($0 administrative agreement).'
+              : 'Base contract inception award obligation.';
+        }
+      } else if (amt === 0 || modNum.startsWith('M')) {
+        actionType = 'ADMIN';
+        if (!actionDesc || actionDesc === 'Scope Action') {
+          actionDesc =
+            'Administrative modification (FAR Part 43) — terms, clauses, or scope adjustment with no obligation change.';
+        }
+      } else if (amt < 0) {
+        actionType = 'DEOBLIGATION';
+        if (!actionDesc || actionDesc === 'Scope Action') {
+          actionDesc = 'De-obligation modification — reduction or reallocation of obligated funds.';
+        }
+      } else {
+        actionType = 'FUNDING';
+        if (!actionDesc || actionDesc === 'Scope Action') {
+          actionDesc = modNum.startsWith('A')
+            ? 'Accounting / funding obligation modification.'
+            : 'Incremental contract funding obligation.';
+        }
+      }
+
+      return {
+        ...tx,
+        modNum,
+        amt,
+        date,
+        runningCumulative,
+        actionType,
+        actionDesc,
+      };
+    });
+  }, [transactions]);
+
+  const fundingOnlyCount = useMemo(
+    () => processedTransactions.filter((tx) => tx.amt !== 0).length,
+    [processedTransactions]
+  );
+
+  const displayedTransactions = useMemo(() => {
+    if (stepperFilter === 'funding') {
+      return processedTransactions.filter((tx) => tx.amt !== 0);
+    }
+    return processedTransactions;
+  }, [processedTransactions, stepperFilter]);
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-white dark:bg-[#18191c] font-sans">
@@ -1825,6 +1979,17 @@ const ContractDetailView: React.FC<ContractDetailViewProps> = ({
               )}
             </div>
           </div>
+
+          {/* Inception Context Banner */}
+          {stats.baselineExplanation && (
+            <div className="mt-2 p-2.5 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/50 rounded-xs flex items-start gap-2">
+              <Info className="w-3.5 h-3.5 text-blue-700 dark:text-sky-400 shrink-0 mt-0.5" />
+              <div className="text-[11px] text-blue-900 dark:text-blue-200 font-sans leading-relaxed">
+                <span className="font-bold">Inception Baseline Context: </span>
+                {stats.baselineExplanation}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Contract Statement of Work */}
@@ -1841,13 +2006,43 @@ const ContractDetailView: React.FC<ContractDetailViewProps> = ({
 
         {/* Transaction Lifecycle Timeline */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between border-b border-stone-200 dark:border-[#2e313a] pb-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-zinc-300">
-              Mod 0 → Mod N Transaction Stepper
-            </span>
-            <span className="text-xs font-mono font-semibold text-stone-500 dark:text-zinc-400">
-              {transactions.length} ACTIONS
-            </span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-stone-200 dark:border-[#2e313a] pb-2 gap-2">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-zinc-300">
+                Mod 0 → Mod N Transaction Stepper
+              </span>
+              <div className="text-[11px] font-mono text-stone-500 dark:text-zinc-400">
+                {displayedTransactions.length} of {processedTransactions.length} ACTIONS DISPLAYED
+              </div>
+            </div>
+
+            {/* Filter Toggle */}
+            {processedTransactions.length > 0 && (
+              <div className="flex items-center gap-1 bg-stone-100 dark:bg-[#1c1d22] p-1 rounded-xs border border-stone-200 dark:border-[#2e313a] self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => setStepperFilter('funding')}
+                  className={`px-2 py-1 text-[11px] font-mono font-bold rounded-xs transition-colors cursor-pointer ${
+                    stepperFilter === 'funding'
+                      ? 'bg-white dark:bg-[#2c2f38] text-stone-900 dark:text-white shadow-2xs'
+                      : 'text-stone-500 dark:text-zinc-400 hover:text-stone-800 dark:hover:text-zinc-200'
+                  }`}
+                >
+                  Funding Only ({fundingOnlyCount})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStepperFilter('all')}
+                  className={`px-2 py-1 text-[11px] font-mono font-bold rounded-xs transition-colors cursor-pointer ${
+                    stepperFilter === 'all'
+                      ? 'bg-white dark:bg-[#2c2f38] text-stone-900 dark:text-white shadow-2xs'
+                      : 'text-stone-500 dark:text-zinc-400 hover:text-stone-800 dark:hover:text-zinc-200'
+                  }`}
+                >
+                  All Actions ({processedTransactions.length})
+                </button>
+              </div>
+            )}
           </div>
 
           {isLoadingTransactions ? (
@@ -1857,52 +2052,75 @@ const ContractDetailView: React.FC<ContractDetailViewProps> = ({
                 Fetching itemized modification history from USAspending...
               </p>
             </div>
-          ) : transactions.length === 0 ? (
+          ) : processedTransactions.length === 0 ? (
             <div className="p-6 text-center bg-white dark:bg-[#22242a] border border-stone-200 dark:border-[#2e313a] rounded-sm text-xs text-stone-500 dark:text-zinc-400 italic">
               No modification transactions recorded for this award.
             </div>
           ) : (
             <div className="space-y-2">
-              {transactions.map((tx, idx) => {
-                const modNum = tx.modification_number ?? tx.mod ?? `${idx}`;
-                const amt = Number(tx.federal_action_obligation ?? tx.o ?? 0);
-                const date = tx.action_date || tx.d || '';
-                const desc = tx.description || tx.desc || tx.action_type_description || 'Scope Action';
-
+              {displayedTransactions.map((tx, idx) => {
                 return (
                   <div
                     key={tx.id || idx}
-                    className="p-3 bg-white dark:bg-[#22242a] border border-stone-200 dark:border-[#2e313a] rounded-xs space-y-1.5"
+                    className="p-3 bg-white dark:bg-[#22242a] border border-stone-200 dark:border-[#2e313a] rounded-xs space-y-1.5 shadow-2xs"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span
                           className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
-                            modNum === '0'
+                            tx.modNum === '0' || tx.modNum === '00' || tx.modNum === 'P00000'
                               ? 'bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-300'
                               : 'bg-stone-100 dark:bg-[#18191c] text-stone-700 dark:text-zinc-300'
                           }`}
                         >
-                          MOD #{modNum}
+                          MOD #{tx.modNum}
                         </span>
+
+                        {tx.actionType === 'BASE' && (
+                          <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/60">
+                            BASE AWARD
+                          </span>
+                        )}
+                        {tx.actionType === 'FUNDING' && (
+                          <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-red-50 dark:bg-rose-950/40 text-red-700 dark:text-rose-400 border border-red-200/50 dark:border-rose-900/50">
+                            FUNDING
+                          </span>
+                        )}
+                        {tx.actionType === 'DEOBLIGATION' && (
+                          <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-900/50">
+                            DE-OBLIGATION
+                          </span>
+                        )}
+                        {tx.actionType === 'ADMIN' && (
+                          <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-stone-100 dark:bg-[#18191c] text-stone-500 dark:text-zinc-400 border border-stone-200 dark:border-[#2e313a]">
+                            ADMIN (NON-FUNDING)
+                          </span>
+                        )}
+
                         <span className="text-xs font-mono text-stone-500 dark:text-zinc-400">
-                          {formatDate(date)}
+                          {formatDate(tx.date)}
                         </span>
                       </div>
-                      <div
-                        className={`text-xs sm:text-sm font-mono font-bold ${
-                          amt > 0
-                            ? 'text-red-700 dark:text-rose-400'
-                            : amt < 0
-                            ? 'text-emerald-700 dark:text-emerald-400'
-                            : 'text-stone-700 dark:text-zinc-300'
-                        }`}
-                      >
-                        {amt > 0 ? `+${formatCurrency(amt, true)}` : formatCurrency(amt, true)}
+
+                      <div className="text-right">
+                        <div
+                          className={`text-xs sm:text-sm font-mono font-bold ${
+                            tx.amt > 0
+                              ? 'text-red-700 dark:text-rose-400'
+                              : tx.amt < 0
+                              ? 'text-emerald-700 dark:text-emerald-400'
+                              : 'text-stone-500 dark:text-zinc-400'
+                          }`}
+                        >
+                          {tx.amt > 0 ? `+${formatCurrency(tx.amt, true)}` : formatCurrency(tx.amt, true)}
+                        </div>
+                        <div className="text-[10px] font-mono text-stone-400 dark:text-zinc-500">
+                          Bal: {formatCurrency(tx.runningCumulative, true)}
+                        </div>
                       </div>
                     </div>
                     <p className="text-xs text-stone-600 dark:text-zinc-400 leading-relaxed font-sans">
-                      {desc}
+                      {tx.actionDesc}
                     </p>
                   </div>
                 );
