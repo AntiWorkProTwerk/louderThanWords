@@ -4,6 +4,9 @@
  * Secured with strict Origin whitelist & Content Security Policies
  */
 
+import registry from '../sites.config.json';
+import { siteHandlers } from '../.generated/site-handlers.js';
+
 const ALLOWED_ORIGIN_PATTERNS = [
   /^https?:\/\/localhost(:\d+)?$/,
   /^https?:\/\/127\.0\.0\.1(:\d+)?$/,
@@ -55,9 +58,73 @@ export default {
       });
     }
 
-    // Normalize path to support both root /api/... and /dukevibington/api/... scoped endpoints
-    const pathname = url.pathname.replace(/^\/dukevibington/, '') || '/';
+    const requestPath = url.pathname;
+    const username = requestPath.split('/')[1];
+    const site = registry.sites?.find((entry) => entry.username === username);
 
+    // Site-specific API handler routing (e.g. AntiWorkProTwerk)
+    if (site) {
+      const prefix = `/${site.username}/api/`;
+      const envPrefix = `${site.username.toUpperCase().replaceAll('-', '_')}__`;
+      const siteEnv = Object.fromEntries(
+        Object.entries(env)
+          .filter(([key]) => key.startsWith(envPrefix))
+          .map(([key, value]) => [key.slice(envPrefix.length), value]),
+      );
+      siteEnv.PUBLIC_APP_URL ??= `https://${registry.domain}/${site.username}/`;
+      if (requestPath.startsWith(prefix) || requestPath === prefix.slice(0, -1)) {
+        const handler = siteHandlers?.[site.username];
+        if (handler) {
+          return handler(request, siteEnv, requestPath.slice(prefix.length));
+        }
+      }
+      const key = requestPath.slice(site.username.length + 2);
+      if (siteEnv.DATA && (key.startsWith('data/') || key.startsWith('tiles/'))) {
+        if (!['GET', 'HEAD'].includes(request.method))
+          return new Response('Method not allowed', { status: 405 });
+        let object;
+        try {
+          object = await siteEnv.DATA.get(key, { range: request.headers, onlyIf: request.headers });
+        } catch {
+          return new Response('Dataset temporarily unavailable', {
+            status: 503,
+            headers: { 'Cache-Control': 'no-store' },
+          });
+        }
+        if (!object) return new Response('Dataset not found', { status: 404 });
+        const headers = new Headers();
+        object.writeHttpMetadata(headers);
+        headers.set('ETag', object.httpEtag);
+        headers.set('Accept-Ranges', 'bytes');
+        headers.set('X-Content-Type-Options', 'nosniff');
+        headers.set(
+          'Cache-Control',
+          key.startsWith('data/releases/') || key.startsWith('tiles/releases/')
+            ? 'public, max-age=31536000, immutable'
+            : 'public, max-age=60, must-revalidate',
+        );
+        if (!('body' in object))
+          return new Response(null, {
+            status:
+              request.headers.has('if-match') || request.headers.has('if-unmodified-since')
+                ? 412
+                : 304,
+            headers,
+          });
+        if (object.range)
+          headers.set(
+            'Content-Range',
+            `bytes ${object.range.offset}-${object.range.offset + object.range.length - 1}/${object.size}`,
+          );
+        return new Response(request.method === 'HEAD' ? null : object.body, {
+          status: object.range ? 206 : 200,
+          headers,
+        });
+      }
+    }
+
+    // Normalize path for forensic procurement API
+    const pathname = url.pathname.replace(/^\/dukevibington/, '') || '/';
     const BACKEND_WORKER_URL = 'https://dukevibington-dev-louderthanwords.louder-than-words.workers.dev';
 
     // If D1 is not bound in this environment, transparently proxy /api/ requests to the backend worker
@@ -362,47 +429,7 @@ export default {
     }
 
     // =========================================================================
-    // 2. R2 BULK CIVIC BUNDLES (Sub-10ms Global Edge CDN)
-    // =========================================================================
-    if (pathname.startsWith('/bundles/')) {
-      const bundleKey = pathname.replace(/^\/bundles\//, '');
-      if (!bundleKey || !env.CIVIC_BUNDLES) {
-        return new Response(JSON.stringify({ error: 'Bundle key missing or R2 not bound' }), {
-          status: 404,
-          headers: { 'Content-Type': 'application/json', ...corsHeaders },
-        });
-      }
-
-      try {
-        // Look for dukevibington/ prefix first, then root prefix
-        let object = await env.CIVIC_BUNDLES.get(`dukevibington/${bundleKey}`);
-        if (!object) {
-          object = await env.CIVIC_BUNDLES.get(bundleKey);
-        }
-        if (!object) {
-          return new Response(JSON.stringify({ error: 'Bundle not found' }), {
-            status: 404,
-            headers: { 'Content-Type': 'application/json', ...corsHeaders },
-          });
-        }
-
-        const headers = new Headers(corsHeaders);
-        object.writeHttpMetadata(headers);
-        headers.set('etag', object.httpEtag);
-        headers.set('Content-Type', 'application/json');
-        headers.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
-
-        return new Response(object.body, { headers });
-      } catch (e) {
-        return new Response(JSON.stringify({ error: String(e) }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json', ...corsHeaders },
-        });
-      }
-    }
-
-    // =========================================================================
-    // 3. CIVIC KV / D1 CACHE LAYER (Dynamic Cache Fallback)
+    // 2. CIVIC KV / D1 CACHE LAYER (Dynamic Cache Fallback)
     // =========================================================================
     if (pathname.startsWith('/api/civic/cache')) {
       if (request.method === 'GET') {
@@ -469,7 +496,7 @@ export default {
     }
 
     // =========================================================================
-    // 4. STATIC SITE ASSET ROUTING & FALLBACK
+    // 3. STATIC SITE ASSET ROUTING & FALLBACK
     // =========================================================================
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       return new Response('Method not allowed', { status: 405 });
@@ -521,6 +548,16 @@ export default {
       const rootHome = new URL('/index.html', url);
       const res = await env.ASSETS.fetch(new Request(rootHome, request));
       return addCacheHeaders(res, rootHome);
+    }
+
+    // Missing data/files must remain real 404s rather than receive an HTML shell.
+    if (
+      site &&
+      (requestPath.includes('/data/') ||
+        requestPath.includes('/tiles/') ||
+        /\.[^/]+$/.test(requestPath))
+    ) {
+      return directRes;
     }
 
     if (siteName) {

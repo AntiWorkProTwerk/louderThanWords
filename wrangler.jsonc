@@ -1,13 +1,20 @@
 {
-	"$schema": "./node_modules/wrangler/config-schema.json",
-	"name": "louderthanwords",
-	"account_id": "3b9f1c5cbf17023810d2362c4c6547c0",
-	"workers_dev": true,
-	"compatibility_date": "2026-09-14",
-	"main": "./worker/index.js",
-	"assets": {
-		"directory": "./dist",
-		"binding": "ASSETS",
-		"html_handling": "none"
-	}
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "louderthanwords",
+  "account_id": "3b9f1c5cbf17023810d2362c4c6547c0",
+  "workers_dev": true,
+  "compatibility_date": "2026-09-14",
+  "main": "./worker/index.js",
+  "routes": [
+    {
+      "pattern": "louderthanwords.fyi",
+      "custom_domain": true
+    }
+  ],
+  "assets": {
+    "run_worker_first": true,
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "html_handling": "none"
+  }
 }
