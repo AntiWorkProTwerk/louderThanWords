@@ -109,11 +109,21 @@ export interface CountyEdgeBundle {
 }
 
 export class CivicEdgeApiClient {
-  private static getBaseUrl(): string {
-    if (typeof window !== 'undefined' && window.location) {
-      return window.location.origin;
+  private static readonly BACKEND_FALLBACK = 'https://dukevibington-dev-louderthanwords.louder-than-words.workers.dev';
+
+  private static async fetchEdge(endpoint: string): Promise<Response> {
+    const origin = typeof window !== 'undefined' && window.location ? window.location.origin : '';
+    const primaryUrl = `${origin}${endpoint}`;
+
+    try {
+      const res = await fetch(primaryUrl);
+      if (res.ok) return res;
+    } catch {
+      // Direct origin unavailable or network fallback
     }
-    return 'https://louderthanwords.louder-than-words.workers.dev';
+
+    const fallbackUrl = `${this.BACKEND_FALLBACK}${endpoint}`;
+    return fetch(fallbackUrl);
   }
 
   /**
@@ -124,7 +134,7 @@ export class CivicEdgeApiClient {
     return civicCache.fetchCached(
       cacheKey,
       async () => {
-        const res = await fetch(`${this.getBaseUrl()}/api/creep/state/${encodeURIComponent(stateCode.toUpperCase())}`);
+        const res = await this.fetchEdge(`/api/creep/state/${encodeURIComponent(stateCode.toUpperCase())}`);
         if (!res.ok) return null;
         return res.json();
       },
@@ -140,8 +150,8 @@ export class CivicEdgeApiClient {
     return civicCache.fetchCached(
       cacheKey,
       async () => {
-        const res = await fetch(
-          `${this.getBaseUrl()}/api/creep/county/${encodeURIComponent(stateCode.toUpperCase())}/${encodeURIComponent(countyFips)}`
+        const res = await this.fetchEdge(
+          `/api/creep/county/${encodeURIComponent(stateCode.toUpperCase())}/${encodeURIComponent(countyFips)}`
         );
         if (!res.ok) return null;
         return res.json();
@@ -158,7 +168,7 @@ export class CivicEdgeApiClient {
     return civicCache.fetchCached(
       cacheKey,
       async () => {
-        const res = await fetch(`${this.getBaseUrl()}/api/creep/fiscal-years/${encodeURIComponent(jurisdictionId)}`);
+        const res = await this.fetchEdge(`/api/creep/fiscal-years/${encodeURIComponent(jurisdictionId)}`);
         if (!res.ok) return [];
         const data = await res.json();
         return data.fiscalYears || [];
@@ -175,7 +185,7 @@ export class CivicEdgeApiClient {
     return civicCache.fetchCached(
       cacheKey,
       async () => {
-        const res = await fetch(`${this.getBaseUrl()}/bundles/states/${encodeURIComponent(stateCode.toUpperCase())}.json`);
+        const res = await this.fetchEdge(`/bundles/states/${encodeURIComponent(stateCode.toUpperCase())}.json`);
         if (!res.ok) return null;
         return res.json();
       },
