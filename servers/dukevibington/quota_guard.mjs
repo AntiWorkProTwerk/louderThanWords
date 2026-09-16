@@ -15,10 +15,10 @@ const TRACKER_FILE = path.join(CACHE_DIR, 'quota_tracker.json');
 
 export const LIMITS = {
   // USAspending.gov safeguards
-  MAX_API_CALLS_PER_RUN: 150,      // Max live HTTP calls per CLI execution
-  MAX_API_CALLS_PER_DAY: 800,      // Max live HTTP calls in rolling 24h window
-  MAX_CONSECUTIVE_ERRORS: 3,       // Max HTTP 429/5xx errors before halting
-  API_MIN_DELAY_MS: 250,           // Rate-limiting delay between requests
+  MAX_API_CALLS_PER_RUN: 2500,     // Max live HTTP calls per CLI execution
+  MAX_API_CALLS_PER_DAY: 10000,    // Max live HTTP calls in rolling 24h window
+  MAX_CONSECUTIVE_ERRORS: 5,       // Max HTTP 429/5xx errors before halting
+  API_MIN_DELAY_MS: 150,           // Rate-limiting delay between requests
 
   // Cloudflare D1 Free Tier Safeguards (Free limit: 100k writes/day)
   MAX_D1_WRITES_PER_DAY: 20000,    // 20% safety threshold of daily free quota
