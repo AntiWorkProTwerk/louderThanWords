@@ -1,7 +1,7 @@
 {
 	"$schema": "./node_modules/wrangler/config-schema.json",
 	"name": "louderthanwords",
-	"account_id": "7a0041ac239768cfdb356ff743bd0bc9",
+	"account_id": "3b9f1c5cbf17023810d2362c4c6547c0",
 	"workers_dev": true,
 	"compatibility_date": "2026-09-14",
 	"main": "./worker/index.js",
@@ -9,12 +9,5 @@
 		"directory": "./dist",
 		"binding": "ASSETS",
 		"html_handling": "none"
-	},
-	"d1_databases": [
-		{
-			"binding": "DB",
-			"database_name": "civic_data",
-			"database_id": "9729fa7a-1324-4f40-9f61-f719486fc5fd"
-		}
-	]
+	}
 }

@@ -58,6 +58,29 @@ export default {
     // Normalize path to support both root /api/... and /dukevibington/api/... scoped endpoints
     const pathname = url.pathname.replace(/^\/dukevibington/, '') || '/';
 
+    const BACKEND_WORKER_URL = 'https://dukevibington-dev-louderthanwords.louder-than-words.workers.dev';
+
+    // If D1 is not bound in this environment, transparently proxy /api/ requests to the backend worker
+    if (!env.DB && (pathname.startsWith('/api/') || pathname.startsWith('/bundles/'))) {
+      const targetUrl = new URL(pathname + url.search, BACKEND_WORKER_URL);
+      const proxyReq = new Request(targetUrl, request);
+      try {
+        const proxyRes = await fetch(proxyReq);
+        const resHeaders = new Headers(proxyRes.headers);
+        Object.entries(corsHeaders).forEach(([k, v]) => resHeaders.set(k, v));
+        return new Response(proxyRes.body, {
+          status: proxyRes.status,
+          statusText: proxyRes.statusText,
+          headers: resHeaders,
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: 'Backend proxy error: ' + String(err) }), {
+          status: 502,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        });
+      }
+    }
+
     // =========================================================================
     // 1. FORENSIC PROCUREMENT EDGE API ROUTES (Backed by D1)
     // =========================================================================
