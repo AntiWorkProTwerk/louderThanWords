@@ -1,5 +1,5 @@
 /**
- * Civic Intelligence Full Batch Harvester & Pre-Seeder v2.0
+ * Civic Intelligence Full Batch Harvester & Pre-Seeder v2.0 (Multi-Threaded / Concurrent)
  * Harvests National, 50 States + DC, and all Major Counties from USAspending.gov,
  * reconstructs Mod #0 baselines, calculates creep, and generates seeds & R2 bundles.
  */
@@ -8,7 +8,13 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
-import { harvestJurisdiction, generateSqlBundle } from './ingest.mjs';
+import {
+  harvestJurisdiction,
+  generateSqlBundle,
+  resolveCounty,
+  getCountiesForState
+} from './ingest.mjs';
+import { quotaGuard } from './quota_guard.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,7 +27,7 @@ const US_STATES = [
   'NH', 'ME', 'MT', 'RI', 'DE', 'SD', 'ND', 'AK', 'DC', 'VT', 'WY'
 ];
 
-// Major Counties mapping per top state
+// Explicit Major Counties mapping for priority states
 const STATE_COUNTIES = {
   CO: [
     { fips: '041', name: 'El Paso County' },
@@ -34,7 +40,6 @@ const STATE_COUNTIES = {
     { fips: '069', name: 'Larimer County' },
     { fips: '123', name: 'Weld County' },
     { fips: '101', name: 'Pueblo County' },
-    { fips: '093', name: 'Park County' },
   ],
   IL: [
     { fips: '031', name: 'Cook County' },
@@ -44,10 +49,6 @@ const STATE_COUNTIES = {
     { fips: '197', name: 'Will County' },
     { fips: '019', name: 'Champaign County' },
     { fips: '167', name: 'Sangamon County' },
-    { fips: '163', name: 'St. Clair County' },
-    { fips: '119', name: 'Madison County' },
-    { fips: '143', name: 'Peoria County' },
-    { fips: '201', name: 'Winnebago County' },
   ],
   TX: [
     { fips: '201', name: 'Harris County' },
@@ -80,8 +81,6 @@ const STATE_COUNTIES = {
     { fips: '013', name: 'Arlington County' },
     { fips: '107', name: 'Loudoun County' },
     { fips: '153', name: 'Prince William County' },
-    { fips: '700', name: 'Newport News City' },
-    { fips: '710', name: 'Norfolk City' },
   ],
   FL: [
     { fips: '086', name: 'Miami-Dade County' },
@@ -91,13 +90,54 @@ const STATE_COUNTIES = {
     { fips: '031', name: 'Duval County' },
     { fips: '009', name: 'Brevard County' },
   ],
+  KS: [
+    { fips: '091', name: 'Johnson County' },
+    { fips: '173', name: 'Sedgwick County' },
+    { fips: '209', name: 'Wyandotte County' },
+    { fips: '177', name: 'Shawnee County' },
+  ],
+  MO: [
+    { fips: '189', name: 'St. Louis County' },
+    { fips: '510', name: 'St. Louis City' },
+    { fips: '095', name: 'Jackson County' },
+    { fips: '037', name: 'Cass County' },
+    { fips: '047', name: 'Clay County' },
+  ],
+  WA: [
+    { fips: '033', name: 'King County' },
+    { fips: '053', name: 'Pierce County' },
+    { fips: '061', name: 'Snohomish County' },
+    { fips: '005', name: 'Benton County' },
+  ],
 };
-
-import { quotaGuard } from './quota_guard.mjs';
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function harvestStateAndCounties(stateCode, { autoExecute = false, force = false, rebuild = false } = {}) {
+// Concurrent task pool runner
+async function mapConcurrent(items, concurrency, fn) {
+  const results = new Array(items.length);
+  let currentIndex = 0;
+
+  async function worker(workerId) {
+    while (currentIndex < items.length) {
+      const idx = currentIndex++;
+      const item = items[idx];
+      try {
+        results[idx] = await fn(item, idx, items.length, workerId);
+      } catch (err) {
+        console.error(`[Worker ${workerId}] ❌ Error processing ${item}:`, err.message);
+        results[idx] = { error: err.message, item };
+      }
+    }
+  }
+
+  const workerCount = Math.min(concurrency, items.length);
+  const workers = Array.from({ length: workerCount }, (_, i) => worker(i + 1));
+  await Promise.all(workers);
+  return results;
+}
+
+export async function harvestStateAndCounties(stateCode, { autoExecute = false, force = false, rebuild = false, workerId = 1, progressStr = '' } = {}) {
   const sqlDir = path.join(__dirname, 'seed_data');
   const bundleDir = path.join(__dirname, 'bundles', 'states');
   const sqlFile = path.join(sqlDir, `${stateCode}_seed.sql`);
@@ -106,67 +146,68 @@ async function harvestStateAndCounties(stateCode, { autoExecute = false, force =
   const alreadyHarvested = fs.existsSync(sqlFile) && fs.existsSync(bundleFile) && !rebuild && !force;
 
   if (alreadyHarvested) {
-    console.log(`\n======================================================`);
-    console.log(`⏩ [CACHED] ${stateCode} already harvested locally.`);
-    console.log(`   Bundle: ${bundleFile}`);
-    console.log(`   SQL:    ${sqlFile}`);
-    console.log(`======================================================`);
-
-    if (autoExecute) {
-      try {
-        quotaGuard.checkD1Budget(50);
-        console.log(`🚀 Seeding remote D1 for ${stateCode} from cached SQL...`);
-        execSync(`npx wrangler d1 execute civic_data --remote --file="${sqlFile}" --yes`, { stdio: 'inherit' });
-        quotaGuard.recordD1Write(50);
-
-        console.log(`☁️ Uploading cached ${stateCode} bundle to remote R2...`);
-        execSync(`npx wrangler r2 object put civic-bundles/dukevibington/states/${stateCode}.json --file="${bundleFile}" --remote`, { stdio: 'inherit' });
-        quotaGuard.recordR2Put();
-        console.log(`✅ ${stateCode} fully deployed to D1 and R2!`);
-      } catch (e) {
-        console.error(`Error deploying ${stateCode}:`, e.message);
-      }
-    }
-
-    return { stateCode, cached: true };
+    console.log(`[Worker ${workerId}] ⏩ [CACHED] ${stateCode} ${progressStr} (Bundle & SQL ready)`);
+    return { stateCode, cached: true, sqlFile, bundleFile };
   }
 
-  console.log(`\n======================================================`);
-  console.log(`🏛️ HARVESTING JURISDICTIONS FOR: ${stateCode}`);
-  console.log(`======================================================`);
+  console.log(`[Worker ${workerId}] 🏛️ [START] Harvesting ${stateCode} ${progressStr}...`);
 
   const sqlStatements = [];
-  const stateAwards = await harvestJurisdiction({ stateCode, limit: 25, force });
+  const stateAwards = await harvestJurisdiction({ stateCode, limit: 30, force });
   const stateBundle = generateSqlBundle({ stateCode, name: stateCode }, stateAwards);
   sqlStatements.push(stateBundle.sql);
 
-  const countyBundles = [];
-  const counties = STATE_COUNTIES[stateCode] || [];
+  // Group state awards by county dynamically
+  const countyAwardsMap = new Map(); // fips -> { meta: { fips, name }, awards: [] }
 
-  for (const c of counties) {
-    await sleep(250); // rate limiting
-    console.log(`  📍 Harvesting County: ${c.name} (${stateCode}-${c.fips})...`);
-    try {
-      const cAwards = await harvestJurisdiction({ stateCode, countyFips: c.fips, limit: 10, force });
-      if (cAwards.length > 0) {
-        const cBundle = generateSqlBundle({ stateCode, countyFips: c.fips, name: c.name }, cAwards);
-        sqlStatements.push(cBundle.sql);
-        countyBundles.push({
-          countyFips: c.fips,
-          name: c.name,
-          summary: cBundle.summary,
-          awards: cAwards,
-        });
+  for (const award of stateAwards) {
+    const rawCounty = award['Place of Performance County Name'] || award.recipient_location_county_name;
+    if (!rawCounty) continue;
+    const matched = resolveCounty(stateCode, rawCounty);
+    if (matched) {
+      if (!countyAwardsMap.has(matched.fips)) {
+        countyAwardsMap.set(matched.fips, { meta: matched, awards: [] });
       }
-    } catch (err) {
-      console.warn(`Could not harvest county ${c.name}:`, err.message);
+      countyAwardsMap.get(matched.fips).awards.push(award);
+    }
+  }
+
+  // Harvest dedicated awards for explicit major counties if specified
+  const explicitCounties = STATE_COUNTIES[stateCode] || [];
+  for (const c of explicitCounties) {
+    if (!countyAwardsMap.has(c.fips) && explicitCounties.length <= 4) {
+      try {
+        await sleep(150);
+        const cAwards = await harvestJurisdiction({ stateCode, countyFips: c.fips, limit: 10, force });
+        if (cAwards.length > 0) {
+          countyAwardsMap.set(c.fips, { meta: c, awards: cAwards });
+        }
+      } catch (err) {
+        // Continue if single county fails
+      }
+    }
+  }
+
+  // Generate SQL and bundle payloads for all discovered counties
+  const countyBundles = [];
+  for (const [fips, { meta, awards }] of countyAwardsMap.entries()) {
+    try {
+      const cBundle = generateSqlBundle({ stateCode, countyFips: fips, name: meta.name }, awards);
+      sqlStatements.push(cBundle.sql);
+      countyBundles.push({
+        countyFips: fips,
+        name: meta.name,
+        summary: cBundle.summary,
+        awards,
+      });
+    } catch (e) {
+      console.warn(`Could not bundle county ${meta.name} (${fips}):`, e.message);
     }
   }
 
   // 1. Output combined State + Counties D1 SQL Seed
   if (!fs.existsSync(sqlDir)) fs.mkdirSync(sqlDir, { recursive: true });
   fs.writeFileSync(sqlFile, sqlStatements.join('\n'), 'utf8');
-  console.log(`✨ Generated Comprehensive Seed SQL: ${sqlFile}`);
 
   // 2. Output R2 Bundle JSON
   if (!fs.existsSync(bundleDir)) fs.mkdirSync(bundleDir, { recursive: true });
@@ -182,30 +223,18 @@ async function harvestStateAndCounties(stateCode, { autoExecute = false, force =
   };
 
   fs.writeFileSync(bundleFile, JSON.stringify(bundlePayload, null, 2), 'utf8');
-  console.log(`📦 Generated Comprehensive R2 Bundle: ${bundleFile}`);
+  console.log(`[Worker ${workerId}] ✅ [DONE] ${stateCode} ${progressStr} (${stateAwards.length} awards, ${countyBundles.length} counties)`);
 
-  // 3. Auto Execute Remote D1 and R2 if requested
-  if (autoExecute) {
-    try {
-      const estimatedRows = stateAwards.length + countyBundles.reduce((s, c) => s + c.awards.length, 0) + 15;
-      quotaGuard.checkD1Budget(estimatedRows);
-      console.log(`🚀 Seeding remote D1 for ${stateCode}...`);
-      execSync(`npx wrangler d1 execute civic_data --remote --file="${sqlFile}" --yes`, { stdio: 'inherit' });
-      quotaGuard.recordD1Write(estimatedRows);
-
-      console.log(`☁️ Uploading ${stateCode} bundle to remote R2...`);
-      execSync(`npx wrangler r2 object put civic-bundles/dukevibington/states/${stateCode}.json --file="${bundleFile}" --remote`, { stdio: 'inherit' });
-      quotaGuard.recordR2Put();
-      console.log(`✅ ${stateCode} fully deployed to D1 and R2!`);
-    } catch (e) {
-      console.error(`Error deploying ${stateCode}:`, e.message);
-    }
-  }
-
-  return { stateCode, awardsCount: stateAwards.length, countiesCount: countyBundles.length };
+  return {
+    stateCode,
+    awardsCount: stateAwards.length,
+    countiesCount: countyBundles.length,
+    sqlFile,
+    bundleFile
+  };
 }
 
-async function harvestNational({ autoExecute = false, force = false, rebuild = false } = {}) {
+export async function harvestNational({ autoExecute = false, force = false, rebuild = false } = {}) {
   const sqlDir = path.join(__dirname, 'seed_data');
   const bundleDir = path.join(__dirname, 'bundles', 'states');
   const sqlFile = path.join(sqlDir, `US_seed.sql`);
@@ -215,34 +244,16 @@ async function harvestNational({ autoExecute = false, force = false, rebuild = f
 
   if (alreadyHarvested) {
     console.log(`\n======================================================`);
-    console.log(`⏩ [CACHED] National Federal Jurisdiction (US) already harvested locally.`);
-    console.log(`   Bundle: ${bundleFile}`);
-    console.log(`   SQL:    ${sqlFile}`);
+    console.log(`⏩ [CACHED] National Federal Jurisdiction (US) already ready.`);
     console.log(`======================================================`);
-
-    if (autoExecute) {
-      try {
-        quotaGuard.checkD1Budget(40);
-        console.log(`🚀 Seeding National Federal Data to remote D1 from cached SQL...`);
-        execSync(`npx wrangler d1 execute civic_data --remote --file="${sqlFile}" --yes`, { stdio: 'inherit' });
-        quotaGuard.recordD1Write(40);
-
-        console.log(`☁️ Uploading cached US bundle to remote R2...`);
-        execSync(`npx wrangler r2 object put civic-bundles/dukevibington/states/US.json --file="${bundleFile}" --remote`, { stdio: 'inherit' });
-        quotaGuard.recordR2Put();
-        console.log(`✅ National Federal data live in D1 and R2!`);
-      } catch (e) {
-        console.error(`Error deploying US National:`, e.message);
-      }
-    }
-    return;
+    return { stateCode: 'US', cached: true, sqlFile, bundleFile };
   }
 
   console.log(`\n======================================================`);
   console.log(`🇺🇸 HARVESTING NATIONAL FEDERAL JURISDICTION (US)`);
   console.log(`======================================================`);
 
-  const awards = await harvestJurisdiction({ stateCode: 'US', limit: 30, force });
+  const awards = await harvestJurisdiction({ stateCode: 'US', limit: 35, force });
   const result = generateSqlBundle({ stateCode: 'US', name: 'United States' }, awards);
 
   if (!fs.existsSync(sqlDir)) fs.mkdirSync(sqlDir, { recursive: true });
@@ -259,21 +270,42 @@ async function harvestNational({ autoExecute = false, force = false, rebuild = f
     awards,
   };
   fs.writeFileSync(bundleFile, JSON.stringify(bundlePayload, null, 2), 'utf8');
+  console.log(`✅ National Federal jurisdiction processed.`);
 
-  if (autoExecute) {
+  return { stateCode: 'US', awardsCount: awards.length, sqlFile, bundleFile };
+}
+
+// Deploy SQL and R2 bundles sequentially to avoid database contention
+export function deployArtifacts(items) {
+  console.log(`\n🚀 DEPLOYING HARVESTED ARTIFACTS TO CLOUDFLARE D1 & R2...`);
+  let deployedCount = 0;
+
+  for (const item of items) {
+    if (!item || item.error || !item.sqlFile || !fs.existsSync(item.sqlFile)) continue;
+    const st = item.stateCode;
     try {
-      quotaGuard.checkD1Budget(40);
-      console.log(`🚀 Seeding National Federal Data to remote D1...`);
-      execSync(`npx wrangler d1 execute civic_data --remote --file="${sqlFile}" --yes`, { stdio: 'inherit' });
-      quotaGuard.recordD1Write(40);
+      console.log(`[D1 Deploy] 🗄️ Seeding ${st} to remote D1...`);
+      execSync(`npx wrangler d1 execute civic_data --remote --file="${item.sqlFile}" --yes -c servers/dukevibington/wrangler.jsonc`, { stdio: 'inherit' });
+      quotaGuard.recordD1Write(45);
 
-      execSync(`npx wrangler r2 object put civic-bundles/dukevibington/states/US.json --file="${bundleFile}" --remote`, { stdio: 'inherit' });
-      quotaGuard.recordR2Put();
-      console.log(`✅ National Federal data live in D1 and R2!`);
+      if (item.bundleFile && fs.existsSync(item.bundleFile)) {
+        console.log(`[R2 Deploy] ☁️ Uploading ${st} bundle to remote R2...`);
+        try {
+          execSync(`npx wrangler r2 object put civic-bundles/dukevibington/states/${st}.json --file="${item.bundleFile}" --remote -c servers/dukevibington/wrangler.jsonc`, { stdio: 'inherit' });
+          quotaGuard.recordR2Put();
+        } catch (r2Err) {
+          console.warn(`R2 upload warning for ${st}:`, r2Err.message);
+        }
+      }
+
+      console.log(`✅ ${st} successfully deployed to Cloudflare D1!`);
+      deployedCount++;
     } catch (e) {
-      console.error(`Error deploying US National:`, e.message);
+      console.error(`❌ Deployment failed for ${st}:`, e.message);
     }
   }
+
+  console.log(`\n🎉 Deployed ${deployedCount} jurisdictions to Cloudflare!`);
 }
 
 async function main() {
@@ -284,13 +316,15 @@ async function main() {
   const rebuild = args.includes('--rebuild') || args.includes('--regenerate');
   const ignoreLimits = args.includes('--ignore-limits');
 
+  const concurrencyArg = args.find((a) => a.startsWith('--concurrency=') || a.startsWith('-c='));
+  const concurrency = concurrencyArg ? parseInt(concurrencyArg.split('=')[1], 10) || 4 : 4;
+
   const maxCallsArg = args.find((a) => a.startsWith('--max-calls='));
   if (maxCallsArg) {
     const parsed = parseInt(maxCallsArg.split('=')[1], 10);
     if (!isNaN(parsed)) quotaGuard.setMaxCalls(parsed);
   } else if (!targetState || targetState === 'ALL') {
-    // Generous session quota for batch run across 50 states
-    quotaGuard.setMaxCalls(1000);
+    quotaGuard.setMaxCalls(3500);
   }
 
   if (ignoreLimits) {
@@ -298,30 +332,67 @@ async function main() {
     console.log(`⚠️ [OVERRIDE] QuotaGuardian safety limits bypassed by user flag.`);
   }
 
+  const startTime = Date.now();
+
   try {
     if (targetState === 'NATIONAL' || targetState === 'US') {
-      await harvestNational({ autoExecute: autoDeploy, force, rebuild });
+      const nationalRes = await harvestNational({ autoExecute: false, force, rebuild });
+      if (autoDeploy) deployArtifacts([nationalRes]);
       return;
     }
 
     if (targetState && targetState !== 'ALL') {
-      await harvestStateAndCounties(targetState, { autoExecute: autoDeploy, force, rebuild });
+      const stateRes = await harvestStateAndCounties(targetState, { autoExecute: false, force, rebuild });
+      if (autoDeploy) deployArtifacts([stateRes]);
       return;
     }
 
-    // Harvest all states in batch
-    console.log(`🚀 Starting Comprehensive Multi-State Civic Pre-Seeding Batch (50 States + DC, force=${force}, rebuild=${rebuild})...`);
-    await harvestNational({ autoExecute: autoDeploy, force, rebuild });
+    // Full 50 States + DC + National Batch Run
+    console.log(`\n======================================================`);
+    console.log(`🚀 STARTING MULTI-THREADED CIVIC BATCH HARVESTER`);
+    console.log(`   Jurisdictions: 50 States + DC + National Federal`);
+    console.log(`   Worker Concurrency: ${concurrency} parallel streams`);
+    console.log(`   Force Re-fetch: ${force} | Rebuild: ${rebuild} | Auto Deploy: ${autoDeploy}`);
+    console.log(`======================================================\n`);
 
-    const statesToProcess = targetState && targetState !== 'ALL' ? [targetState] : US_STATES;
-    console.log(`📋 Processing ${statesToProcess.length} jurisdictions...`);
+    const nationalRes = await harvestNational({ autoExecute: false, force, rebuild });
 
-    for (const st of statesToProcess) {
-      await harvestStateAndCounties(st, { autoExecute: autoDeploy, force, rebuild });
-      await sleep(200);
+    const statesToProcess = US_STATES;
+    console.log(`📋 Queueing ${statesToProcess.length} state jurisdictions across ${concurrency} workers...\n`);
+
+    const stateResults = await mapConcurrent(
+      statesToProcess,
+      concurrency,
+      async (st, idx, total, workerId) => {
+        const progressStr = `[${idx + 1}/${total}]`;
+        return harvestStateAndCounties(st, {
+          autoExecute: false,
+          force,
+          rebuild,
+          workerId,
+          progressStr
+        });
+      }
+    );
+
+    const allResults = [nationalRes, ...stateResults];
+    const successful = allResults.filter((r) => r && !r.error);
+    const cachedCount = successful.filter((r) => r.cached).length;
+    const freshCount = successful.length - cachedCount;
+    const durationSec = ((Date.now() - startTime) / 1000).toFixed(1);
+
+    console.log(`\n======================================================`);
+    console.log(`🏁 BATCH HARVEST COMPLETED IN ${durationSec}s`);
+    console.log(`   Total Processed: ${successful.length}/${allResults.length}`);
+    console.log(`   Freshly Harvested: ${freshCount} | Cached: ${cachedCount}`);
+    console.log(`======================================================`);
+
+    if (autoDeploy) {
+      deployArtifacts(successful);
+    } else {
+      console.log(`\n💡 Tip: Run with --deploy to automatically seed Cloudflare D1 and upload to R2.`);
     }
 
-    console.log(`\n🎉 BATCH HARVEST & SEED RUN COMPLETE!`);
   } catch (err) {
     console.error(`\n❌ Execution halted:`, err.message);
   } finally {
@@ -329,4 +400,7 @@ async function main() {
   }
 }
 
-main().catch(console.error);
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch(console.error);
+}
+
