@@ -20,6 +20,7 @@ import {
   Briefcase,
   Layers,
   ArrowUpRight,
+  Info,
 } from 'lucide-react';
 import { CivicEdgeApiClient } from '../services/civicEdgeApiClient';
 import { civicCache, CACHE_TTL } from '../services/civicCacheService';
@@ -160,76 +161,82 @@ export const GLOSSARY_DEFINITIONS = {
       'The cumulative taxpayer dollars obligated to date across all subsequent contract modifications, extensions, and scope increases.',
   },
   'taxpayer-overrun': {
-    title: 'Taxpayer Dollar Creep (Net Budget Escalation)',
+    title: 'Net Obligation Growth (Budget Expansion)',
     category: 'Fiscal Escalation',
     description:
       'The net dollar expansion of a contract beyond its original Mod #0 baseline: Current Total Obligated minus Initial Baseline.',
   },
   'percent-creep': {
-    title: 'Creep Rate (Budget Expansion Percentage)',
+    title: 'Growth Rate (Budget Expansion Percentage)',
     category: 'Fiscal Escalation',
     description:
       'The percentage growth of a contract budget relative to its original inception value ((Current - Baseline) / Baseline * 100).',
   },
   'top-offender': {
-    title: 'Top Overrun Contractor',
-    category: 'Vendor Accountability',
+    title: 'Top Contractor by Growth',
+    category: 'Vendor Distribution',
     description:
-      'The corporate parent contractor responsible for the largest absolute dollar escalation above original inception baselines in this jurisdiction.',
+      'The prime contractor or managing entity responsible for the largest net dollar expansion above inception baseline in this jurisdiction (reflects routine multi-year operational additions and project modifications).',
   },
   'cost-plus-multiplier': {
-    title: 'Cost-Plus Creep Multiplier',
-    category: 'Pricing Risk',
+    title: 'Cost-Plus Growth Multiplier',
+    category: 'Pricing Structure',
     description:
-      'The ratio of cost escalation on Cost-Plus (reimbursement) contracts compared to Firm Fixed Price contracts. Quantifies how much faster cost-plus contracts balloon over baseline.',
+      'The ratio of budget expansion on Cost-Plus (reimbursement) contracts compared to Firm Fixed Price contracts. Reflects relative escalation rates across pricing models.',
   },
   'capital-flight': {
-    title: 'Capital Flight (Out-of-State Contractors)',
-    category: 'Local Economic Impact',
+    title: 'Out-of-State Contractor Share',
+    category: 'Procurement Distribution',
     description:
-      'The percentage of prime federal procurement funding awarded to corporate contractors headquartered outside this state.',
+      'The percentage of prime federal procurement funding awarded to contractors headquartered outside this state.',
   },
   'mega-contract-exposure': {
     title: 'Mega-Contract Exposure (> $1 Billion)',
-    category: 'National Fiscal Concentration',
+    category: 'Fiscal Concentration',
     description:
       'The share of total federal contract dollars tied up in individual mega-awards valued at $1 Billion or greater.',
   },
   'september-spurt': {
-    title: 'September Spurt (FY-End Dump)',
-    category: 'Fiscal Volatility',
+    title: 'September / Q4 Obligations',
+    category: 'Fiscal Cycle',
     description:
-      'The share of modification funding authorized in September (Q4 of the fiscal year), capturing the "use-it-or-lose-it" bureaucratic rush.',
+      'The share of contract modification funding authorized in September (the final month of the federal fiscal year), reflecting fiscal year-end budget execution.',
   },
   'zombie-contracts': {
-    title: 'Zombie Contracts (Chronic Schedule Extensions)',
-    category: 'Project Execution',
+    title: 'Schedule Delays & Extended Awards',
+    category: 'Schedule & Execution',
     description:
-      'Procurement projects suffering delivery extensions over 365 days past original Mod #0 target dates or requiring 8+ consecutive amendments.',
+      'Awards experiencing delivery extensions beyond their original target completion dates, or multi-year programs with repeated modifications.',
   },
   'hhi-monopoly': {
     title: 'Herfindahl-Hirschman Index (HHI)',
-    category: 'Antitrust Telemetry',
-    description:
-      'The Department of Justice measure of market concentration (0–10,000). Scores above 2,500 indicate extreme monopoly capture by top prime contractors.',
-  },
-  'the-overruns': {
-    title: 'The Overruns (Itemized Contracts)',
-    category: 'Itemized Ledger',
-    description:
-      'All prime contracts awarded in this jurisdiction, ranked by total net taxpayer cost creep.',
-  },
-  'the-monopolies': {
-    title: 'The Monopolies (Corporate Parents)',
     category: 'Market Concentration',
     description:
-      'Corporate parent conglomerates aggregating prime awards, showing total capital captured and cumulative cost escalations.',
+      'The standard Department of Justice economic metric for market concentration (0–10,000). In federal procurement, scores above 2,500 indicate high vendor concentration among top prime contractors.',
+  },
+  'the-overruns': {
+    title: 'Contract Growth (Itemized Contracts)',
+    category: 'Itemized Ledger',
+    description:
+      'All prime contracts awarded in this jurisdiction, ranked by net contract expansion above initial baseline.',
+  },
+  'the-monopolies': {
+    title: 'Prime Vendors & Entities',
+    category: 'Vendor Distribution',
+    description:
+      'Contractors, universities, and parent entities aggregating prime awards, displaying total obligated funding and net budget adjustments.',
   },
   'the-bureaucrats': {
-    title: 'The Bureaucrats (Awarding Agencies & Offices)',
+    title: 'Awarding Agencies & Bureaus',
     category: 'Procurement Oversight',
     description:
-      'Federal and state procurement sub-agencies and contracting offices ranked by authorized dollars and contractor creep rates.',
+      'Federal departments, sub-agencies, and contracting offices ranked by authorized dollars and contract budget adjustments.',
+  },
+  'ffrdc-lab': {
+    title: 'Federally Funded R&D Center (FFRDC / M&O)',
+    category: 'Institutional Structure',
+    description:
+      'A government-owned, contractor-operated (GOCO) national research laboratory. Governed by FAR Part 17.6 and 35.017 under multi-year cost-reimbursement contracts where annual operating budgets are incrementally funded by congressional appropriations, rather than traditional commercial cost overruns.',
   },
   'idv': {
     title: 'Indefinite Delivery Vehicle (IDV)',
@@ -260,6 +267,24 @@ export const GLOSSARY_DEFINITIONS = {
     category: 'Pricing Structure',
     description:
       'A contract structure billed at fixed hourly labor rates plus material costs, prone to expansion when deliverables lack strict bounds.',
+  },
+  'defense-prime': {
+    title: 'Defense Prime Contractor',
+    category: 'Vendor Distribution',
+    description:
+      'Major commercial defense and aerospace conglomerate delivering weapon systems, tactical hardware, military aircraft, or cybersecurity infrastructure.',
+  },
+  'higher-ed': {
+    title: 'University / Academic Research',
+    category: 'Vendor Distribution',
+    description:
+      'Accredited university or non-profit academic research institution performing federal scientific, biomedical, or technological research under grant or contract.',
+  },
+  'commercial-vendor': {
+    title: 'Commercial Contractor',
+    category: 'Vendor Distribution',
+    description:
+      'Private-sector commercial enterprise providing standard goods, professional services, civil infrastructure, or commercial off-the-shelf solutions.',
   },
 };
 
@@ -485,6 +510,168 @@ export const normalizePricingType = (
   return 'FIXED PRICE';
 };
 
+export const isFfrdcOrNationalLab = (
+  recipient?: string,
+  parent?: string,
+  desc?: string
+): boolean => {
+  const s = `${recipient || ''} ${parent || ''} ${desc || ''}`.toUpperCase();
+  return (
+    s.includes('ARGONNE') ||
+    s.includes('FERMI') ||
+    s.includes('BATTELLE') ||
+    s.includes('LOS ALAMOS') ||
+    s.includes('LAWRENCE LIVERMORE') ||
+    s.includes('LAWRENCE BERKELEY') ||
+    s.includes('SANDIA') ||
+    s.includes('OAK RIDGE') ||
+    s.includes('BROOKHAVEN') ||
+    s.includes('PACIFIC NORTHWEST NATIONAL') ||
+    s.includes('NATIONAL RENEWABLE ENERGY') ||
+    s.includes('SLAC') ||
+    s.includes('THOMAS JEFFERSON NATIONAL') ||
+    s.includes('IDAHO NATIONAL') ||
+    s.includes('PRINCETON PLASMA') ||
+    s.includes('SAVANNAH RIVER') ||
+    s.includes('AMES LABORATORY') ||
+    s.includes('JET PROPULSION') ||
+    s.includes('LINCOLN LABORATORY') ||
+    s.includes('APPLIED PHYSICS LABORATORY') ||
+    s.includes('NATIONAL ENERGY TECHNOLOGY') ||
+    s.includes('NEVADA NATIONAL SECURITY') ||
+    s.includes('PANTEX') ||
+    s.includes('Y-12') ||
+    s.includes('FFRDC') ||
+    s.includes('M&O CONTRACT') ||
+    s.includes('MANAGEMENT AND OPERATION OF') ||
+    s.includes('MANAGEMENT & OPERATION OF')
+  );
+};
+
+export type EntityClassificationType = 'FFRDC' | 'HIGHER_ED' | 'DEFENSE_PRIME' | 'COMMERCIAL';
+
+export interface EntityClassification {
+  type: EntityClassificationType;
+  label: string;
+  badgeClass: string;
+  termKey: keyof typeof GLOSSARY_DEFINITIONS;
+  description: string;
+}
+
+export const getEntityClassification = (
+  recipient?: string,
+  parent?: string,
+  desc?: string
+): EntityClassification => {
+  const name = `${recipient || ''} ${parent || ''}`.toUpperCase();
+
+  if (isFfrdcOrNationalLab(recipient, parent, desc)) {
+    return {
+      type: 'FFRDC',
+      label: 'FFRDC / M&O LAB',
+      badgeClass:
+        'bg-sky-100 dark:bg-sky-950/80 text-sky-900 dark:text-sky-300 border border-sky-300 dark:border-sky-800/60 font-bold',
+      termKey: 'ffrdc-lab',
+      description:
+        'Government-owned, contractor-operated (GOCO) national laboratory funded via annual congressional appropriations under FAR Part 17.6.',
+    };
+  }
+
+  // Major Defense and Aerospace Primes
+  if (
+    name.includes('LOCKHEED') ||
+    name.includes('BOEING') ||
+    name.includes('NORTHROP') ||
+    name.includes('GENERAL DYNAMICS') ||
+    name.includes('RAYTHEON') ||
+    name.includes('RTX') ||
+    name.includes('L3HARRIS') ||
+    name.includes('HUNTINGTON INGALLS') ||
+    name.includes('BAE SYSTEMS') ||
+    name.includes('TEXTRON') ||
+    name.includes('BELL HELICOPTER') ||
+    name.includes('GENERAL ATOMICS') ||
+    name.includes('SIKORSKY') ||
+    name.includes('PRATT & WHITNEY') ||
+    name.includes('LEIDOS') ||
+    name.includes('BOOZ ALLEN') ||
+    name.includes('CACI') ||
+    name.includes('SAIC')
+  ) {
+    return {
+      type: 'DEFENSE_PRIME',
+      label: 'DEFENSE PRIME',
+      badgeClass:
+        'bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60 font-bold',
+      termKey: 'defense-prime',
+      description: 'Major defense/aerospace prime contractor delivering military systems, platforms, or defense IT.',
+    };
+  }
+
+  // Academic / Higher Education
+  if (
+    name.includes('UNIVERSITY') ||
+    name.includes('COLLEGE') ||
+    name.includes('INSTITUTE OF TECH') ||
+    name.includes('REGENTS OF') ||
+    name.includes('TRUSTEES OF') ||
+    name.includes('ACADEMIC')
+  ) {
+    return {
+      type: 'HIGHER_ED',
+      label: 'UNIVERSITY / RESEARCH',
+      badgeClass:
+        'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-900 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800/60 font-bold',
+      termKey: 'higher-ed',
+      description: 'Higher education or academic research institution performing federal scientific or medical research.',
+    };
+  }
+
+  return {
+    type: 'COMMERCIAL',
+    label: 'COMMERCIAL',
+    badgeClass: 'bg-stone-100 dark:bg-[#18191c] text-stone-700 dark:text-zinc-300 border border-stone-200 dark:border-[#2e313a]',
+    termKey: 'commercial-vendor',
+    description: 'Commercial enterprise providing goods, professional services, or infrastructure.',
+  };
+};
+
+export const EntityBadge: React.FC<{
+  recipient?: string;
+  parent?: string;
+  description?: string;
+  showCommercial?: boolean;
+}> = ({ recipient, parent, description, showCommercial = false }) => {
+  const entity = getEntityClassification(recipient, parent, description);
+  if (entity.type === 'COMMERCIAL' && !showCommercial) return null;
+
+  return (
+    <TermTooltip termKey={entity.termKey} align="left">
+      <span className={`text-[10px] font-mono px-2 py-0.5 rounded-xs uppercase tracking-wide shrink-0 ${entity.badgeClass}`}>
+        {entity.label}
+      </span>
+    </TermTooltip>
+  );
+};
+
+export const FfrdcCallout: React.FC<{
+  recipient?: string;
+  parent?: string;
+  description?: string;
+}> = ({ recipient, parent, description }) => {
+  if (!isFfrdcOrNationalLab(recipient, parent, description)) return null;
+
+  return (
+    <div className="p-3 bg-sky-50/80 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-900/60 rounded-xs flex items-start gap-2.5 text-xs text-sky-900 dark:text-sky-200 font-sans leading-relaxed">
+      <ShieldAlert className="w-4 h-4 text-sky-700 dark:text-sky-400 mt-0.5 shrink-0" />
+      <div>
+        <span className="font-bold">National Research Facility (FFRDC / M&O):</span>{' '}
+        This award represents a government-owned, contractor-operated (GOCO) national laboratory governed by FAR Part 17.6 and 35.017. Multi-year budget expansion reflects annual congressional appropriations for ongoing laboratory operations and scientific facilities rather than conventional commercial cost overruns.
+      </div>
+    </div>
+  );
+};
+
 export const PricingBadge: React.FC<{
   pricingType?: string;
   description?: string;
@@ -624,6 +811,7 @@ interface ExecutiveAuditViewProps {
     hhiScore: number;
     avgDelayDays: number;
     zombieCount: number;
+    delayedCount: number;
     topOffender: VendorAggregate | null;
     vendorsList: VendorAggregate[];
     officesList: OfficeAggregate[];
@@ -700,11 +888,11 @@ const ExecutiveAuditView: React.FC<ExecutiveAuditViewProps> = ({
           </div>
         </div>
 
-        {/* Metric 3: Dollar Creep */}
+        {/* Metric 3: Dollar Growth */}
         <div className="p-3 bg-white dark:bg-[#22242a] border border-stone-200 dark:border-[#2e313a] rounded-xs flex flex-col justify-between shadow-2xs">
           <TermTooltip termKey="taxpayer-overrun" showIcon align="left" className="w-full justify-between">
             <span className="text-[11px] font-bold text-stone-500 dark:text-zinc-400 uppercase tracking-wide truncate">
-              Dollar Creep
+              Net Growth
             </span>
           </TermTooltip>
           <div
@@ -719,15 +907,15 @@ const ExecutiveAuditView: React.FC<ExecutiveAuditViewProps> = ({
               : '$0.00'}
           </div>
           <div className="text-[10px] text-stone-400 dark:text-zinc-500 font-sans truncate">
-            {analytics.totalTaxpayerOverrun > 0 ? 'Net taxpayer overrun' : 'No overrun'}
+            {analytics.totalTaxpayerOverrun > 0 ? 'Net obligation expansion' : 'No net expansion'}
           </div>
         </div>
 
-        {/* Metric 4: Percent Creep */}
+        {/* Metric 4: Percent Growth */}
         <div className="p-3 bg-white dark:bg-[#22242a] border border-stone-200 dark:border-[#2e313a] rounded-xs flex flex-col justify-between shadow-2xs">
           <TermTooltip termKey="percent-creep" showIcon align="left" className="w-full justify-between">
             <span className="text-[11px] font-bold text-stone-500 dark:text-zinc-400 uppercase tracking-wide truncate">
-              Percent Creep
+              Growth Rate
             </span>
           </TermTooltip>
           <div
@@ -740,14 +928,14 @@ const ExecutiveAuditView: React.FC<ExecutiveAuditViewProps> = ({
             {analytics.percentOverrun > 0 ? `+${analytics.percentOverrun.toFixed(1)}%` : '0.0%'}
           </div>
           <div className="text-[10px] text-stone-400 dark:text-zinc-500 font-sans truncate">
-            {analytics.percentOverrun > 0 ? 'Budget escalation' : 'On baseline budget'}
+            {analytics.percentOverrun > 0 ? 'Above Mod #0 baseline' : 'On baseline budget'}
           </div>
         </div>
       </div>
 
       {/* 3. Secondary Exposure & Contractor Indicators (3-in-a-Row) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-        {/* Top Offender */}
+        {/* Top Contractor by Growth */}
         <div
           onClick={() => analytics.topOffender && onSelectVendor(analytics.topOffender)}
           className={`p-2.5 sm:p-3 bg-white dark:bg-[#22242a] border border-stone-200 dark:border-[#2e313a] rounded-xs flex flex-col justify-between ${
@@ -759,22 +947,30 @@ const ExecutiveAuditView: React.FC<ExecutiveAuditViewProps> = ({
           <div className="flex items-center justify-between">
             <TermTooltip termKey="top-offender" showIcon align="left" className="truncate">
               <span className="text-[10px] font-bold text-stone-500 dark:text-zinc-400 uppercase tracking-wide truncate">
-                Top Offender
+                Top Contractor by Growth
               </span>
             </TermTooltip>
             {analytics.topOffender && (
               <ChevronRight className="w-3.5 h-3.5 text-stone-400 dark:text-zinc-500 flex-shrink-0" />
             )}
           </div>
-          <div
-            className="text-xs sm:text-sm font-bold text-stone-900 dark:text-zinc-100 truncate my-1"
-            title={analytics.topOffender?.parentName}
-          >
-            {analytics.topOffender ? analytics.topOffender.parentName : 'None Identified'}
+          <div className="my-1 space-y-1">
+            <div
+              className="text-xs sm:text-sm font-bold text-stone-900 dark:text-zinc-100 truncate"
+              title={analytics.topOffender?.parentName}
+            >
+              {analytics.topOffender ? analytics.topOffender.parentName : 'None Identified'}
+            </div>
+            {analytics.topOffender && (
+              <EntityBadge
+                parent={analytics.topOffender.parentName}
+                recipient={analytics.topOffender.name}
+              />
+            )}
           </div>
           <div className="text-[10px] font-mono text-red-700 dark:text-rose-400 font-semibold tabular-nums truncate">
             {analytics.topOffender && analytics.topOffender.totalCreep > 0
-              ? `+${formatCurrency(analytics.topOffender.totalCreep, true)} creep`
+              ? `+${formatCurrency(analytics.topOffender.totalCreep, true)} net growth`
               : `${analytics.topOffender?.awards.length || 0} prime awards`}
           </div>
         </div>
@@ -791,7 +987,7 @@ const ExecutiveAuditView: React.FC<ExecutiveAuditViewProps> = ({
             <span>{analytics.costPlusPct.toFixed(1)}%</span>
             {analytics.costPlusMultiplier > 1 && (
               <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 rounded border border-amber-300 dark:border-amber-800">
-                {analytics.costPlusMultiplier}x creep
+                {analytics.costPlusMultiplier}x rate
               </span>
             )}
           </div>
@@ -800,7 +996,7 @@ const ExecutiveAuditView: React.FC<ExecutiveAuditViewProps> = ({
           </div>
         </div>
 
-        {/* Capital Flight or Mega-Awards */}
+        {/* Out-of-State Share or Mega-Awards */}
         <div className="p-2.5 sm:p-3 bg-white dark:bg-[#22242a] border border-stone-200 dark:border-[#2e313a] rounded-xs flex flex-col justify-between">
           {isNationalFederal ? (
             <TermTooltip termKey="mega-contract-exposure" showIcon align="right" className="w-full justify-between">
@@ -813,7 +1009,7 @@ const ExecutiveAuditView: React.FC<ExecutiveAuditViewProps> = ({
             <TermTooltip termKey="capital-flight" showIcon align="right" className="w-full justify-between">
               <span className="text-[10px] font-bold text-stone-500 dark:text-zinc-400 uppercase tracking-wide flex items-center gap-1 truncate">
                 <Globe className="w-3 h-3 text-stone-400 dark:text-zinc-500 flex-shrink-0" />
-                <span className="truncate">Capital Flight</span>
+                <span className="truncate">Out-of-State</span>
               </span>
             </TermTooltip>
           )}
@@ -830,26 +1026,26 @@ const ExecutiveAuditView: React.FC<ExecutiveAuditViewProps> = ({
 
       {/* 4. Advanced Forensic Telemetry (3-in-a-Row) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-        {/* September Spurt */}
+        {/* September Obligations */}
         <div className="p-2.5 sm:p-3 bg-white dark:bg-[#22242a] border border-stone-200 dark:border-[#2e313a] rounded-xs flex flex-col justify-between">
           <TermTooltip termKey="september-spurt" showIcon align="left" className="w-full justify-between">
             <span className="text-[10px] font-bold text-stone-500 dark:text-zinc-400 uppercase tracking-wide truncate">
-              September Spurt
+              Sept Obligations
             </span>
           </TermTooltip>
           <div className="text-xs sm:text-sm font-bold font-mono text-amber-700 dark:text-amber-400 tabular-nums my-1">
             {analytics.septemberSpurtPct.toFixed(1)}%
           </div>
           <div className="text-[10px] text-stone-400 dark:text-zinc-500 font-sans truncate">
-            FY-end budget dump
+            Q4 / FY-end execution
           </div>
         </div>
 
-        {/* Monopoly Capture (HHI) */}
+        {/* Market Concentration (HHI) */}
         <div className="p-2.5 sm:p-3 bg-white dark:bg-[#22242a] border border-stone-200 dark:border-[#2e313a] rounded-xs flex flex-col justify-between">
           <TermTooltip termKey="hhi-monopoly" showIcon align="center" className="w-full justify-between">
             <span className="text-[10px] font-bold text-stone-500 dark:text-zinc-400 uppercase tracking-wide truncate">
-              Monopoly HHI
+              Concentration (HHI)
             </span>
           </TermTooltip>
           <div className="text-xs sm:text-sm font-bold font-mono text-stone-800 dark:text-zinc-100 tabular-nums my-1 flex items-center gap-1.5">
@@ -863,23 +1059,24 @@ const ExecutiveAuditView: React.FC<ExecutiveAuditViewProps> = ({
                   : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
               }`}
             >
-              {analytics.hhiScore >= 2500 ? 'Captured' : analytics.hhiScore >= 1500 ? 'Moderate' : 'Competitive'}
+              {analytics.hhiScore >= 2500 ? 'High' : analytics.hhiScore >= 1500 ? 'Moderate' : 'Competitive'}
             </span>
           </div>
           <div className="text-[10px] text-stone-400 dark:text-zinc-500 font-sans truncate">
-            Vendor concentration
+            DOJ HHI index
           </div>
         </div>
 
-        {/* Zombie Projects */}
+        {/* Schedule Delays */}
         <div className="p-2.5 sm:p-3 bg-white dark:bg-[#22242a] border border-stone-200 dark:border-[#2e313a] rounded-xs flex flex-col justify-between">
           <TermTooltip termKey="zombie-contracts" showIcon align="right" className="w-full justify-between">
             <span className="text-[10px] font-bold text-stone-500 dark:text-zinc-400 uppercase tracking-wide truncate">
-              Zombie Projects
+              Schedule Delays
             </span>
           </TermTooltip>
           <div className="text-xs sm:text-sm font-bold font-mono text-stone-800 dark:text-zinc-100 tabular-nums my-1">
-            {analytics.zombieCount} {analytics.zombieCount === 1 ? 'Award' : 'Awards'}
+            {analytics.delayedCount > 0 ? analytics.delayedCount : analytics.zombieCount}{' '}
+            {(analytics.delayedCount > 0 ? analytics.delayedCount : analytics.zombieCount) === 1 ? 'Award' : 'Awards'}
           </div>
           <div className="text-[10px] text-stone-400 dark:text-zinc-500 font-sans truncate">
             {analytics.avgDelayDays > 0 ? `Avg. ${analytics.avgDelayDays}d delay` : 'On-schedule delivery'}
@@ -893,10 +1090,10 @@ const ExecutiveAuditView: React.FC<ExecutiveAuditViewProps> = ({
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-zinc-300 flex items-center gap-1.5">
               <Building2 className="w-3.5 h-3.5 text-stone-500 dark:text-zinc-400" />
-              Top Prime Contractors & Conglomerates
+              Top Prime Contractors & Managing Entities
             </span>
             <span className="text-xs font-mono font-bold text-stone-500 dark:text-zinc-400">
-              RANKED BY OVERRUN
+              RANKED BY NET GROWTH
             </span>
           </div>
 
@@ -912,10 +1109,13 @@ const ExecutiveAuditView: React.FC<ExecutiveAuditViewProps> = ({
                     #{i + 1}
                   </span>
                   <div className="min-w-0">
-                    <div className="text-xs sm:text-sm font-bold text-stone-900 dark:text-zinc-100 truncate">
-                      {v.parentName}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-xs sm:text-sm font-bold text-stone-900 dark:text-zinc-100 truncate">
+                        {v.parentName}
+                      </span>
+                      <EntityBadge parent={v.parentName} recipient={v.name} />
                     </div>
-                    <div className="text-[10px] text-stone-500 dark:text-zinc-400 truncate flex items-center gap-1.5">
+                    <div className="text-[10px] text-stone-500 dark:text-zinc-400 truncate flex items-center gap-1.5 mt-0.5">
                       <span>
                         {v.awards.length} {v.awards.length === 1 ? 'prime award' : 'prime awards'}
                       </span>
@@ -929,7 +1129,7 @@ const ExecutiveAuditView: React.FC<ExecutiveAuditViewProps> = ({
                     {formatCurrency(v.totalCurrent, true)}
                   </div>
                   <div className="text-[10px] font-mono text-red-700 dark:text-rose-400 font-semibold">
-                    +{formatCurrency(v.totalCreep, true)} creep
+                    +{formatCurrency(v.totalCreep, true)} growth
                   </div>
                 </div>
               </div>
@@ -944,10 +1144,10 @@ const ExecutiveAuditView: React.FC<ExecutiveAuditViewProps> = ({
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-zinc-300 flex items-center gap-1.5">
               <Landmark className="w-3.5 h-3.5 text-stone-500 dark:text-zinc-400" />
-              Awarding Bureaus & Oversight
+              Awarding Agencies & Bureaus
             </span>
             <span className="text-xs font-mono font-bold text-stone-500 dark:text-zinc-400">
-              RANKED BY OVERRUN
+              RANKED BY NET GROWTH
             </span>
           </div>
 
@@ -976,7 +1176,7 @@ const ExecutiveAuditView: React.FC<ExecutiveAuditViewProps> = ({
                     {formatCurrency(o.totalCurrent, true)}
                   </div>
                   <div className="text-[10px] font-mono text-red-700 dark:text-rose-400 font-semibold">
-                    +{formatCurrency(o.totalCreep, true)} creep
+                    +{formatCurrency(o.totalCreep, true)} growth
                   </div>
                 </div>
               </div>
@@ -991,7 +1191,7 @@ const ExecutiveAuditView: React.FC<ExecutiveAuditViewProps> = ({
         className="w-full py-3 px-4 bg-stone-900 hover:bg-stone-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-stone-900 rounded-sm font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer"
       >
         <FileText className="w-4 h-4" />
-        <span>Explore All {contracts.length} Contracts & Monopolies in Ledger</span>
+        <span>Explore All {contracts.length} Contracts & Prime Entities in Ledger</span>
         <ChevronRight className="w-4 h-4 ml-auto" />
       </button>
     </div>
@@ -1044,7 +1244,7 @@ const ItemizedLedgerView: React.FC<ItemizedLedgerViewProps> = ({
             type="text"
             value={filterQuery}
             onChange={(e) => setFilterQuery(e.target.value)}
-            placeholder="Filter by vendor, office, or contract ID..."
+            placeholder="Filter by vendor, agency, or contract ID..."
             className="w-full pl-9 pr-9 py-1.5 bg-stone-50/70 dark:bg-[#18191c] border border-stone-200 dark:border-[#2e313a] rounded-xs text-xs sm:text-sm text-stone-900 dark:text-zinc-100 placeholder-stone-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-stone-400 dark:focus:ring-white focus:border-stone-400 dark:focus:border-white font-sans"
           />
           {filterQuery && (
@@ -1070,7 +1270,7 @@ const ItemizedLedgerView: React.FC<ItemizedLedgerViewProps> = ({
             <TermTooltip termKey="the-overruns" align="left">
               <span className="flex items-center gap-1.5">
                 <FileText className="w-4 h-4 shrink-0" />
-                The Overruns
+                Contract Growth
               </span>
             </TermTooltip>
             <span className="text-xs font-mono px-1.5 py-0.5 bg-stone-200/70 dark:bg-[#18191c] text-stone-700 dark:text-zinc-300 rounded-xs">
@@ -1089,7 +1289,7 @@ const ItemizedLedgerView: React.FC<ItemizedLedgerViewProps> = ({
             <TermTooltip termKey="the-monopolies" align="center">
               <span className="flex items-center gap-1.5">
                 <Building2 className="w-4 h-4 shrink-0" />
-                The Monopolies
+                Prime Vendors & Entities
               </span>
             </TermTooltip>
             <span className="text-xs font-mono px-1.5 py-0.5 bg-stone-200/70 dark:bg-[#18191c] text-stone-700 dark:text-zinc-300 rounded-xs">
@@ -1108,7 +1308,7 @@ const ItemizedLedgerView: React.FC<ItemizedLedgerViewProps> = ({
             <TermTooltip termKey="the-bureaucrats" align="right">
               <span className="flex items-center gap-1.5">
                 <Landmark className="w-4 h-4 shrink-0" />
-                The Bureaucrats
+                Awarding Agencies & Bureaus
               </span>
             </TermTooltip>
             <span className="text-xs font-mono px-1.5 py-0.5 bg-stone-200/70 dark:bg-[#18191c] text-stone-700 dark:text-zinc-300 rounded-xs">
@@ -1120,13 +1320,13 @@ const ItemizedLedgerView: React.FC<ItemizedLedgerViewProps> = ({
 
       {/* 2. Scrollable List Feed */}
       <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 space-y-3">
-        {/* Category A: Contracts (The Overruns) */}
+        {/* Category A: Contracts (Contract Growth) */}
         {activeCategory === 'contracts' && (
           <div className="space-y-3 pt-1">
             {filteredContracts.length === 0 ? (
               <div className="p-8 text-center bg-white dark:bg-[#22242a] border border-stone-200 dark:border-[#2e313a] rounded-sm">
                 <p className="text-xs text-stone-500 dark:text-zinc-400 font-serif italic">
-                  No prime contract overruns match your search query.
+                  No prime contracts match your search query.
                 </p>
               </div>
             ) : (
@@ -1186,7 +1386,7 @@ const ItemizedLedgerView: React.FC<ItemizedLedgerViewProps> = ({
                   >
                     {/* Top Row: PIID + Badges */}
                     <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="font-mono text-xs sm:text-sm font-bold text-stone-900 dark:text-zinc-100">
                           {piid}
                         </span>
@@ -1201,13 +1401,18 @@ const ItemizedLedgerView: React.FC<ItemizedLedgerViewProps> = ({
                             {isIdv ? 'IDV VEHICLE' : 'DEFINITIVE'}
                           </span>
                         </TermTooltip>
+                        <EntityBadge
+                          recipient={recipientName}
+                          parent={parentName}
+                          description={award.Description || award.description}
+                        />
                       </div>
 
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {award.isZombieContract && (
                           <TermTooltip termKey="zombie-contracts" align="left">
                             <span className="text-[10px] sm:text-xs font-mono px-1.5 py-0.5 rounded-xs font-bold uppercase bg-red-100 dark:bg-rose-950/80 text-red-900 dark:text-rose-300 border border-red-300 dark:border-rose-800/60">
-                              ZOMBIE{' '}
+                              EXTENDED{' '}
                               {award.scheduleDelayDays && award.scheduleDelayDays > 0
                                 ? `(+${award.scheduleDelayDays}d)`
                                 : ''}
@@ -1217,7 +1422,7 @@ const ItemizedLedgerView: React.FC<ItemizedLedgerViewProps> = ({
                         {award.isSeptemberSpurt && (
                           <TermTooltip termKey="september-spurt" align="left">
                             <span className="text-[10px] sm:text-xs font-mono px-1.5 py-0.5 rounded-xs font-bold uppercase bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60">
-                              SEPT DUMP
+                              SEPT SURGE
                             </span>
                           </TermTooltip>
                         )}
@@ -1242,7 +1447,7 @@ const ItemizedLedgerView: React.FC<ItemizedLedgerViewProps> = ({
                       </div>
                     </div>
 
-                    {/* Financials & Red Overrun Math */}
+                    {/* Financials & Net Growth Math */}
                     <div className="bg-stone-50 dark:bg-[#18191c] p-3 rounded-xs border border-stone-100 dark:border-[#2e313a] flex items-center justify-between gap-3">
                       <div>
                         <div className="text-[10px] font-bold text-stone-500 dark:text-zinc-400 uppercase tracking-wide">
@@ -1262,7 +1467,7 @@ const ItemizedLedgerView: React.FC<ItemizedLedgerViewProps> = ({
                       </div>
                       <div className="text-right">
                         <div className="text-[10px] font-bold text-red-700 dark:text-rose-400 uppercase tracking-wide">
-                          Taxpayer Creep
+                          Net Growth
                         </div>
                         <div
                           className={`text-xs sm:text-sm font-mono font-bold ${
@@ -1291,13 +1496,13 @@ const ItemizedLedgerView: React.FC<ItemizedLedgerViewProps> = ({
           </div>
         )}
 
-        {/* Category B: Vendors (The Monopolies) */}
+        {/* Category B: Vendors (Prime Vendors & Entities) */}
         {activeCategory === 'vendors' && (
           <div className="space-y-3 pt-1">
             {filteredVendors.length === 0 ? (
               <div className="p-8 text-center bg-white dark:bg-[#22242a] border border-stone-200 dark:border-[#2e313a] rounded-sm">
                 <p className="text-sm text-stone-500 dark:text-zinc-400 italic">
-                  No corporate monopolies match your search query.
+                  No prime contractors or entities match your search query.
                 </p>
               </div>
             ) : (
@@ -1309,8 +1514,11 @@ const ItemizedLedgerView: React.FC<ItemizedLedgerViewProps> = ({
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <div className="text-base sm:text-[17px] font-bold text-stone-900 dark:text-zinc-100">
-                        {vendor.parentName}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-base sm:text-[17px] font-bold text-stone-900 dark:text-zinc-100">
+                          {vendor.parentName}
+                        </span>
+                        <EntityBadge parent={vendor.parentName} recipient={vendor.name} />
                       </div>
                       <div className="text-xs sm:text-sm text-stone-500 dark:text-zinc-400 flex items-center gap-2 mt-0.5">
                         <span>
@@ -1354,7 +1562,7 @@ const ItemizedLedgerView: React.FC<ItemizedLedgerViewProps> = ({
                     <div className="pl-2 border-l border-stone-200 dark:border-[#2e313a]">
                       <TermTooltip termKey="taxpayer-overrun" showIcon align="right">
                         <span className="text-[11px] sm:text-xs font-bold text-red-700 dark:text-rose-400 uppercase">
-                          Dollar Creep
+                          Net Growth
                         </span>
                       </TermTooltip>
                       <div className="text-sm sm:text-base font-mono font-bold text-red-700 dark:text-rose-400 tabular-nums mt-0.5">
@@ -1375,7 +1583,7 @@ const ItemizedLedgerView: React.FC<ItemizedLedgerViewProps> = ({
           </div>
         )}
 
-        {/* Category C: Bureaus (The Bureaucrats) */}
+        {/* Category C: Bureaus (Awarding Agencies & Bureaus) */}
         {activeCategory === 'offices' && (
           <div className="space-y-3 pt-1">
             {filteredOffices.length === 0 ? (
@@ -1427,7 +1635,7 @@ const ItemizedLedgerView: React.FC<ItemizedLedgerViewProps> = ({
                     <div>
                       <TermTooltip termKey="taxpayer-overrun" showIcon align="center">
                         <span className="text-[11px] sm:text-xs text-red-700 dark:text-rose-400 font-bold uppercase">
-                          Dollar Creep
+                          Net Growth
                         </span>
                       </TermTooltip>
                       <div className="text-sm sm:text-base font-mono font-bold text-red-700 dark:text-rose-400 tabular-nums mt-0.5">
@@ -1440,7 +1648,7 @@ const ItemizedLedgerView: React.FC<ItemizedLedgerViewProps> = ({
                     <div className="pl-2 border-l border-stone-200 dark:border-[#2e313a]">
                       <TermTooltip termKey="percent-creep" showIcon align="right">
                         <span className="text-[11px] sm:text-xs text-stone-500 dark:text-zinc-400 font-bold uppercase">
-                          Overrun Rate
+                          Growth Rate
                         </span>
                       </TermTooltip>
                       <div className="text-sm sm:text-base font-mono font-bold text-red-700 dark:text-rose-400 tabular-nums mt-0.5">
@@ -1548,6 +1756,12 @@ const ContractDetailView: React.FC<ContractDetailViewProps> = ({
             <span className="text-xs font-mono px-2 py-0.5 rounded bg-stone-100 dark:bg-[#22242a] text-stone-700 dark:text-zinc-300 font-bold uppercase">
               {isIdv ? 'IDV VEHICLE' : 'DEFINITIVE AWARD'}
             </span>
+            <EntityBadge
+              recipient={recipientName}
+              parent={parentName}
+              description={award.Description || award.description}
+              showCommercial={true}
+            />
             <PricingBadge pricingType={pricing} description={award.Description || award.description} recipientName={recipientName} />
           </div>
 
@@ -1563,6 +1777,9 @@ const ContractDetailView: React.FC<ContractDetailViewProps> = ({
             Awarding Office: <span className="font-semibold text-stone-800 dark:text-zinc-200">{officeName}</span> ({agencyName})
           </div>
         </div>
+
+        {/* FFRDC / M&O Informational Context Callout */}
+        <FfrdcCallout recipient={recipientName} parent={parentName} description={award.Description || award.description} />
 
         {/* 3-Box Financial Micro-Dashboard */}
         <div className="bg-stone-50 dark:bg-[#22242a] border border-stone-200 dark:border-[#2e313a] p-3.5 rounded-sm space-y-2">
@@ -1595,7 +1812,7 @@ const ContractDetailView: React.FC<ContractDetailViewProps> = ({
             <div className="p-2 bg-white dark:bg-[#18191c] border border-stone-200 dark:border-[#2e313a] rounded-xs">
               <TermTooltip termKey="taxpayer-overrun" showIcon align="right">
                 <span className="text-[10px] text-red-700 dark:text-rose-400 font-bold uppercase">
-                  Taxpayer Creep
+                  Net Dollar Growth
                 </span>
               </TermTooltip>
               <div className="text-sm sm:text-base font-mono font-bold text-red-700 dark:text-rose-400 mt-0.5">
@@ -1734,14 +1951,20 @@ const VendorDetailView: React.FC<VendorDetailViewProps> = ({
       <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
         {/* Vendor Title */}
         <div className="space-y-1 pb-3 border-b border-stone-200 dark:border-[#2e313a]">
-          <h2 className="text-lg sm:text-xl font-bold text-stone-900 dark:text-zinc-100">
-            {vendor.parentName}
-          </h2>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-lg sm:text-xl font-bold text-stone-900 dark:text-zinc-100">
+              {vendor.parentName}
+            </h2>
+            <EntityBadge parent={vendor.parentName} recipient={vendor.name} showCommercial={true} />
+          </div>
           <div className="text-xs text-stone-500 dark:text-zinc-400">
             Headquarters: <span className="font-semibold text-stone-800 dark:text-zinc-200">{vendor.hqState}</span> ·{' '}
             {vendor.awards.length} prime awards
           </div>
         </div>
+
+        {/* FFRDC / M&O Informational Context Callout */}
+        <FfrdcCallout parent={vendor.parentName} recipient={vendor.name} />
 
         {/* Micro-Dashboard */}
         <div className="bg-stone-50 dark:bg-[#22242a] border border-stone-200 dark:border-[#2e313a] p-3.5 rounded-sm space-y-2">
@@ -1769,7 +1992,7 @@ const VendorDetailView: React.FC<VendorDetailViewProps> = ({
 
             <div className="p-2 bg-white dark:bg-[#18191c] border border-stone-200 dark:border-[#2e313a] rounded-xs">
               <span className="text-[10px] text-red-700 dark:text-rose-400 font-bold uppercase">
-                Dollar Creep
+                Net Growth
               </span>
               <div className="text-sm sm:text-base font-mono font-bold text-red-700 dark:text-rose-400 mt-0.5">
                 {vendor.totalCreep > 0 ? `+${formatCurrency(vendor.totalCreep, true)}` : '$0.00'}
@@ -1806,7 +2029,7 @@ const VendorDetailView: React.FC<VendorDetailViewProps> = ({
                       Total: {formatCurrency(stats.currentValue, true)}
                     </span>
                     <span className="text-red-700 dark:text-rose-400 font-mono font-bold">
-                      +{formatCurrency(stats.dollarCreep, true)} creep
+                      +{formatCurrency(stats.dollarCreep, true)} growth
                     </span>
                   </div>
                 </div>
@@ -1880,7 +2103,7 @@ const OfficeDetailView: React.FC<OfficeDetailViewProps> = ({
 
             <div className="p-2 bg-white dark:bg-[#18191c] border border-stone-200 dark:border-[#2e313a] rounded-xs">
               <span className="text-[10px] text-red-700 dark:text-rose-400 font-bold uppercase">
-                Dollar Creep
+                Net Growth
               </span>
               <div className="text-sm sm:text-base font-mono font-bold text-red-700 dark:text-rose-400 mt-0.5">
                 {office.totalCreep > 0 ? `+${formatCurrency(office.totalCreep, true)}` : '$0.00'}
@@ -1889,7 +2112,7 @@ const OfficeDetailView: React.FC<OfficeDetailViewProps> = ({
 
             <div className="p-2 bg-white dark:bg-[#18191c] border border-stone-200 dark:border-[#2e313a] rounded-xs">
               <span className="text-[10px] text-stone-500 dark:text-zinc-400 font-bold uppercase">
-                Overrun Rate
+                Growth Rate
               </span>
               <div className="text-sm sm:text-base font-mono font-bold text-red-700 dark:text-rose-400 mt-0.5">
                 {office.percentCreep > 0 ? `+${office.percentCreep.toFixed(1)}%` : '0.0%'}
@@ -1929,7 +2152,7 @@ const OfficeDetailView: React.FC<OfficeDetailViewProps> = ({
                       Total: {formatCurrency(stats.currentValue, true)}
                     </span>
                     <span className="text-red-700 dark:text-rose-400 font-mono font-bold">
-                      +{formatCurrency(stats.dollarCreep, true)} creep
+                      +{formatCurrency(stats.dollarCreep, true)} growth
                     </span>
                   </div>
                 </div>
@@ -2319,6 +2542,7 @@ export const ContractCreepPanel: React.FC<JurisdictionGeoProps> = ({
       hhiScore,
       avgDelayDays,
       zombieCount,
+      delayedCount,
       topOffender,
       vendorsList,
       officesList,
