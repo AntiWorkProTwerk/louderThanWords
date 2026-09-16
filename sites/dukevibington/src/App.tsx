@@ -904,13 +904,15 @@ export function App() {
                 category,
               };
             } else {
-              fill = theme === 'dark' ? '#2A2D36' : '#F3F4F6';
-              hoverFill = theme === 'dark' ? '#373A44' : '#E5E7EB';
-              category = 'Baseline';
+              // County sector without isolated mega-award -> Inherits state baseline CartoColor gradient
+              const stateColorConfig = getEditorialCreepColor(stateBaseCreep);
+              fill = stateColorConfig.fill;
+              hoverFill = stateColorConfig.hoverFill;
+              category = stateColorConfig.category;
 
               telemetry = {
                 title: countyName,
-                subtitle: `County Jurisdiction · ${currentStateMeta?.name}`,
+                subtitle: `County Jurisdiction · Showing State Baseline · ${currentStateMeta?.name}`,
                 metric1: {
                   label: 'COUNTY SECTOR',
                   value: countyName.replace(/ County$/i, ''),
@@ -921,13 +923,13 @@ export function App() {
                 },
                 metric3: {
                   label: 'DATA SOURCE',
-                  value: 'USAspending Prime Awards',
+                  value: 'USAspending Open Data',
                 },
                 metric4: {
                   label: 'SECTOR STATUS',
-                  value: 'Baseline Indexed',
+                  value: 'State Indexed',
                   isPill: true,
-                  pillColor: 'bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-zinc-300',
+                  pillColor: stateBaseCreep > 0 ? 'bg-red-50 text-red-700 dark:bg-rose-950/60 dark:text-rose-300' : 'bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-zinc-300',
                 },
                 category,
               };

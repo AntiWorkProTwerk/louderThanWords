@@ -13,15 +13,60 @@ const __dirname = path.dirname(__filename);
 
 const USASPENDING_API = 'https://api.usaspending.gov/api/v2';
 const TIME_PERIOD = [{ start_date: '2020-10-01', end_date: '2026-09-30' }];
+const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) CivicEdgeProcurement/2.0';
 
 // Helper: Sleep to respect rate limits
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Robust fetch with retry and custom User-Agent
+export async function fetchWithRetry(url, options = {}, retries = 2, timeoutMs = 25000) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(url, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': USER_AGENT,
+          ...(options.headers || {}),
+        },
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+      return res;
+    } catch (err) {
+      if (attempt === retries) throw err;
+      await sleep(1000 * (attempt + 1));
+    }
+  }
+}
 
 // Helper: Format SQL strings safely
 function sqlEscape(val) {
   if (val === null || val === undefined) return 'NULL';
   if (typeof val === 'number') return isNaN(val) ? '0' : String(val);
   return `'${String(val).replace(/'/g, "''")}'`;
+}
+
+// Load Counties Database
+const countiesDataPath = path.join(__dirname, 'data', 'counties_by_state.json');
+let countiesByState = {};
+if (fs.existsSync(countiesDataPath)) {
+  try {
+    countiesByState = JSON.parse(fs.readFileSync(countiesDataPath, 'utf8'));
+  } catch (e) {}
+}
+
+export function getCountiesForState(stateCode) {
+  return countiesByState[stateCode?.toUpperCase()] || [];
+}
+
+export function resolveCounty(stateCode, rawCountyStr) {
+  if (!rawCountyStr || !stateCode) return null;
+  const list = getCountiesForState(stateCode);
+  const clean = String(rawCountyStr).toLowerCase().replace(/ (county|parish|borough|census area|city)$/i, '').replace(/[\.\,]/g, '').trim();
+  return list.find((c) => {
+    const cClean = c.rawName.toLowerCase().replace(/ (county|parish|borough|census area|city)$/i, '').replace(/[\.\,]/g, '').trim();
+    return cClean === clean;
+  }) || null;
 }
 
 // Derive Federal Fiscal Year from date (e.g. 2021-10-15 -> FY2022)
@@ -286,12 +331,10 @@ export async function harvestJurisdiction({ stateCode, countyFips, limit = 25, f
     };
 
     try {
-      const res = await fetch(`${USASPENDING_API}/search/spending_by_award/`, {
+      const res = await fetchWithRetry(`${USASPENDING_API}/search/spending_by_award/`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(45000),
-      });
+      }, 2, 35000);
 
       if (!res.ok) {
         quotaGuard.recordApiError(res.status);
@@ -329,17 +372,15 @@ export async function harvestJurisdiction({ stateCode, countyFips, limit = 25, f
         quotaGuard.checkApiBudget();
         await sleep(LIMITS.API_MIN_DELAY_MS); // rate limiting
         try {
-          const txRes = await fetch(`${USASPENDING_API}/transactions/`, {
+          const txRes = await fetchWithRetry(`${USASPENDING_API}/transactions/`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               award_id: internalId,
               limit: 50,
               sort: 'action_date',
               order: 'asc',
             }),
-            signal: AbortSignal.timeout(15000),
-          });
+          }, 2, 20000);
           if (txRes.ok) {
             quotaGuard.recordApiCall();
             quotaGuard.recordApiSuccess();
@@ -404,6 +445,14 @@ export function generateSqlBundle(jurisdictionMeta, awards) {
   }
   const stateBenchmarks = benchmarkData[jurisdictionMeta.stateCode]?.years || benchmarkData['US']?.years || {};
   const latestBenchmark = stateBenchmarks['2023'] || { state_operating_budget: 40200000000, federal_tax_collected: 74180000000, population: 5877610 };
+
+  const countiesDataPath = path.join(__dirname, 'data', 'counties_by_state.json');
+  let countiesByState = {};
+  if (fs.existsSync(countiesDataPath)) {
+    try {
+      countiesByState = JSON.parse(fs.readFileSync(countiesDataPath, 'utf8'));
+    } catch (e) {}
+  }
 
   for (const award of awards) {
     const amt = award.currentObligation;
@@ -498,6 +547,12 @@ export function generateSqlBundle(jurisdictionMeta, awards) {
       award.recipient_city_name ||
       null;
 
+    let awardCountyFips = jurisdictionMeta.countyFips || award.county_fips || null;
+    if (!awardCountyFips && jurisdictionMeta.stateCode && jurisdictionMeta.stateCode !== 'US') {
+      const cMatch = resolveCounty(jurisdictionMeta.stateCode, award['Place of Performance County Name'] || award.recipient_location_county_name);
+      if (cMatch) awardCountyFips = cMatch.fips;
+    }
+
     sqlStatements.push(`
       INSERT INTO awards (
         internal_id, award_id_piid, fiscal_year_started, state_code, county_fips,
@@ -511,7 +566,7 @@ export function generateSqlBundle(jurisdictionMeta, awards) {
         ${sqlEscape(award['Award ID'])},
         ${fy},
         ${sqlEscape(jurisdictionMeta.stateCode)},
-        ${sqlEscape(jurisdictionMeta.countyFips || null)},
+        ${sqlEscape(awardCountyFips)},
         ${sqlEscape(cityName)},
         ${sqlEscape(congDist)},
         ${sqlEscape(award['Recipient Name'])},
