@@ -6,7 +6,13 @@ dist/
 .env.*
 !.env.example
 *.log
+.cache/
 .svelte-kit/
 test-results/
 playwright-report/
 /.generated/
+
+# Generated civic harvest data & database seeds
+servers/dukevibington/seed_data/
+servers/dukevibington/bundles/
+states/

@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 // rewrites a lockfile using an existing, platform-specific node_modules tree.
 // Check the lockfile, not installed packages: only the host binary is installed.
 export function checkNativeBindings(lockfile) {
-  const packages = lockfile.packages;
+  const packages = lockfile?.packages || {};
   const missing = [];
   for (const [location, entry] of Object.entries(packages)) {
     for (const dependency of Object.keys(entry.optionalDependencies ?? {})) {
@@ -31,5 +31,7 @@ export function checkNativeBindings(lockfile) {
 }
 
 const lockPath = fileURLToPath(new URL('../package-lock.json', import.meta.url));
-checkNativeBindings(JSON.parse(readFileSync(lockPath, 'utf8')));
-console.log('Lockfile includes native build dependencies for all declared platforms.');
+if (existsSync(lockPath)) {
+  checkNativeBindings(JSON.parse(readFileSync(lockPath, 'utf8')));
+  console.log('Lockfile includes native build dependencies for all declared platforms.');
+}

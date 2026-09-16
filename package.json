@@ -8,12 +8,17 @@
   ],
   "scripts": {
     "dev": "node scripts/dev.mjs",
+    "dev:dukevibington": "npm run dev --workspace @louder-than-words/dukevibington",
     "build": "node scripts/build-all.mjs",
     "preview": "node scripts/preview.mjs",
     "sites:sync": "node scripts/sync-sites.mjs",
     "check": "npm run build",
     "deploy": "node scripts/deploy.mjs",
-    "deploy:preview": "node scripts/deploy.mjs --preview"
+    "deploy:preview": "node scripts/deploy.mjs --preview",
+    "d1:migrate": "wrangler d1 execute civic_data --remote --file=./servers/dukevibington/schema.sql --yes",
+    "ingest": "node servers/dukevibington/ingest.mjs",
+    "harvest": "node servers/dukevibington/batch_harvest.mjs",
+    "r2:upload:co": "wrangler r2 object put civic-bundles/dukevibington/states/CO.json --file=./servers/dukevibington/bundles/states/CO.json --remote"
   },
   "devDependencies": {
     "@types/leaflet": "^1.9.22",

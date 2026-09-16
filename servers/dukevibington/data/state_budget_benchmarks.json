@@ -1,0 +1,100 @@
+{
+  "CO": {
+    "name": "Colorado",
+    "years": {
+      "2018": { "state_operating_budget": 30500000000, "federal_tax_collected": 50210000000, "population": 5695564 },
+      "2019": { "state_operating_budget": 32800000000, "federal_tax_collected": 53120000000, "population": 5758736 },
+      "2020": { "state_operating_budget": 34200000000, "federal_tax_collected": 54840000000, "population": 5784865 },
+      "2021": { "state_operating_budget": 36100000000, "federal_tax_collected": 64910000000, "population": 5812069 },
+      "2022": { "state_operating_budget": 38500000000, "federal_tax_collected": 78420000000, "population": 5839926 },
+      "2023": { "state_operating_budget": 40200000000, "federal_tax_collected": 74180000000, "population": 5877610 },
+      "2024": { "state_operating_budget": 42800000000, "federal_tax_collected": 76500000000, "population": 5910000 },
+      "2025": { "state_operating_budget": 44500000000, "federal_tax_collected": 79200000000, "population": 5935000 },
+      "2026": { "state_operating_budget": 46200000000, "federal_tax_collected": 81500000000, "population": 5950000 }
+    }
+  },
+  "IL": {
+    "name": "Illinois",
+    "years": {
+      "2018": { "state_operating_budget": 38500000000, "federal_tax_collected": 164200000000, "population": 12741080 },
+      "2019": { "state_operating_budget": 40100000000, "federal_tax_collected": 171500000000, "population": 12671821 },
+      "2020": { "state_operating_budget": 42900000000, "federal_tax_collected": 173800000000, "population": 12587530 },
+      "2021": { "state_operating_budget": 44200000000, "federal_tax_collected": 198400000000, "population": 12518064 },
+      "2022": { "state_operating_budget": 46500000000, "federal_tax_collected": 221300000000, "population": 12582032 },
+      "2023": { "state_operating_budget": 50400000000, "federal_tax_collected": 215400000000, "population": 12549689 },
+      "2024": { "state_operating_budget": 53100000000, "federal_tax_collected": 224000000000, "population": 12520000 },
+      "2025": { "state_operating_budget": 55200000000, "federal_tax_collected": 231000000000, "population": 12500000 },
+      "2026": { "state_operating_budget": 56800000000, "federal_tax_collected": 238000000000, "population": 12480000 }
+    }
+  },
+  "TX": {
+    "name": "Texas",
+    "years": {
+      "2018": { "state_operating_budget": 108500000000, "federal_tax_collected": 298100000000, "population": 28628666 },
+      "2019": { "state_operating_budget": 113200000000, "federal_tax_collected": 310500000000, "population": 28995881 },
+      "2020": { "state_operating_budget": 118400000000, "federal_tax_collected": 305800000000, "population": 29145505 },
+      "2021": { "state_operating_budget": 124200000000, "federal_tax_collected": 361200000000, "population": 29527941 },
+      "2022": { "state_operating_budget": 133500000000, "federal_tax_collected": 420800000000, "population": 30029572 },
+      "2023": { "state_operating_budget": 144100000000, "federal_tax_collected": 412500000000, "population": 30503301 },
+      "2024": { "state_operating_budget": 152000000000, "federal_tax_collected": 435000000000, "population": 30900000 },
+      "2025": { "state_operating_budget": 159000000000, "federal_tax_collected": 452000000000, "population": 31300000 },
+      "2026": { "state_operating_budget": 165000000000, "federal_tax_collected": 470000000000, "population": 31700000 }
+    }
+  },
+  "CA": {
+    "name": "California",
+    "years": {
+      "2018": { "state_operating_budget": 190300000000, "federal_tax_collected": 456500000000, "population": 39461588 },
+      "2019": { "state_operating_budget": 208900000000, "federal_tax_collected": 472800000000, "population": 39437610 },
+      "2020": { "state_operating_budget": 202100000000, "federal_tax_collected": 492400000000, "population": 39538223 },
+      "2021": { "state_operating_budget": 262900000000, "federal_tax_collected": 578000000000, "population": 39237836 },
+      "2022": { "state_operating_budget": 307900000000, "federal_tax_collected": 673200000000, "population": 39029342 },
+      "2023": { "state_operating_budget": 310800000000, "federal_tax_collected": 612400000000, "population": 38965193 },
+      "2024": { "state_operating_budget": 297900000000, "federal_tax_collected": 635000000000, "population": 38980000 },
+      "2025": { "state_operating_budget": 305000000000, "federal_tax_collected": 655000000000, "population": 39050000 },
+      "2026": { "state_operating_budget": 312000000000, "federal_tax_collected": 675000000000, "population": 39120000 }
+    }
+  },
+  "NY": {
+    "name": "New York",
+    "years": {
+      "2018": { "state_operating_budget": 168200000000, "federal_tax_collected": 284100000000, "population": 19530351 },
+      "2019": { "state_operating_budget": 175500000000, "federal_tax_collected": 298400000000, "population": 19453561 },
+      "2020": { "state_operating_budget": 177400000000, "federal_tax_collected": 301200000000, "population": 20201249 },
+      "2021": { "state_operating_budget": 212000000000, "federal_tax_collected": 361500000000, "population": 19835913 },
+      "2022": { "state_operating_budget": 220500000000, "federal_tax_collected": 418200000000, "population": 19677151 },
+      "2023": { "state_operating_budget": 229000000000, "federal_tax_collected": 395100000000, "population": 19571216 },
+      "2024": { "state_operating_budget": 237000000000, "federal_tax_collected": 410000000000, "population": 19540000 },
+      "2025": { "state_operating_budget": 242000000000, "federal_tax_collected": 425000000000, "population": 19520000 },
+      "2026": { "state_operating_budget": 248000000000, "federal_tax_collected": 440000000000, "population": 19500000 }
+    }
+  },
+  "FL": {
+    "name": "Florida",
+    "years": {
+      "2018": { "state_operating_budget": 88700000000, "federal_tax_collected": 203500000000, "population": 21244317 },
+      "2019": { "state_operating_budget": 91100000000, "federal_tax_collected": 215800000000, "population": 21477737 },
+      "2020": { "state_operating_budget": 92200000000, "federal_tax_collected": 218400000000, "population": 21538187 },
+      "2021": { "state_operating_budget": 101500000000, "federal_tax_collected": 268200000000, "population": 21781128 },
+      "2022": { "state_operating_budget": 109900000000, "federal_tax_collected": 331400000000, "population": 22244823 },
+      "2023": { "state_operating_budget": 117000000000, "federal_tax_collected": 328900000000, "population": 22610726 },
+      "2024": { "state_operating_budget": 121000000000, "federal_tax_collected": 348000000000, "population": 22950000 },
+      "2025": { "state_operating_budget": 125500000000, "federal_tax_collected": 365000000000, "population": 23250000 },
+      "2026": { "state_operating_budget": 130000000000, "federal_tax_collected": 382000000000, "population": 23550000 }
+    }
+  },
+  "US": {
+    "name": "National Benchmark",
+    "years": {
+      "2018": { "state_operating_budget": 2020000000000, "federal_tax_collected": 3468000000000, "population": 326838199 },
+      "2019": { "state_operating_budget": 2130000000000, "federal_tax_collected": 3564000000000, "population": 328329953 },
+      "2020": { "state_operating_budget": 2180000000000, "federal_tax_collected": 3596000000000, "population": 331449281 },
+      "2021": { "state_operating_budget": 2450000000000, "federal_tax_collected": 4100000000000, "population": 331893745 },
+      "2022": { "state_operating_budget": 2720000000000, "federal_tax_collected": 4900000000000, "population": 333287557 },
+      "2023": { "state_operating_budget": 2850000000000, "federal_tax_collected": 4440000000000, "population": 334914895 },
+      "2024": { "state_operating_budget": 2980000000000, "federal_tax_collected": 4710000000000, "population": 336500000 },
+      "2025": { "state_operating_budget": 3090000000000, "federal_tax_collected": 4950000000000, "population": 338000000 },
+      "2026": { "state_operating_budget": 3200000000000, "federal_tax_collected": 5180000000000, "population": 339500000 }
+    }
+  }
+}
