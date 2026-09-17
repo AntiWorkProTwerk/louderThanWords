@@ -55,6 +55,21 @@
     district: number;
     role: 'Representative' | 'Delegate';
   };
+  type StateExecutive = {
+    name: string;
+    party: PartyCode;
+    state: string;
+    role: 'Governor' | 'Mayor';
+  };
+  type StateExecutivesData = {
+    metadata: {
+      retrievedOn: string;
+      source: string;
+      dcSource: string;
+      notes: string;
+    };
+    executives: StateExecutive[];
+  };
   type OfficialsData = {
     metadata: {
       congress: number;
@@ -243,6 +258,7 @@
   let districtFeatures: Feature<Geometry, DistrictProperties>[] = [];
   let districtShapes: DistrictShape[] = [];
   let officialsData: OfficialsData | null = null;
+  let stateExecutivesData: StateExecutivesData | null = null;
   let electionData: ElectionData | null = null;
   let billsData: BillsData | null = null;
   let selectedElectionYear: ElectionYear = 2024;
@@ -283,6 +299,9 @@
   $: selectedSenators = selectedState && officialsData
     ? officialsData.senators.filter((senator) => senator.state === selectedState.code)
     : [];
+  $: selectedExecutive = selectedState && stateExecutivesData
+    ? stateExecutivesData.executives.find((executive) => executive.state === selectedState.code) ?? null
+    : null;
   $: selectedRepresentatives = selectedState && officialsData
     ? officialsData.representatives
       .filter((representative) => representative.state === selectedState.code)
@@ -423,22 +442,25 @@
 
   async function loadOfficials() {
     try {
-      const [officialsResponse, districtsResponse] = await Promise.all([
+      const [officialsResponse, districtsResponse, executivesResponse] = await Promise.all([
         fetch(`${base}/data/federal-officials-119.json`),
-        fetch(`${base}/data/congressional-districts-119.geojson`)
+        fetch(`${base}/data/congressional-districts-119.geojson`),
+        fetch(`${base}/data/state-executives.json`)
       ]);
-      if (!officialsResponse.ok || !districtsResponse.ok) {
+      if (!officialsResponse.ok || !districtsResponse.ok || !executivesResponse.ok) {
         throw new Error(
-          `Officials request failed: ${officialsResponse.status}/${districtsResponse.status}`
+          `Officials request failed: ${officialsResponse.status}/${districtsResponse.status}/${executivesResponse.status}`
         );
       }
 
-      const [officials, districts] = await Promise.all([
+      const [officials, districts, executives] = await Promise.all([
         officialsResponse.json(),
-        districtsResponse.json()
-      ]) as [OfficialsData, FeatureCollection<Geometry, DistrictProperties>];
+        districtsResponse.json(),
+        executivesResponse.json()
+      ]) as [OfficialsData, FeatureCollection<Geometry, DistrictProperties>, StateExecutivesData];
 
       officialsData = officials;
+      stateExecutivesData = executives;
       districtFeatures = districts.features;
       buildDistrictShapes();
     } catch (error) {
@@ -1369,7 +1391,7 @@
         aria-busy={officialsLoading}
       >
         <header class="officials-header">
-          <p class="section-kicker">Federal delegation</p>
+          <p class="section-kicker">State &amp; federal officials</p>
           <div class="officials-title-row">
             <h2 id="officials-panel-title">{selectedState.name}</h2>
             <span>{selectedState.code}</span>
@@ -1394,6 +1416,30 @@
           </p>
           <p class="roster-vintage">{rosterVintage()}</p>
         </header>
+
+        <section class="governor-section" aria-labelledby="governor-title">
+          <div class="section-heading">
+            <h3 id="governor-title">State executive</h3>
+            <span>Current</span>
+          </div>
+
+          {#if officialsLoading}
+            <p class="panel-status">Loading state executive…</p>
+          {:else if officialsLoadError}
+            <p class="panel-status">The state executive roster is unavailable.</p>
+          {:else if selectedExecutive}
+            <article class={`governor-card party-${partyClass(selectedExecutive.party)}`}>
+              <div class="official-card-topline">
+                <span class="party-dot" aria-hidden="true"></span>
+                <span>{partyName(selectedExecutive.party)}</span>
+                <span class="governor-role">{selectedExecutive.role}</span>
+              </div>
+              <h4>{selectedExecutive.name}</h4>
+            </article>
+          {:else}
+            <p class="panel-status">No current state executive was found.</p>
+          {/if}
+        </section>
 
         <section class="senators-section" aria-labelledby="senators-title">
           <div class="section-heading">
