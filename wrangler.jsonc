@@ -1,6 +1,8 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "louderthanwords",
+  "account_id": "3b9f1c5cbf17023810d2362c4c6547c0",
+  "workers_dev": true,
   "compatibility_date": "2026-09-14",
   "main": "./worker/index.js",
   "routes": [
