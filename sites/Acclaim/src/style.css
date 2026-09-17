@@ -281,7 +281,8 @@ button:focus-visible {
   padding: 7px 0;
   border: 0;
   background: transparent;
-  font-size: 0.68rem;
+  font-size: 0.76rem;
+  font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   cursor: pointer;
@@ -292,9 +293,16 @@ button:focus-visible {
 }
 
 .back-button.visible {
-  opacity: 0.64;
+  opacity: 0.82;
   pointer-events: auto;
   transform: translateX(0);
+}
+
+.back-button:not(.visible) {
+  width: 0;
+  min-width: 0;
+  padding-inline: 0;
+  overflow: hidden;
 }
 
 .back-button:hover {
@@ -305,8 +313,8 @@ button:focus-visible {
   display: flex;
   gap: 9px;
   align-items: center;
-  color: rgba(17, 17, 17, 0.56);
-  font-size: 0.55rem;
+  color: rgba(17, 17, 17, 0.72);
+  font-size: 0.62rem;
   font-weight: 720;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -338,8 +346,8 @@ button:focus-visible {
   padding: 6px 8px;
   border: 0;
   background: #fff;
-  color: rgba(17, 17, 17, 0.55);
-  font-size: 0.5rem;
+  color: rgba(17, 17, 17, 0.72);
+  font-size: 0.58rem;
   font-weight: 740;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -362,8 +370,8 @@ button:focus-visible {
 }
 
 .district-vintage {
-  color: rgba(17, 17, 17, 0.54);
-  font-size: 0.51rem;
+  color: rgba(17, 17, 17, 0.7);
+  font-size: 0.6rem;
   font-weight: 720;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -476,7 +484,7 @@ button:focus-visible {
 }
 
 .readout-code {
-  font-size: 0.61rem;
+  font-size: 0.68rem;
   font-weight: 760;
   letter-spacing: 0.13em;
 }
@@ -494,8 +502,8 @@ button:focus-visible {
   gap: 2px 9px;
   padding-left: 15px;
   border-left: 1px solid rgba(17, 17, 17, 0.2);
-  color: rgba(17, 17, 17, 0.52);
-  font-size: 0.49rem;
+  color: rgba(17, 17, 17, 0.68);
+  font-size: 0.58rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -514,8 +522,8 @@ button:focus-visible {
 
 .election-unavailable {
   max-width: 190px;
-  color: rgba(17, 17, 17, 0.46);
-  font-size: 0.5rem;
+  color: rgba(17, 17, 17, 0.64);
+  font-size: 0.57rem;
   letter-spacing: 0.08em;
   line-height: 1.35;
   text-transform: uppercase;
@@ -534,8 +542,8 @@ button:focus-visible {
   gap: 2px;
   padding-left: 15px;
   border-left: 1px solid rgba(17, 17, 17, 0.2);
-  color: rgba(17, 17, 17, 0.5);
-  font-size: 0.49rem;
+  color: rgba(17, 17, 17, 0.68);
+  font-size: 0.58rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -940,7 +948,8 @@ button:focus-visible {
   align-self: center;
   justify-self: center;
   margin: 0;
-  font-size: 0.57rem;
+  color: rgba(17, 17, 17, 0.72);
+  font-size: 0.62rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -953,7 +962,7 @@ button:focus-visible {
 .officials-panel {
   z-index: 4;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto minmax(0, 1fr);
   min-width: 0;
   min-height: 0;
   overflow: hidden;
@@ -963,6 +972,7 @@ button:focus-visible {
 }
 
 .officials-header,
+.governor-section,
 .senators-section,
 .representatives-section {
   padding-inline: clamp(20px, 2.1vw, 32px);
@@ -985,8 +995,8 @@ button:focus-visible {
 
 .section-kicker {
   margin: 0 0 11px;
-  color: rgba(17, 17, 17, 0.5);
-  font-size: 0.57rem;
+  color: rgba(17, 17, 17, 0.68);
+  font-size: 0.64rem;
   font-weight: 750;
   letter-spacing: 0.18em;
 }
@@ -1021,8 +1031,8 @@ button:focus-visible {
   padding: 10px 0;
   border-top: 1px solid rgba(17, 17, 17, 0.14);
   border-bottom: 1px solid rgba(17, 17, 17, 0.14);
-  color: rgba(17, 17, 17, 0.5);
-  font-size: 0.5rem;
+  color: rgba(17, 17, 17, 0.68);
+  font-size: 0.6rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -1047,8 +1057,8 @@ button:focus-visible {
   padding: 10px 0;
   border-top: 1px solid rgba(17, 17, 17, 0.14);
   border-bottom: 1px solid rgba(17, 17, 17, 0.14);
-  color: rgba(17, 17, 17, 0.5);
-  font-size: 0.5rem;
+  color: rgba(17, 17, 17, 0.68);
+  font-size: 0.6rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -1068,7 +1078,7 @@ button:focus-visible {
 .delegation-summary {
   margin: 10px 0 0;
   color: rgba(17, 17, 17, 0.72);
-  font-size: 0.72rem;
+  font-size: 0.77rem;
 }
 
 .delegation-summary span {
@@ -1078,8 +1088,8 @@ button:focus-visible {
 
 .roster-vintage {
   margin: 8px 0 0;
-  color: rgba(17, 17, 17, 0.42);
-  font-size: 0.5rem;
+  color: rgba(17, 17, 17, 0.62);
+  font-size: 0.58rem;
   letter-spacing: 0.1em;
 }
 
@@ -1087,6 +1097,40 @@ button:focus-visible {
   padding-top: 18px;
   padding-bottom: 20px;
   border-bottom: 1px solid rgba(17, 17, 17, 0.17);
+}
+
+.governor-section {
+  padding-top: 15px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(17, 17, 17, 0.17);
+}
+
+.governor-card {
+  min-width: 0;
+  padding: 12px 14px 11px 16px;
+  border: 1px solid rgba(17, 17, 17, 0.72);
+  background: #fff;
+  box-shadow: inset 3px 0 var(--party-color);
+}
+
+.governor-card .official-card-topline {
+  justify-content: flex-start;
+}
+
+.governor-role {
+  margin-left: auto;
+  color: rgba(17, 17, 17, 0.64);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.governor-card h4 {
+  margin: 9px 0 0;
+  overflow-wrap: anywhere;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.04rem;
+  font-weight: 400;
+  line-height: 1.05;
 }
 
 .section-heading {
@@ -1105,8 +1149,8 @@ button:focus-visible {
 }
 
 .section-heading span {
-  color: rgba(17, 17, 17, 0.42);
-  font-size: 0.5rem;
+  color: rgba(17, 17, 17, 0.62);
+  font-size: 0.58rem;
   letter-spacing: 0.12em;
 }
 
@@ -1130,8 +1174,8 @@ button:focus-visible {
   display: flex;
   gap: 6px;
   align-items: center;
-  color: rgba(17, 17, 17, 0.55);
-  font-size: 0.51rem;
+  color: rgba(17, 17, 17, 0.7);
+  font-size: 0.58rem;
   font-weight: 760;
   letter-spacing: 0.08em;
 }
@@ -1156,8 +1200,8 @@ button:focus-visible {
 
 .senator-card p {
   margin: 0;
-  color: rgba(17, 17, 17, 0.52);
-  font-size: 0.56rem;
+  color: rgba(17, 17, 17, 0.68);
+  font-size: 0.64rem;
   line-height: 1.35;
 }
 
@@ -1246,8 +1290,8 @@ button:focus-visible {
 }
 
 .representative-district {
-  color: rgba(17, 17, 17, 0.48);
-  font-size: 0.49rem;
+  color: rgba(17, 17, 17, 0.66);
+  font-size: 0.58rem;
   font-weight: 760;
   letter-spacing: 0.1em;
 }
@@ -1268,8 +1312,8 @@ button:focus-visible {
   grid-column: 2;
   grid-row: 1 / 4;
   align-self: center;
-  color: rgba(17, 17, 17, 0.42);
-  font-size: 0.46rem;
+  color: rgba(17, 17, 17, 0.66);
+  font-size: 0.56rem;
   letter-spacing: 0.09em;
 }
 
@@ -1831,6 +1875,7 @@ button:focus-visible {
   }
 
   .officials-header,
+  .governor-section,
   .senators-section,
   .representatives-section {
     padding-inline: 16px;
@@ -1867,12 +1912,26 @@ button:focus-visible {
 
   .roster-vintage {
     margin-top: 4px;
-    font-size: 0.44rem;
+    font-size: 0.52rem;
   }
 
   .senators-section {
     padding-top: 9px;
     padding-bottom: 10px;
+  }
+
+  .governor-section {
+    padding-top: 9px;
+    padding-bottom: 10px;
+  }
+
+  .governor-card {
+    padding: 9px 10px 8px 13px;
+  }
+
+  .governor-card h4 {
+    margin-top: 7px;
+    font-size: 0.9rem;
   }
 
   .section-heading {
@@ -1890,7 +1949,7 @@ button:focus-visible {
   }
 
   .senator-card p {
-    font-size: 0.49rem;
+    font-size: 0.58rem;
   }
 
   .representatives-section {
@@ -1953,7 +2012,7 @@ button:focus-visible {
 
   .geography-control button {
     padding: 5px 6px;
-    font-size: 0.44rem;
+    font-size: 0.52rem;
   }
 
   .district-vintage {
@@ -1983,7 +2042,7 @@ button:focus-visible {
 
   .election-control select {
     padding: 4px 20px 4px 6px;
-    font-size: 0.59rem;
+    font-size: 0.64rem;
   }
 
   .state-readout {
@@ -2006,7 +2065,7 @@ button:focus-visible {
     justify-content: flex-end;
     padding-left: 0;
     border-left: 0;
-    font-size: 0.43rem;
+    font-size: 0.5rem;
   }
 
   .election-readout > span:last-child {
@@ -2027,7 +2086,7 @@ button:focus-visible {
     justify-content: flex-end;
     padding-left: 0;
     border-left: 0;
-    font-size: 0.42rem;
+    font-size: 0.5rem;
   }
 
   .district-readout strong {
@@ -2040,11 +2099,11 @@ button:focus-visible {
 
   .election-unavailable {
     max-width: 145px;
-    font-size: 0.42rem;
+    font-size: 0.49rem;
   }
 
   .map-footnote {
-    font-size: 0.5rem;
+    font-size: 0.54rem;
   }
 
   .state-label text {
