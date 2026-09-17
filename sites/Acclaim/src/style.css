@@ -1,0 +1,2071 @@
+:root {
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #111;
+  background: #fff;
+  font-synthesis: none;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+button {
+  color: inherit;
+  font: inherit;
+}
+
+button:focus-visible {
+  outline: 1px solid #111;
+  outline-offset: 4px;
+}
+
+.site-shell {
+  position: relative;
+  display: grid;
+  grid-template-rows: 74px minmax(0, 1fr);
+  width: 100%;
+  height: 100dvh;
+  min-height: 460px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.intro {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #000;
+  opacity: 1;
+  visibility: visible;
+  transition: background-color 1500ms cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+.intro-action {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 32px 48px;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  isolation: isolate;
+}
+
+.intro-action:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.intro-word {
+  display: block;
+  color: #fff;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(4rem, 10vw, 9rem);
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: -0.065em;
+  transform: scale(1);
+  transform-origin: center;
+  transition:
+    transform 550ms cubic-bezier(0.16, 1, 0.3, 1),
+    letter-spacing 550ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.intro-action:hover .intro-word,
+.intro-action:focus-visible .intro-word {
+  letter-spacing: -0.05em;
+  transform: scale(1.04);
+}
+
+.intro-action:focus-visible {
+  outline-color: #fff;
+}
+
+.revealing .intro {
+  background: #fff;
+}
+
+.revealing .intro-word {
+  letter-spacing: -0.05em;
+  transform: scale(1.04);
+}
+
+.entered .intro {
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 100ms linear,
+    visibility 0s linear 100ms;
+}
+
+.navbar {
+  z-index: 5;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  height: 74px;
+  padding: 0 clamp(20px, 3vw, 48px);
+  border-bottom: 1px solid rgba(17, 17, 17, 0.8);
+  background: #fff;
+  opacity: 0;
+  transform: translateY(-22px);
+  transition:
+    opacity 500ms ease 110ms,
+    transform 720ms cubic-bezier(0.16, 1, 0.3, 1) 80ms;
+}
+
+.entered .navbar {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.nav-primary {
+  display: flex;
+  gap: clamp(18px, 2.4vw, 34px);
+  align-items: center;
+  min-width: 0;
+}
+
+.wordmark {
+  width: max-content;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.55rem;
+  letter-spacing: -0.045em;
+  cursor: pointer;
+}
+
+.nav-modes {
+  display: flex;
+  gap: clamp(14px, 1.8vw, 25px);
+  align-items: center;
+}
+
+.nav-modes button {
+  position: relative;
+  padding: 9px 0;
+  border: 0;
+  background: transparent;
+  color: rgba(17, 17, 17, 0.56);
+  font-size: 0.61rem;
+  font-weight: 720;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+
+.nav-modes button::after {
+  position: absolute;
+  right: 0;
+  bottom: 4px;
+  left: 0;
+  height: 1px;
+  background: #111;
+  content: "";
+  opacity: 0;
+  transform: scaleX(0.45);
+  transition:
+    opacity 160ms ease,
+    transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-modes button:hover,
+.nav-modes button:focus-visible,
+.nav-modes button.active {
+  color: #111;
+}
+
+.nav-modes button.active::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.nav-context {
+  display: grid;
+  gap: 3px;
+  text-align: center;
+}
+
+.context-kicker,
+.nav-prompt,
+.map-footnote {
+  color: rgba(17, 17, 17, 0.52);
+}
+
+.context-kicker {
+  font-size: 0.57rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.context-name {
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+}
+
+.nav-prompt {
+  justify-self: end;
+  font-size: 0.66rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.state-workspace {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: #fff;
+  opacity: 0;
+  transition: opacity 300ms ease 120ms;
+}
+
+.entered .state-workspace {
+  opacity: 1;
+}
+
+.state-workspace.state-focus {
+  grid-template-columns: minmax(0, 1fr) clamp(360px, 28vw, 420px);
+}
+
+.map-shell {
+  position: relative;
+  display: grid;
+  grid-template-rows: 54px minmax(0, 1fr) 38px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0 clamp(12px, 2.3vw, 36px);
+  background: #fff;
+}
+
+.map-toolbar {
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.toolbar-actions {
+  display: flex;
+  gap: clamp(14px, 2vw, 28px);
+  align-items: center;
+  pointer-events: auto;
+}
+
+.back-button {
+  display: inline-flex;
+  gap: 9px;
+  align-items: center;
+  padding: 7px 0;
+  border: 0;
+  background: transparent;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(10px);
+  transition: opacity 350ms ease, transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.back-button.visible {
+  opacity: 0.64;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+.back-button:hover {
+  opacity: 1;
+}
+
+.election-control {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  color: rgba(17, 17, 17, 0.56);
+  font-size: 0.55rem;
+  font-weight: 720;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.election-control select {
+  padding: 5px 24px 5px 7px;
+  border: 1px solid rgba(17, 17, 17, 0.52);
+  border-radius: 0;
+  background-color: #fff;
+  color: #111;
+  font-size: 0.66rem;
+  font-weight: 680;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+.election-control select:focus-visible {
+  outline: 1px solid #111;
+  outline-offset: 3px;
+}
+
+.geography-control {
+  display: inline-flex;
+  border: 1px solid rgba(17, 17, 17, 0.48);
+}
+
+.geography-control button {
+  padding: 6px 8px;
+  border: 0;
+  background: #fff;
+  color: rgba(17, 17, 17, 0.55);
+  font-size: 0.5rem;
+  font-weight: 740;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.geography-control button + button {
+  border-left: 1px solid rgba(17, 17, 17, 0.28);
+}
+
+.geography-control button:hover,
+.geography-control button.active {
+  background: #111;
+  color: #fff;
+}
+
+.geography-control button:focus-visible {
+  z-index: 1;
+  outline-offset: 2px;
+}
+
+.district-vintage {
+  color: rgba(17, 17, 17, 0.54);
+  font-size: 0.51rem;
+  font-weight: 720;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.election-help {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.election-help-trigger {
+  display: grid;
+  width: 19px;
+  height: 19px;
+  padding: 0;
+  border: 1px solid rgba(17, 17, 17, 0.58);
+  border-radius: 50%;
+  background: #fff;
+  color: rgba(17, 17, 17, 0.72);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.72rem;
+  line-height: 1;
+  cursor: help;
+  place-items: center;
+}
+
+.election-help-trigger:hover,
+.election-help-trigger:focus-visible,
+.election-help.open .election-help-trigger {
+  border-color: #111;
+  color: #111;
+}
+
+.election-help-trigger:focus-visible {
+  outline: 1px solid #111;
+  outline-offset: 3px;
+}
+
+.election-help-popover {
+  position: absolute;
+  z-index: 8;
+  top: calc(100% + 10px);
+  left: 0;
+  width: min(280px, calc(100vw - 28px));
+  padding: 14px 15px;
+  border: 1px solid #111;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 4px 4px 0 rgba(17, 17, 17, 0.12);
+  color: rgba(17, 17, 17, 0.72);
+  font-size: 0.67rem;
+  letter-spacing: 0;
+  line-height: 1.48;
+  opacity: 0;
+  pointer-events: none;
+  text-align: left;
+  text-transform: none;
+  transform: translateY(-4px);
+  visibility: hidden;
+  transition:
+    opacity 150ms ease,
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 150ms;
+}
+
+.state-focus .election-help-popover {
+  right: 0;
+  left: auto;
+}
+
+.election-help:hover .election-help-popover,
+.election-help:focus-within .election-help-popover,
+.election-help.open .election-help-popover {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+  visibility: visible;
+}
+
+.election-help-popover strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #111;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.82rem;
+  font-weight: 400;
+}
+
+.election-help-popover p {
+  margin: 0;
+}
+
+.election-help-popover p + p {
+  margin-top: 6px;
+}
+
+.state-readout {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 8px 16px;
+  align-items: center;
+  margin-left: auto;
+  text-align: right;
+}
+
+.readout-place {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.readout-code {
+  font-size: 0.61rem;
+  font-weight: 760;
+  letter-spacing: 0.13em;
+}
+
+.readout-name {
+  min-width: 104px;
+  color: rgba(17, 17, 17, 0.72);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+}
+
+.election-readout {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 2px 9px;
+  padding-left: 15px;
+  border-left: 1px solid rgba(17, 17, 17, 0.2);
+  color: rgba(17, 17, 17, 0.52);
+  font-size: 0.49rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.election-readout strong {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  align-self: center;
+  color: var(--result-color);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  text-transform: none;
+}
+
+.election-unavailable {
+  max-width: 190px;
+  color: rgba(17, 17, 17, 0.46);
+  font-size: 0.5rem;
+  letter-spacing: 0.08em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.result-democrat {
+  --result-color: #245ca6;
+}
+
+.result-republican {
+  --result-color: #b53a36;
+}
+
+.district-readout {
+  display: grid;
+  gap: 2px;
+  padding-left: 15px;
+  border-left: 1px solid rgba(17, 17, 17, 0.2);
+  color: rgba(17, 17, 17, 0.5);
+  font-size: 0.49rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.district-readout strong {
+  color: var(--party-color);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.88rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.map-frame {
+  position: relative;
+  min-height: 0;
+}
+
+.map-status {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  color: rgba(17, 17, 17, 0.55);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.us-map {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  shape-rendering: geometricPrecision;
+}
+
+.state-shape {
+  fill: var(--region-fill, #d8d8d6);
+  fill-opacity: 0;
+  stroke: transparent;
+  stroke-width: 1.15px;
+  vector-effect: non-scaling-stroke;
+  cursor: pointer;
+  opacity: 1;
+  transition:
+    fill 380ms ease,
+    stroke 240ms ease,
+    opacity 500ms ease;
+}
+
+.entered .state-shape {
+  animation: state-fill-in 440ms ease calc(600ms + var(--draw-delay)) forwards;
+}
+
+.state-shape:hover,
+.state-shape.hovered {
+  fill: var(--region-hover, #8c8c8a);
+}
+
+.state-shape:focus-visible {
+  fill: var(--region-hover, #8c8c8a);
+  stroke: #111;
+}
+
+.state-shape:focus,
+.state-label:focus {
+  outline: none;
+}
+
+.state-shape.selected {
+  fill: var(--region-fill, #d1d1cf);
+}
+
+.state-shape.dimmed {
+  pointer-events: none;
+  opacity: 0.025;
+}
+
+.boundary-mask-state {
+  fill: #fff;
+  stroke: #fff;
+  stroke-width: 3px;
+  opacity: 0;
+}
+
+.entered .boundary-mask-state {
+  animation: boundary-region-reveal 360ms ease calc(240ms + var(--draw-delay)) forwards;
+}
+
+.boundary-layer {
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 220ms ease;
+}
+
+.boundary-layer.hidden {
+  opacity: 0;
+}
+
+.state-boundaries,
+.national-outline,
+.county-boundaries,
+.state-focus-outline {
+  fill: none;
+  pointer-events: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.state-boundaries {
+  stroke: #111;
+  stroke-width: 0.7px;
+}
+
+.national-outline {
+  stroke: #111;
+  stroke-width: 1px;
+}
+
+.county-layer {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms ease;
+}
+
+.county-layer.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transition-delay: 640ms;
+}
+
+.county-layer.district-context {
+  pointer-events: none;
+}
+
+.county-shape {
+  fill: var(--region-fill, #cfcfcd);
+  stroke: none;
+  cursor: default;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    fill 380ms ease,
+    transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 220ms ease;
+}
+
+.county-shape:hover,
+.county-shape.hovered {
+  fill: var(--region-hover, #787876);
+  transform: scale(1.022);
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.3));
+}
+
+.party-democrat {
+  --party-color: #245ca6;
+  --party-fill: rgba(36, 92, 166, 0.3);
+  --district-fill: rgba(36, 92, 166, 0.3);
+  --district-highlight: rgba(36, 92, 166, 0.2);
+}
+
+.party-republican {
+  --party-color: #b53a36;
+  --party-fill: rgba(181, 58, 54, 0.3);
+  --district-fill: rgba(181, 58, 54, 0.3);
+  --district-highlight: rgba(181, 58, 54, 0.2);
+}
+
+.party-other {
+  --party-color: #4f4f4d;
+  --party-fill: rgba(79, 79, 77, 0.28);
+  --district-fill: rgba(79, 79, 77, 0.26);
+  --district-highlight: rgba(79, 79, 77, 0.18);
+}
+
+.district-mode-fill-layer,
+.district-mode-layer {
+  animation: district-mode-in 260ms ease both;
+}
+
+.district-mode-fill-layer {
+  pointer-events: none;
+}
+
+.district-mode-fill {
+  fill: var(--district-fill);
+  stroke: none;
+}
+
+.district-mode-region {
+  cursor: pointer;
+  outline: none;
+}
+
+.district-mode-separator,
+.district-mode-hit {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.district-mode-separator {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.94);
+  stroke-width: 3.2px;
+  pointer-events: none;
+}
+
+.district-mode-hit {
+  fill: transparent;
+  stroke: #000;
+  stroke-width: 1.15px;
+  transition:
+    fill 180ms ease,
+    stroke-width 180ms ease,
+    filter 180ms ease;
+}
+
+.district-mode-region:hover .district-mode-hit,
+.district-mode-region:focus .district-mode-hit,
+.district-mode-region.active .district-mode-hit {
+  fill: var(--district-highlight);
+  stroke-width: 1.8px;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.22));
+}
+
+.district-mode-label {
+  fill: rgba(17, 17, 17, 0.78);
+  stroke: rgba(255, 255, 255, 0.95);
+  stroke-width: 2.8px;
+  paint-order: stroke;
+  font-family: Inter, ui-sans-serif, sans-serif;
+  font-size: 8px;
+  font-weight: 800;
+  pointer-events: none;
+}
+
+@keyframes district-mode-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.district-fill-layer,
+.district-outline-layer {
+  pointer-events: none;
+}
+
+.district-fill {
+  fill: var(--party-fill);
+  stroke: none;
+  animation: district-preview-in 220ms ease both;
+}
+
+.district-outline-separator,
+.district-outline {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  animation: district-preview-in 220ms ease both;
+}
+
+.district-outline-separator {
+  stroke: rgba(255, 255, 255, 0.96);
+  stroke-width: 4px;
+}
+
+.district-outline {
+  stroke: #000;
+  stroke-width: 1.8px;
+}
+
+.county-border-layer,
+.state-focus-outline {
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+.county-border-layer.visible,
+.state-focus-outline.visible {
+  opacity: 1;
+}
+
+.county-border-layer.visible {
+  transition-delay: 640ms;
+}
+
+.county-boundaries {
+  stroke: #fff;
+  stroke-width: 0.68px;
+}
+
+.county-border-layer.district-context .county-boundaries {
+  stroke: rgba(255, 255, 255, 0.82);
+  stroke-width: 0.52px;
+}
+
+.state-focus-outline {
+  stroke: #111;
+  stroke-width: 1px;
+}
+
+.leader-layer,
+.label-layer {
+  opacity: 1;
+  transition: opacity 260ms ease;
+}
+
+.leader-layer.hidden,
+.label-layer.hidden {
+  pointer-events: none;
+  opacity: 0;
+}
+
+.label-leader {
+  fill: none;
+  stroke: rgba(17, 17, 17, 0.56);
+  stroke-width: 0.65px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+}
+
+.state-label {
+  cursor: pointer;
+  opacity: 0;
+}
+
+.entered .state-label {
+  animation: map-label-reveal 320ms ease calc(1060ms + var(--draw-delay)) both;
+}
+
+.state-label circle {
+  fill: transparent;
+  stroke: none;
+  transition: fill 180ms ease;
+}
+
+.state-label text {
+  fill: rgba(17, 17, 17, 0.76);
+  font-family: Inter, ui-sans-serif, sans-serif;
+  font-size: 9px;
+  font-weight: 760;
+  letter-spacing: 0.06em;
+  pointer-events: none;
+  transition: fill 180ms ease;
+}
+
+.state-label:hover text,
+.state-label.hovered text {
+  fill: #fff;
+}
+
+.state-label:hover circle,
+.state-label.hovered circle {
+  fill: #777775;
+}
+
+.entered .label-leader {
+  animation: map-label-reveal 320ms ease calc(1060ms + var(--draw-delay)) both;
+}
+
+@keyframes map-label-reveal {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes boundary-region-reveal {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes state-fill-in {
+  from {
+    fill-opacity: 0;
+  }
+
+  to {
+    fill-opacity: 1;
+  }
+}
+
+.map-footnote {
+  align-self: center;
+  justify-self: center;
+  margin: 0;
+  font-size: 0.57rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.map-footnote span {
+  margin: 0 7px;
+  opacity: 0.4;
+}
+
+.officials-panel {
+  z-index: 4;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-left: 1px solid rgba(17, 17, 17, 0.82);
+  background: #fff;
+  animation: officials-panel-enter 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.officials-header,
+.senators-section,
+.representatives-section {
+  padding-inline: clamp(20px, 2.1vw, 32px);
+}
+
+.officials-header {
+  padding-top: 26px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(17, 17, 17, 0.17);
+}
+
+.section-kicker,
+.roster-vintage,
+.section-heading span,
+.representative-district,
+.representative-party,
+.district-action {
+  text-transform: uppercase;
+}
+
+.section-kicker {
+  margin: 0 0 11px;
+  color: rgba(17, 17, 17, 0.5);
+  font-size: 0.57rem;
+  font-weight: 750;
+  letter-spacing: 0.18em;
+}
+
+.officials-title-row {
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.officials-title-row h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.75rem, 2.2vw, 2.35rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+.officials-title-row > span {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.panel-election-summary {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 3px 12px;
+  margin-top: 15px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(17, 17, 17, 0.14);
+  border-bottom: 1px solid rgba(17, 17, 17, 0.14);
+  color: rgba(17, 17, 17, 0.5);
+  font-size: 0.5rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.panel-election-summary strong {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  align-self: center;
+  color: var(--result-color);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.2rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  text-transform: none;
+}
+
+.panel-district-summary {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 3px 12px;
+  margin-top: 15px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(17, 17, 17, 0.14);
+  border-bottom: 1px solid rgba(17, 17, 17, 0.14);
+  color: rgba(17, 17, 17, 0.5);
+  font-size: 0.5rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.panel-district-summary strong {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  align-self: center;
+  color: #111;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.92rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
+.delegation-summary {
+  margin: 10px 0 0;
+  color: rgba(17, 17, 17, 0.72);
+  font-size: 0.72rem;
+}
+
+.delegation-summary span {
+  margin-inline: 7px;
+  color: rgba(17, 17, 17, 0.35);
+}
+
+.roster-vintage {
+  margin: 8px 0 0;
+  color: rgba(17, 17, 17, 0.42);
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+}
+
+.senators-section {
+  padding-top: 18px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(17, 17, 17, 0.17);
+}
+
+.section-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.section-heading h3 {
+  margin: 0;
+  font-size: 0.67rem;
+  font-weight: 780;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.section-heading span {
+  color: rgba(17, 17, 17, 0.42);
+  font-size: 0.5rem;
+  letter-spacing: 0.12em;
+}
+
+.senator-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.senator-card {
+  min-width: 0;
+  min-height: 112px;
+  padding: 14px 13px 13px 16px;
+  border: 1px solid rgba(17, 17, 17, 0.72);
+  background: #fff;
+  box-shadow: inset 3px 0 var(--party-color);
+}
+
+.official-card-topline,
+.representative-party {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: rgba(17, 17, 17, 0.55);
+  font-size: 0.51rem;
+  font-weight: 760;
+  letter-spacing: 0.08em;
+}
+
+.party-dot {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--party-color);
+}
+
+.senator-card h4 {
+  margin: 18px 0 4px;
+  overflow-wrap: anywhere;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.98rem;
+  font-weight: 400;
+  line-height: 1.05;
+}
+
+.senator-card p {
+  margin: 0;
+  color: rgba(17, 17, 17, 0.52);
+  font-size: 0.56rem;
+  line-height: 1.35;
+}
+
+.no-senators {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  min-height: 62px;
+  padding: 12px 14px;
+  border: 1px solid rgba(17, 17, 17, 0.35);
+  color: rgba(17, 17, 17, 0.62);
+}
+
+.no-senators > span {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.4rem;
+}
+
+.no-senators p,
+.panel-status {
+  margin: 0;
+  font-size: 0.67rem;
+  line-height: 1.45;
+}
+
+.panel-status {
+  color: rgba(17, 17, 17, 0.56);
+}
+
+.representatives-section {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  padding-top: 18px;
+  padding-bottom: 20px;
+}
+
+.representatives-heading {
+  margin-bottom: 8px;
+}
+
+.representative-list {
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: rgba(17, 17, 17, 0.35) transparent;
+  scrollbar-width: thin;
+}
+
+.representative-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 12px;
+  width: 100%;
+  margin: 0;
+  padding: 14px 12px 14px 15px;
+  border: 0;
+  border-top: 1px solid rgba(17, 17, 17, 0.2);
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: inset 0 0 var(--party-color);
+  transition:
+    background-color 180ms ease,
+    box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    padding-left 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.representative-card:last-child {
+  border-bottom: 1px solid rgba(17, 17, 17, 0.2);
+}
+
+.representative-card:hover,
+.representative-card:focus-visible,
+.representative-card.active {
+  padding-left: 19px;
+  background: rgba(17, 17, 17, 0.035);
+  box-shadow: inset 4px 0 var(--party-color);
+  outline: none;
+}
+
+.representative-card.pinned {
+  background: var(--party-fill);
+}
+
+.representative-district {
+  color: rgba(17, 17, 17, 0.48);
+  font-size: 0.49rem;
+  font-weight: 760;
+  letter-spacing: 0.1em;
+}
+
+.representative-name {
+  grid-column: 1;
+  overflow-wrap: anywhere;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.94rem;
+  line-height: 1.1;
+}
+
+.representative-party {
+  grid-column: 1;
+}
+
+.district-action {
+  grid-column: 2;
+  grid-row: 1 / 4;
+  align-self: center;
+  color: rgba(17, 17, 17, 0.42);
+  font-size: 0.46rem;
+  letter-spacing: 0.09em;
+}
+
+.bills-workspace {
+  display: grid;
+  grid-template-columns: clamp(250px, 22vw, 320px) minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: #fff;
+  opacity: 0;
+  transition: opacity 300ms ease 120ms;
+}
+
+.entered .bills-workspace {
+  opacity: 1;
+}
+
+.bill-index {
+  display: flex;
+  min-height: 0;
+  padding: clamp(24px, 4vh, 42px) 22px 24px;
+  border-right: 1px solid rgba(17, 17, 17, 0.8);
+  flex-direction: column;
+  overflow: auto;
+}
+
+.bill-index header h1,
+.bill-detail h1,
+.bill-section-heading h2,
+.vote-explanation h3 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+}
+
+.bill-index header h1 {
+  margin: 7px 0 10px;
+  font-size: clamp(1.55rem, 2.3vw, 2.15rem);
+  letter-spacing: -0.04em;
+}
+
+.bill-index header > p:last-child,
+.bill-index-note {
+  color: rgba(17, 17, 17, 0.56);
+  font-size: 0.66rem;
+  line-height: 1.55;
+}
+
+.bill-index-card {
+  display: grid;
+  gap: 7px;
+  width: 100%;
+  margin-top: clamp(25px, 5vh, 48px);
+  padding: 15px 14px;
+  border: 1px solid #111;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.bill-index-card.active {
+  background: rgba(17, 17, 17, 0.045);
+  box-shadow: inset 3px 0 #111;
+}
+
+.bill-index-card > span,
+.bill-index-card small {
+  color: rgba(17, 17, 17, 0.54);
+  font-size: 0.52rem;
+  font-weight: 760;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.bill-index-card strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.bill-index-note {
+  margin: auto 0 0;
+  padding-top: 25px;
+}
+
+.bill-status {
+  color: rgba(17, 17, 17, 0.52);
+  font-size: 0.66rem;
+  line-height: 1.5;
+}
+
+.bill-detail {
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(25px, 4vw, 58px) clamp(24px, 5vw, 76px) 60px;
+  overflow: auto;
+  scrollbar-color: rgba(17, 17, 17, 0.35) transparent;
+}
+
+.bill-detail-header {
+  max-width: 940px;
+}
+
+.bill-heading-line,
+.bill-metadata {
+  display: flex;
+  gap: 8px 18px;
+  color: rgba(17, 17, 17, 0.53);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  flex-wrap: wrap;
+}
+
+.bill-heading-line span + span::before,
+.bill-metadata span + span::before {
+  margin-right: 18px;
+  content: "·";
+}
+
+.bill-detail h1 {
+  max-width: 850px;
+  margin: 12px 0 10px;
+  font-size: clamp(2.1rem, 4.5vw, 4.6rem);
+  letter-spacing: -0.055em;
+  line-height: 0.94;
+}
+
+.bill-official-title {
+  max-width: 940px;
+  margin: 0 0 18px;
+  color: rgba(17, 17, 17, 0.62);
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
+.bill-latest-action {
+  max-width: 820px;
+  margin: 23px 0 13px;
+  padding: 13px 15px;
+  border-left: 2px solid #111;
+  background: rgba(17, 17, 17, 0.035);
+}
+
+.bill-latest-action span {
+  color: rgba(17, 17, 17, 0.52);
+  font-size: 0.51rem;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.bill-latest-action p {
+  margin: 6px 0 0;
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+.bill-detail a {
+  color: #111;
+  font-size: 0.62rem;
+  text-underline-offset: 3px;
+}
+
+.bill-summary,
+.bill-votes,
+.bill-timeline {
+  max-width: 1100px;
+  margin-top: clamp(36px, 6vh, 68px);
+  padding-top: 24px;
+  border-top: 1px solid rgba(17, 17, 17, 0.28);
+}
+
+.bill-section-heading h2 {
+  margin: 6px 0 0;
+  font-size: clamp(1.45rem, 2.2vw, 2.15rem);
+  letter-spacing: -0.035em;
+}
+
+.summary-vintage {
+  display: block;
+  margin-top: 7px;
+  color: rgba(17, 17, 17, 0.48);
+  font-size: 0.49rem;
+  font-weight: 720;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bill-summary > p {
+  max-width: 850px;
+  margin: 18px 0 0;
+  color: rgba(17, 17, 17, 0.76);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.93rem;
+  line-height: 1.65;
+  white-space: pre-line;
+}
+
+.bill-vote-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.bill-vote-tabs button {
+  display: grid;
+  gap: 5px;
+  padding: 13px 14px;
+  border: 1px solid rgba(17, 17, 17, 0.35);
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.bill-vote-tabs button:hover,
+.bill-vote-tabs button.active {
+  border-color: #111;
+  background: rgba(17, 17, 17, 0.045);
+}
+
+.bill-vote-tabs span,
+.bill-vote-tabs small {
+  color: rgba(17, 17, 17, 0.5);
+  font-size: 0.49rem;
+  font-weight: 740;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.bill-vote-tabs strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.88rem;
+  font-weight: 400;
+}
+
+.bill-vote-layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.75fr) minmax(350px, 1.25fr);
+  gap: clamp(24px, 4vw, 54px);
+  margin-top: 26px;
+}
+
+.vote-result {
+  display: inline-block;
+  padding: 5px 7px;
+  border: 1px solid currentColor;
+  font-size: 0.51rem;
+  font-weight: 770;
+  letter-spacing: 0.08em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.result-passed {
+  color: #275f3b;
+}
+
+.result-rejected {
+  color: #8f2926;
+}
+
+.vote-explanation h3 {
+  margin: 15px 0 8px;
+  font-size: 1.28rem;
+  line-height: 1.2;
+}
+
+.vote-explanation > p {
+  color: rgba(17, 17, 17, 0.66);
+  font-size: 0.69rem;
+  line-height: 1.55;
+}
+
+.vote-explanation .procedure-note {
+  padding: 11px 12px;
+  border: 1px solid rgba(17, 17, 17, 0.25);
+  color: #111;
+}
+
+.vote-counts {
+  display: flex;
+  gap: 7px;
+  margin: 16px 0 9px;
+}
+
+.vote-counts > div {
+  display: grid;
+  min-width: 62px;
+  padding: 9px 10px;
+  border: 1px solid rgba(17, 17, 17, 0.22);
+}
+
+.vote-counts strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.2rem;
+  font-weight: 400;
+}
+
+.vote-counts span,
+.vote-threshold {
+  color: rgba(17, 17, 17, 0.5);
+  font-size: 0.48rem;
+  font-weight: 740;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.count-yea {
+  box-shadow: inset 0 3px #275f3b;
+}
+
+.count-nay {
+  box-shadow: inset 0 3px #8f2926;
+}
+
+.count-absent {
+  box-shadow: inset 0 3px #777;
+}
+
+.member-votes {
+  min-width: 0;
+}
+
+.member-votes > label {
+  display: grid;
+  gap: 6px;
+}
+
+.member-votes > label span {
+  color: rgba(17, 17, 17, 0.52);
+  font-size: 0.5rem;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.member-votes input {
+  width: 100%;
+  padding: 10px 11px;
+  border: 1px solid rgba(17, 17, 17, 0.5);
+  border-radius: 0;
+  background: #fff;
+  color: #111;
+  font: inherit;
+  font-size: 0.7rem;
+}
+
+.member-votes input:focus {
+  border-color: #111;
+  outline: 1px solid #111;
+  outline-offset: 2px;
+}
+
+.member-vote-list {
+  max-height: 410px;
+  margin-top: 10px;
+  border-top: 1px solid rgba(17, 17, 17, 0.2);
+  overflow: auto;
+}
+
+.member-vote-row {
+  display: grid;
+  grid-template-columns: 7px minmax(0, 1fr) auto auto;
+  gap: 8px 12px;
+  align-items: center;
+  padding: 9px 8px;
+  border-bottom: 1px solid rgba(17, 17, 17, 0.14);
+}
+
+.member-vote-name {
+  overflow: hidden;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.76rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-vote-meta {
+  color: rgba(17, 17, 17, 0.48);
+  font-size: 0.49rem;
+  letter-spacing: 0.07em;
+}
+
+.member-position {
+  min-width: 72px;
+  padding: 5px 6px;
+  border: 1px solid currentColor;
+  font-size: 0.48rem;
+  letter-spacing: 0.07em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.position-yea {
+  color: #275f3b;
+}
+
+.position-nay {
+  color: #8f2926;
+}
+
+.position-absent {
+  color: #666;
+}
+
+.bill-timeline summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.bill-timeline summary span {
+  color: rgba(17, 17, 17, 0.5);
+  font-family: Inter, ui-sans-serif, sans-serif;
+  font-size: 0.55rem;
+}
+
+.bill-timeline ol {
+  display: grid;
+  gap: 14px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bill-timeline li {
+  display: grid;
+  grid-template-columns: 105px minmax(0, 1fr);
+  gap: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(17, 17, 17, 0.13);
+}
+
+.bill-timeline time {
+  color: rgba(17, 17, 17, 0.52);
+  font-size: 0.53rem;
+  font-weight: 730;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.bill-timeline p {
+  margin: 0;
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
+@keyframes officials-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateX(34px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes district-preview-in {
+  from {
+    fill-opacity: 0;
+    stroke-opacity: 0;
+  }
+
+  to {
+    fill-opacity: 1;
+    stroke-opacity: 1;
+  }
+}
+
+@keyframes officials-sheet-enter {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 820px) {
+  .bills-workspace {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .bill-index {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(190px, 0.8fr);
+    gap: 18px;
+    align-items: center;
+    padding: 14px 18px;
+    border-right: 0;
+    border-bottom: 1px solid rgba(17, 17, 17, 0.8);
+    overflow: visible;
+  }
+
+  .bill-index header > p:last-child,
+  .bill-index-note {
+    display: none;
+  }
+
+  .bill-index header h1 {
+    margin-block: 4px 0;
+    font-size: 1.25rem;
+  }
+
+  .bill-index-card {
+    gap: 4px;
+    margin: 0;
+    padding: 9px 10px;
+  }
+
+  .bill-index-card strong {
+    font-size: 0.8rem;
+  }
+
+  .bill-detail {
+    padding: 26px 22px 50px;
+  }
+
+  .bill-vote-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .member-vote-list {
+    max-height: 320px;
+  }
+
+  .state-workspace.state-focus {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(210px, 44%) minmax(0, 56%);
+  }
+
+  .state-workspace.state-focus .map-shell {
+    grid-template-rows: 42px minmax(0, 1fr);
+    padding-inline: 6px;
+  }
+
+  .state-workspace.state-focus .map-footnote {
+    display: none;
+  }
+
+  .officials-panel {
+    border-top: 1px solid rgba(17, 17, 17, 0.82);
+    border-left: 0;
+    animation-name: officials-sheet-enter;
+  }
+
+  .officials-header,
+  .senators-section,
+  .representatives-section {
+    padding-inline: 16px;
+  }
+
+  .officials-header {
+    padding-top: 11px;
+    padding-bottom: 10px;
+  }
+
+  .section-kicker {
+    margin-bottom: 5px;
+  }
+
+  .officials-title-row h2 {
+    font-size: 1.4rem;
+  }
+
+  .panel-election-summary,
+  .panel-district-summary {
+    margin-top: 7px;
+    padding-block: 5px;
+  }
+
+  .panel-election-summary strong,
+  .panel-district-summary strong {
+    font-size: 1rem;
+  }
+
+  .delegation-summary {
+    margin-top: 5px;
+    font-size: 0.62rem;
+  }
+
+  .roster-vintage {
+    margin-top: 4px;
+    font-size: 0.44rem;
+  }
+
+  .senators-section {
+    padding-top: 9px;
+    padding-bottom: 10px;
+  }
+
+  .section-heading {
+    margin-bottom: 6px;
+  }
+
+  .senator-card {
+    min-height: 70px;
+    padding: 9px 10px 8px 13px;
+  }
+
+  .senator-card h4 {
+    margin-top: 8px;
+    font-size: 0.84rem;
+  }
+
+  .senator-card p {
+    font-size: 0.49rem;
+  }
+
+  .representatives-section {
+    padding-top: 9px;
+    padding-bottom: 10px;
+  }
+
+  .representative-card {
+    padding-block: 10px;
+  }
+}
+
+@media (max-width: 680px) {
+  .site-shell {
+    grid-template-rows: 64px minmax(0, 1fr);
+  }
+
+  .navbar {
+    grid-template-columns: 1fr auto;
+    height: 64px;
+  }
+
+  .nav-primary {
+    gap: 13px;
+  }
+
+  .wordmark {
+    font-size: 1.35rem;
+  }
+
+  .nav-modes {
+    gap: 11px;
+  }
+
+  .nav-modes button {
+    font-size: 0.54rem;
+  }
+
+  .nav-context {
+    justify-self: end;
+    text-align: right;
+  }
+
+  .nav-prompt {
+    display: none;
+  }
+
+  .map-shell {
+    grid-template-rows: 48px minmax(0, 1fr) 32px;
+    padding-inline: 4px;
+  }
+
+  .map-toolbar {
+    padding-inline: 14px;
+  }
+
+  .toolbar-actions {
+    gap: 8px;
+  }
+
+  .geography-control button {
+    padding: 5px 6px;
+    font-size: 0.44rem;
+  }
+
+  .district-vintage {
+    display: none;
+  }
+
+  .back-button:not(.visible) {
+    width: 0;
+    overflow: hidden;
+  }
+
+  .election-control {
+    gap: 0;
+  }
+
+  .election-control > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .election-control select {
+    padding: 4px 20px 4px 6px;
+    font-size: 0.59rem;
+  }
+
+  .state-readout {
+    grid-template-columns: auto;
+    gap: 2px;
+  }
+
+  .readout-place {
+    justify-content: flex-end;
+  }
+
+  .readout-name {
+    min-width: 0;
+    font-size: 0.8rem;
+  }
+
+  .election-readout {
+    display: flex;
+    gap: 7px;
+    justify-content: flex-end;
+    padding-left: 0;
+    border-left: 0;
+    font-size: 0.43rem;
+  }
+
+  .election-readout > span:last-child {
+    display: none;
+  }
+
+  .election-readout strong {
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .district-readout {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    padding-left: 0;
+    border-left: 0;
+    font-size: 0.42rem;
+  }
+
+  .district-readout strong {
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .election-unavailable {
+    max-width: 145px;
+    font-size: 0.42rem;
+  }
+
+  .map-footnote {
+    font-size: 0.5rem;
+  }
+
+  .state-label text {
+    font-size: 10px;
+  }
+}
+
+@media (max-height: 600px) {
+  .site-shell {
+    grid-template-rows: 58px minmax(0, 1fr);
+  }
+
+  .navbar {
+    height: 58px;
+  }
+
+  .map-shell {
+    grid-template-rows: 42px minmax(0, 1fr) 28px;
+  }
+
+  .state-workspace.state-focus {
+    grid-template-rows: minmax(180px, 38%) minmax(0, 62%);
+  }
+}

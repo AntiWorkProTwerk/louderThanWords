@@ -1,0 +1,29 @@
+{
+  "name": "@louder-than-words/acclaim",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "sync:bills": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/sync-bill-data.ps1"
+  },
+  "dependencies": {
+    "@sveltejs/adapter-cloudflare": "^7.2.9",
+    "@sveltejs/kit": "^2.70.3",
+    "d3-geo": "^3.1.1",
+    "svelte": "^5.57.0",
+    "topojson-client": "^3.1.0"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-static": "^3.0.10",
+    "@sveltejs/vite-plugin-svelte": "^7.3.0",
+    "@types/d3-geo": "^3.1.1",
+    "@types/geojson": "^7946.0.16",
+    "@types/topojson-client": "^3.1.5",
+    "svelte-check": "^4.7.6",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.0"
+  }
+}
