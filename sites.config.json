@@ -3,7 +3,7 @@
   "defaultSite": "AntiWorkProTwerk",
   "sites": [
     { "username": "AntiWorkProTwerk" },
-    { "username": "Alantran32" },
+    { "username": "Acclaim", "owner": "Alantran32" },
     { "username": "dukevibington" }
   ]
 }
