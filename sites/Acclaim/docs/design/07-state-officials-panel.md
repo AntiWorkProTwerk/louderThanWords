@@ -2,11 +2,12 @@
 
 ## Purpose
 
-Add baseline federal representation to State Focus without leaving the map or introducing page scroll. The map remains the geographic context; the officials panel explains who represents the selected state and lets House districts be located visually.
+Add baseline state and federal representation to State Focus without leaving the map or introducing page scroll. The map remains the geographic context; the officials panel identifies the selected state's executive and federal delegation and lets House districts be located visually.
 
 ## Non-negotiables
 
 - A state's two current U.S. senators appear at the top of the panel and remain pinned while the representative list scrolls.
+- The current governor appears above the senators as the state's executive. D.C. shows its mayor as the equivalent executive.
 - Current U.S. House members appear below the senators in an internally scrolling list.
 - Hovering or focusing a representative reveals that member's congressional district over the county map.
 - The district overlay is blue for a Democrat, red for a Republican, and neutral charcoal for another or unavailable affiliation.
@@ -36,6 +37,12 @@ Add baseline federal representation to State Focus without leaving the map or in
 - Each card shows full name, party, role, and Senate class.
 - Party is communicated by both a text label and a small color accent; color is never the only signal.
 - The cards remain visible while the House list scrolls.
+
+### State executive — pinned
+
+- One compact card shows the current governor's full name, office, and party above the Senate cards.
+- D.C. labels its executive as `Mayor` rather than implying it has a governor.
+- The executive roster is locally stored with an authoritative source and retrieval date so it remains deterministic and visibly time-bound.
 
 ### Representatives — scrolling
 
@@ -85,7 +92,7 @@ Add baseline federal representation to State Focus without leaving the map or in
 
 - State Focus becomes a map plus a bottom information sheet beneath the navbar.
 - The map initially occupies roughly 40–45% of the available height.
-- The sheet has a compact state header, a two-card senator region, and an internally scrolling representatives region.
+- The sheet has a compact state header, state-executive card, two-card senator region, and an internally scrolling representatives region.
 - The sheet may later gain collapsed, half, and full snap positions. The first implementation may use one stable split as long as all officials are reachable without document scroll.
 - Hover-only behavior has a touch equivalent: tapping a representative pins the district overlay; tapping it again clears it.
 
@@ -94,7 +101,7 @@ Add baseline federal representation to State Focus without leaving the map or in
 - The officials rail/sheet enters over approximately 500–650ms with the established quintic easing.
 - The state is refitted after the layout allocates space to the rail, preventing a visible second jump.
 - District previews fade in quickly (about 180–240ms) and do not animate geographic points independently.
-- The pinned Senate section does not move when the representative list scrolls.
+- The pinned governor and Senate sections do not move when the representative list scrolls.
 
 ## Accessibility
 
@@ -107,7 +114,7 @@ Add baseline federal representation to State Focus without leaving the map or in
 ## Acceptance
 
 - Selecting any state refits it entirely inside the map column and opens its officials panel.
-- Every state shows two current senators and its current House delegation, subject to explicit vacancy handling.
+- Every state shows its current governor, two current senators, and current House delegation, subject to explicit vacancy handling.
 - D.C. shows no senators and shows its current delegate.
 - A representative's district overlay matches the selected state and never bleeds into another state's panel state.
 - District overlays use the representative's party color while county borders remain visible.
