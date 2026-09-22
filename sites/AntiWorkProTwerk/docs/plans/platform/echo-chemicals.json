@@ -1,0 +1,11 @@
+{
+  "id": "epa-chemical-city-queries",
+  "title": "EPA chemical-sector discovery in Deer Park, Richmond and Sauget",
+  "selection": "Complete ECHO active-facility queries for NAICS prefix 325 and the named state/city combinations. EPA may match any linked program address or industry code; the displayed FRS address can differ. This is a nonrandom three-city collection, not nationwide enforcement rates or a list chosen by violation outcomes.",
+  "queries": [
+    {"state":"TX","city":"DEER PARK","naics":"325","active":"Y"},
+    {"state":"CA","city":"RICHMOND","naics":"325","active":"Y"},
+    {"state":"IL","city":"SAUGET","naics":"325","active":"Y"}
+  ],
+  "maxFacilities": 250
+}

@@ -1,0 +1,8 @@
+{
+  "id": "anthropic-direct-client-2024-2025",
+  "title": "Anthropic · direct-client LDA reports · 2024–2025",
+  "clientIds": [59201],
+  "fromYear": 2024,
+  "throughYear": 2025,
+  "maxPerClientYear": 200
+}

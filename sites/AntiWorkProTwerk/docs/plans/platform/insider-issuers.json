@@ -1,0 +1,17 @@
+{
+  "id": "sec-six-issuer-ownership",
+  "title": "Six issuers’ SEC ownership filings, 2026 first-half archives",
+  "selection": "Every Form 3, 4, 5 and amendment for these six exact issuer CIKs in the specified complete SEC quarterly archives. This is a nonrandom demonstration collection, not a market-wide screen or an investment signal. Quarterly archive membership is not a transaction-date window; older reported transactions remain visible.",
+  "issuers": ["0000320193", "0000789019", "0001045810", "0000012927", "0001318605", "0000019617"],
+  "quarters": [
+    {
+      "quarter": "2026q1",
+      "url": "https://www.sec.gov/files/structureddata/data/insider-transactions-data-sets/2026q1_form345.zip"
+    },
+    {
+      "quarter": "2026q2",
+      "url": "https://www.sec.gov/files/datastandardsinnovation/data/insider-transactions-data-sets/2026q2_form345.zip"
+    }
+  ],
+  "maxFilings": 5000
+}

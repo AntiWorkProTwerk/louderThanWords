@@ -67,3 +67,19 @@ test('the existing shared civic cache remains available without a D1 binding', a
   const post = await worker.fetch(new Request(url, { method: 'POST' }), {});
   assert.deepEqual(await post.json(), { ok: false, error: 'D1 not bound' });
 });
+
+test('nested prerendered pages are served before the SPA fallback for every site', async () => {
+  for (const site of sites) {
+    const env = { ASSETS: { fetch: async (request: Request) => {
+      const path = new URL(request.url).pathname;
+      return path === `${site.basePath}/research/example/index.html`
+        ? new Response('Prerendered evidence page')
+        : path === `${site.basePath}/index.html` ? new Response('App shell') : new Response('missing', {status:404});
+    } } };
+    const response = await worker.fetch(new Request(`https://${registry.domain}${site.basePath}/research/example/`), env);
+    assert.equal(await response.text(), 'Prerendered evidence page');
+    const redirect = await worker.fetch(new Request(`https://${registry.domain}${site.basePath}/research/example?q=test`), env);
+    assert.equal(redirect.status,308);
+    assert.equal(redirect.headers.get('location'),`https://${registry.domain}${site.basePath}/research/example/?q=test`);
+  }
+});

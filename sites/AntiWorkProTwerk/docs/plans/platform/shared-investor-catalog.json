@@ -1,0 +1,138 @@
+{
+  "id": "financial-cloud-peers-2026h1",
+  "version": "2026h1-v1",
+  "title": "Shared investors · selected cloud and banking peers",
+  "selection": "Seven selected U.S. public companies and their mapped common-equity classes; reporting managers and quarter coverage come from the frozen Quarterly Holdings collection. Not a market-wide ownership map or a measure of operating control.",
+  "reviewedAt": "2026-09-16",
+  "companies": [
+    {
+      "cik": "0001652044",
+      "label": "Alphabet",
+      "ticker": "GOOGL / GOOG",
+      "securities": [
+        {
+          "cusip": "02079K305",
+          "label": "Class A",
+          "from": "2026-03-31",
+          "through": "2026-06-30",
+          "identityUrl": "https://www.sec.gov/Archives/edgar/data/1652044/000210011926000161/primary_doc.xml"
+        },
+        {
+          "cusip": "02079K107",
+          "label": "Class C",
+          "from": "2026-03-31",
+          "through": "2026-06-30",
+          "identityUrl": "https://www.sec.gov/Archives/edgar/data/1652044/000210011926000137/primary_doc.xml"
+        }
+      ]
+    },
+    {
+      "cik": "0001018724",
+      "label": "Amazon",
+      "ticker": "AMZN",
+      "securities": [
+        {
+          "cusip": "023135106",
+          "label": "Common stock",
+          "from": "2026-03-31",
+          "through": "2026-06-30",
+          "identityUrl": "https://www.sec.gov/Archives/edgar/data/1018724/000210011926000133/primary_doc.xml"
+        }
+      ]
+    },
+    {
+      "cik": "0000789019",
+      "label": "Microsoft",
+      "ticker": "MSFT",
+      "securities": [
+        {
+          "cusip": "594918104",
+          "label": "Common stock",
+          "from": "2026-03-31",
+          "through": "2026-06-30",
+          "identityUrl": "https://www.sec.gov/Archives/edgar/data/789019/000210011926000820/primary_doc.xml"
+        }
+      ]
+    },
+    {
+      "cik": "0000019617",
+      "label": "JPMorgan Chase",
+      "ticker": "JPM",
+      "securities": [
+        {
+          "cusip": "46625H100",
+          "label": "Common stock",
+          "from": "2026-03-31",
+          "through": "2026-06-30",
+          "identityUrl": "https://www.sec.gov/Archives/edgar/data/19617/000210011926000693/primary_doc.xml"
+        }
+      ]
+    },
+    {
+      "cik": "0000070858",
+      "label": "Bank of America",
+      "ticker": "BAC",
+      "securities": [
+        {
+          "cusip": "060505104",
+          "label": "Common stock",
+          "from": "2026-03-31",
+          "through": "2026-06-30",
+          "identityUrl": "https://www.sec.gov/Archives/edgar/data/70858/000210011926000199/primary_doc.xml"
+        }
+      ]
+    },
+    {
+      "cik": "0000831001",
+      "label": "Citigroup",
+      "ticker": "C",
+      "securities": [
+        {
+          "cusip": "172967424",
+          "label": "Common stock",
+          "from": "2026-03-31",
+          "through": "2026-06-30",
+          "identityUrl": "https://www.sec.gov/Archives/edgar/data/831001/000210011926000307/primary_doc.xml"
+        }
+      ]
+    },
+    {
+      "cik": "0000072971",
+      "label": "Wells Fargo",
+      "ticker": "WFC",
+      "securities": [
+        {
+          "cusip": "949746101",
+          "label": "Common stock",
+          "from": "2026-03-31",
+          "through": "2026-06-30",
+          "identityUrl": "https://www.sec.gov/Archives/edgar/data/72971/000210011926001271/primary_doc.xml"
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "id": "cloud-services",
+      "label": "Cloud services",
+      "kind": "curated",
+      "companies": ["0001652044", "0001018724", "0000789019"],
+      "definition": "A curated subset of cloud providers named in Backblaze's March 2026 quarterly report: Google Cloud, AWS and Azure. These are multi-business public companies; their common shares are not pure cloud-segment investments. This grouping is not a formal market definition or an exhaustive competitor list, and is applied consistently to both collected quarters.",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1462056/000162828026029797/blze-20260331.htm",
+      "excerpt": "Amazon.com, Inc. through Amazon Web Services, Alphabet Inc. through Google Cloud Platform, and Microsoft Corporation through Azure",
+      "locator": "Part II, Item 1A: Risks Related to Our Business and Industry — competition",
+      "sicCodes": []
+    },
+    {
+      "id": "commercial-banks",
+      "label": "Commercial banks",
+      "kind": "sic",
+      "companies": ["0000019617", "0000070858", "0000831001", "0000072971"],
+      "definition": "Four selected SEC registrants classified as SIC 6021, National Commercial Banks, in their captured SEC submissions profiles. This current classification is held fixed when comparing the two earlier quarters. Shared classification does not mean identical businesses or an exhaustive competitor universe.",
+      "sourceUrl": null,
+      "excerpt": null,
+      "locator": "SEC submissions profile: sic and sicDescription",
+      "sicCodes": ["6021"]
+    }
+  ]
+}

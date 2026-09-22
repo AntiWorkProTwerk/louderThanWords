@@ -1,0 +1,28 @@
+{
+  "scope": {
+    "id": "fictional-local-pilot",
+    "title": "Local evidence pilot",
+    "mode": "demo",
+    "chamber": "House",
+    "from": "2026-08-01",
+    "through": "2026-08-31",
+    "eligibility": "A fixed fictional corpus covering direct references, agreement, tension, procedural actions, conditions, absence, uncertain same-day order, missing text and no-match outcomes. Not a sample of actual congressional behavior.",
+    "exclusions": [
+      {
+        "id": "unresolved-operative-text",
+        "reason": "An example with missing operative text remains in the private review queue."
+      }
+    ],
+    "lookbackDays": 30
+  },
+  "counts": {
+    "sources": 20,
+    "passages": 9,
+    "actions": 8,
+    "candidates": 9,
+    "published": 7,
+    "needsEvidence": 2,
+    "unmatched": 1
+  },
+  "lastSourceDate": "2026-08-14"
+}

@@ -561,6 +561,20 @@ export default {
     }
 
     if (siteName) {
+      // html_handling is deliberately disabled. Resolve each prerendered
+      // directory page before falling back to a site's client-side app shell.
+      const directoryPath = requestPath.endsWith('/') ? requestPath : `${requestPath}/`;
+      const pageAsset = await env.ASSETS.fetch(
+        new Request(new URL(`${directoryPath}index.html`, url), request),
+      );
+      if (pageAsset.status !== 404) {
+        if (!requestPath.endsWith('/')) {
+          const canonical = new URL(url);
+          canonical.pathname = directoryPath;
+          return Response.redirect(canonical.toString(), 308);
+        }
+        return addCacheHeaders(pageAsset, url);
+      }
       const siteHome = new URL(`/${encodeURIComponent(siteName)}/index.html`, url);
       const fallback = await env.ASSETS.fetch(new Request(siteHome, request));
       if (fallback.status !== 404) return addCacheHeaders(fallback, siteHome);

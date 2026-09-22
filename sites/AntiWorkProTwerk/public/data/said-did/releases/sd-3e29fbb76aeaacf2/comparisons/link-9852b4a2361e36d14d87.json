@@ -1,0 +1,174 @@
+{
+  "id": "link-9852b4a2361e36d14d87",
+  "version": 2,
+  "fingerprint": "14bad3a1a6714132a69ec67c40a72f6bb3d6f67e197493b613d2a75de1070e4a",
+  "person": {
+    "id": "demo-maya-chen",
+    "bioguideId": null,
+    "name": "Maya Chen",
+    "fictional": true,
+    "terms": [
+      {
+        "state": "TX",
+        "party": "D",
+        "district": "07",
+        "chamber": "House",
+        "from": "2025-01-03",
+        "to": "2027-01-02"
+      }
+    ]
+  },
+  "state": "TX",
+  "party": "D",
+  "district": "07",
+  "chamber": "House",
+  "claim": {
+    "id": "claim-passage-3",
+    "passageId": "passage-3",
+    "quoteStart": 0,
+    "quoteEnd": 75,
+    "quote": "I support H.R. 9003 and its recovery grants for flood-affected communities.",
+    "type": "position",
+    "stance": "support",
+    "targetId": "119-hr-9003",
+    "policy": "Disaster relief",
+    "qualifiers": [],
+    "conditions": [],
+    "meaning": "I support H.R. 9003 and its recovery grants for flood-affected communities.",
+    "sentiment": "not_assessed"
+  },
+  "statement": {
+    "id": "passage-3",
+    "sourceId": "statement-3",
+    "personId": "demo-maya-chen",
+    "identityEvidence": "Explicit fictional roster ID supplied in this fixture",
+    "attribution": "verified",
+    "start": 0,
+    "end": 75,
+    "kind": "recorded_statement",
+    "eventDate": "2026-08-05",
+    "eventTime": null,
+    "mediaUrl": null,
+    "context": "Debate procedure and final passage are separate legislative actions.",
+    "contextMeasureId": null,
+    "contextEvidence": ""
+  },
+  "action": {
+    "id": "119-house-2-303-demo-maya-chen",
+    "personId": "demo-maya-chen",
+    "measureId": "119-hr-9003",
+    "versionId": "text-9003-v1",
+    "sourceId": "action-3",
+    "congress": 119,
+    "chamber": "House",
+    "session": 2,
+    "roll": 303,
+    "date": "2026-08-12",
+    "time": null,
+    "kind": "procedure",
+    "question": "On Ordering the Previous Question",
+    "result": "Agreed to",
+    "rawVote": "Nay",
+    "vote": "Nay",
+    "operativeText": "established",
+    "conditionsMet": "not_applicable",
+    "context": "Debate procedure and final passage are separate legislative actions."
+  },
+  "measure": {
+    "id": "119-hr-9003",
+    "congress": 119,
+    "type": "hr",
+    "number": 9003,
+    "title": "Community Flood Recovery",
+    "policy": "Disaster relief",
+    "policyDefinition": "Appropriate recovery grants for communities affected by declared floods; distinguish final passage from debate procedure.",
+    "parentId": null,
+    "versions": [
+      {
+        "id": "text-9003-v1",
+        "issued": "2026-08-01",
+        "sourceId": "text-9003",
+        "provision": "Appropriate recovery grants for communities affected by declared floods; distinguish final passage from debate procedure."
+      }
+    ]
+  },
+  "assessment": "context_dependent",
+  "explanation": "The precise legislative question matters; this is not an ordinary final-passage comparison.",
+  "limitations": [
+    "The precise legislative question matters; this is not an ordinary final-passage comparison.",
+    "Fictional person, statement, measure and action. This example is not evidence about any real member of Congress."
+  ],
+  "basis": "explicit_measure",
+  "chronology": "statement_before_action",
+  "evidence": [
+    {
+      "id": "statement-3",
+      "provider": "Local demonstration fixture",
+      "externalId": "statement-3",
+      "title": "Maya Chen — fictional recorded statement",
+      "url": null,
+      "kind": "fixture",
+      "date": "2026-08-05",
+      "publishedAt": "2026-09-15T12:00:00.000Z",
+      "fetchedAt": "2026-09-15T12:00:00.000Z",
+      "modifiedAt": "2026-09-15T12:00:00.000Z",
+      "page": "Fixture 1",
+      "publicationRights": "fixture",
+      "hash": "70893c5376328f80e942154b9fcdcbde853f81c591c3f77670ff8e4e340632f3",
+      "excerpt": "I support H.R. 9003 and its recovery grants for flood-affected communities.",
+      "role": "statement",
+      "normalizedStart": 0,
+      "normalizedEnd": 75
+    },
+    {
+      "id": "action-3",
+      "provider": "Local demonstration fixture",
+      "externalId": "action-3",
+      "title": "Maya Chen — fictional individual action",
+      "url": null,
+      "kind": "fixture",
+      "date": "2026-08-12",
+      "publishedAt": "2026-09-15T12:00:00.000Z",
+      "fetchedAt": "2026-09-15T12:00:00.000Z",
+      "modifiedAt": "2026-09-15T12:00:00.000Z",
+      "page": "Fixture 1",
+      "publicationRights": "fixture",
+      "hash": "74d1d9e21f8a2b8703c7092e00f5b949bbbec60c32af04312f8ec02715953c3a",
+      "excerpt": "Fictional House roll call 303, 119th Congress, session 2. On Ordering the Previous Question. Maya Chen: Nay. Result: Agreed to. Debate procedure and final passage are separate legislative actions.",
+      "role": "action",
+      "normalizedStart": 0,
+      "normalizedEnd": 196
+    },
+    {
+      "id": "text-9003",
+      "provider": "Local demonstration fixture",
+      "externalId": "text-9003",
+      "title": "Fictional operative provision",
+      "url": null,
+      "kind": "fixture",
+      "date": "2026-08-01",
+      "publishedAt": "2026-09-15T12:00:00.000Z",
+      "fetchedAt": "2026-09-15T12:00:00.000Z",
+      "modifiedAt": "2026-09-15T12:00:00.000Z",
+      "page": "Fixture 1",
+      "publicationRights": "fixture",
+      "hash": "3b52f41b52047f5b01c1f8fca6ac4b938fca40439543b4de48d7102f0a06f131",
+      "excerpt": "Appropriate recovery grants for communities affected by declared floods; distinguish final passage from debate procedure.",
+      "role": "provision",
+      "normalizedStart": 0,
+      "normalizedEnd": 121
+    }
+  ],
+  "reviewedAt": "2026-09-15T12:30:00.000Z",
+  "publishedAt": "2026-09-15T12:30:00.000Z",
+  "reviewMode": "demo",
+  "status": "published",
+  "history": [
+    {
+      "version": 1,
+      "release": "sd-fefedb25f18acaf7",
+      "status": "published",
+      "note": "Superseded by a reviewed revision."
+    }
+  ]
+}

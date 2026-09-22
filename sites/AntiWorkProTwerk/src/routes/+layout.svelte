@@ -4,6 +4,8 @@
   import Explorer from '$lib/components/Explorer.svelte';
   import '../style.css';
   import '../explorer.css';
+  import '../said-did.css';
+  import '../atlas.css';
   let { data, children } = $props();
   const client = new QueryClient({
     defaultOptions: {
@@ -19,6 +21,7 @@
 </script>
 
 <QueryClientProvider {client}>
-  <Explorer manifest={data.manifest} initialSummary={data.initialSummary} />
-  {@render children()}
+  <Explorer manifest={data.manifest} initialSummary={data.initialSummary}>
+    {@render children()}
+  </Explorer>
 </QueryClientProvider>

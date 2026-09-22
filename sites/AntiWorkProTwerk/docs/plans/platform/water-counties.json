@@ -1,0 +1,11 @@
+{
+  "id": "sdwa-three-county-records",
+  "title": "Water systems reporting Harris, Contra Costa or St. Clair County service",
+  "selection": "All active public water system types with a reported county in the selected state-ID jurisdictions, plus retained systems from earlier captures. County records with no state use the documented two-letter PWSID jurisdiction prefix; they are not service-boundary polygons. This is a nonrandom geographic collection, not a water-safety ranking.",
+  "counties": [{"state":"TX","county":"Harris"},{"state":"CA","county":"Contra Costa"},{"state":"IL","county":"St. Clair"}],
+  "types": ["CWS","NTNCWS","TNCWS"],
+  "active": "A",
+  "from": "2020-01-01",
+  "through": "2026-06-30",
+  "maxSystems": 2000
+}

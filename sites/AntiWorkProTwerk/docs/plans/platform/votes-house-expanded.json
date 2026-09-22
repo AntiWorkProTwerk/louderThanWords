@@ -1,0 +1,332 @@
+{
+  "scope": {
+    "id": "house-january-2025-two-roll-calls",
+    "title": "House roll-call receipts · January 3–7, 2025",
+    "mode": "real",
+    "chamber": "House",
+    "from": "2025-01-03",
+    "through": "2025-01-07",
+    "eligibility": "Every individual entry in House roll calls 3 (January 3, 2025: ordering the previous question on H.Res. 5) and 6 (January 7, 2025: passage of H.R. 29), including non-votes. This is a two-vote collection, not all congressional activity. Clerk display labels are retained unless a dated full-name record was supplied. The H.R. 29 House-passed text is certified; the H.Res. 5 later engrossed text is context only for its procedural vote.",
+    "exclusions": [],
+    "lookbackDays": 7
+  },
+  "identities": [
+    {
+      "id": "m001177",
+      "bioguideId": "M001177",
+      "name": "Tom McClintock",
+      "fictional": false,
+      "terms": [
+        {
+          "state": "CA",
+          "party": "R",
+          "district": "",
+          "chamber": "House",
+          "from": "2025-01-07",
+          "to": "2025-01-07"
+        }
+      ],
+      "aliases": [
+        "McCLINTOCK"
+      ],
+      "evidenceUrl": "https://www.govinfo.gov/metadata/pkg/CREC-2025-01-07/mods.xml"
+    },
+    {
+      "id": "r000606",
+      "bioguideId": "R000606",
+      "name": "Jamie Raskin",
+      "fictional": false,
+      "terms": [
+        {
+          "state": "MD",
+          "party": "D",
+          "district": "",
+          "chamber": "House",
+          "from": "2025-01-07",
+          "to": "2025-01-07"
+        }
+      ],
+      "aliases": [
+        "RASKIN"
+      ],
+      "evidenceUrl": "https://www.govinfo.gov/metadata/pkg/CREC-2025-01-07/mods.xml"
+    },
+    {
+      "id": "c001129",
+      "bioguideId": "C001129",
+      "name": "Mike Collins",
+      "fictional": false,
+      "terms": [
+        {
+          "state": "GA",
+          "party": "R",
+          "district": "",
+          "chamber": "House",
+          "from": "2025-01-07",
+          "to": "2025-01-07"
+        }
+      ],
+      "aliases": [
+        "COLLINS"
+      ],
+      "evidenceUrl": "https://www.govinfo.gov/metadata/pkg/CREC-2025-01-07/mods.xml"
+    },
+    {
+      "id": "n000002",
+      "bioguideId": "N000002",
+      "name": "Jerrold Nadler",
+      "fictional": false,
+      "terms": [
+        {
+          "state": "NY",
+          "party": "D",
+          "district": "",
+          "chamber": "House",
+          "from": "2025-01-07",
+          "to": "2025-01-07"
+        }
+      ],
+      "aliases": [
+        "NADLER"
+      ],
+      "evidenceUrl": "https://www.govinfo.gov/metadata/pkg/CREC-2025-01-07/mods.xml"
+    },
+    {
+      "id": "b001302",
+      "bioguideId": "B001302",
+      "name": "Andy Biggs",
+      "fictional": false,
+      "terms": [
+        {
+          "state": "AZ",
+          "party": "R",
+          "district": "",
+          "chamber": "House",
+          "from": "2025-01-07",
+          "to": "2025-01-07"
+        }
+      ],
+      "aliases": [
+        "BIGGS of Arizona"
+      ],
+      "evidenceUrl": "https://www.govinfo.gov/metadata/pkg/CREC-2025-01-07/mods.xml"
+    },
+    {
+      "id": "j000298",
+      "bioguideId": "J000298",
+      "name": "Pramila Jayapal",
+      "fictional": false,
+      "terms": [
+        {
+          "state": "WA",
+          "party": "D",
+          "district": "",
+          "chamber": "House",
+          "from": "2025-01-07",
+          "to": "2025-01-07"
+        }
+      ],
+      "aliases": [
+        "JAYAPAL"
+      ],
+      "evidenceUrl": "https://www.govinfo.gov/metadata/pkg/CREC-2025-01-07/mods.xml"
+    },
+    {
+      "id": "h001102",
+      "bioguideId": "H001102",
+      "name": "Mark Harris",
+      "fictional": false,
+      "terms": [
+        {
+          "state": "NC",
+          "party": "R",
+          "district": "",
+          "chamber": "House",
+          "from": "2025-01-07",
+          "to": "2025-01-07"
+        }
+      ],
+      "aliases": [
+        "HARRIS of North Carolina"
+      ],
+      "evidenceUrl": "https://www.govinfo.gov/metadata/pkg/CREC-2025-01-07/mods.xml"
+    },
+    {
+      "id": "c001116",
+      "bioguideId": "C001116",
+      "name": "Andrew S. Clyde",
+      "fictional": false,
+      "terms": [
+        {
+          "state": "GA",
+          "party": "R",
+          "district": "",
+          "chamber": "House",
+          "from": "2025-01-07",
+          "to": "2025-01-07"
+        }
+      ],
+      "aliases": [
+        "CLYDE"
+      ],
+      "evidenceUrl": "https://www.govinfo.gov/metadata/pkg/CREC-2025-01-07/mods.xml"
+    },
+    {
+      "id": "v000133",
+      "bioguideId": "V000133",
+      "name": "Jefferson Van Drew",
+      "fictional": false,
+      "terms": [
+        {
+          "state": "NJ",
+          "party": "R",
+          "district": "",
+          "chamber": "House",
+          "from": "2025-01-07",
+          "to": "2025-01-07"
+        }
+      ],
+      "aliases": [
+        "VAN DREW"
+      ],
+      "evidenceUrl": "https://www.govinfo.gov/metadata/pkg/CREC-2025-01-07/mods.xml"
+    },
+    {
+      "id": "c001118",
+      "bioguideId": "C001118",
+      "name": "Ben Cline",
+      "fictional": false,
+      "terms": [
+        {
+          "state": "VA",
+          "party": "R",
+          "district": "",
+          "chamber": "House",
+          "from": "2025-01-07",
+          "to": "2025-01-07"
+        }
+      ],
+      "aliases": [
+        "CLINE"
+      ],
+      "evidenceUrl": "https://www.govinfo.gov/metadata/pkg/CREC-2025-01-07/mods.xml"
+    },
+    {
+      "id": "p000048",
+      "bioguideId": "P000048",
+      "name": "August Pfluger",
+      "fictional": false,
+      "terms": [
+        {
+          "state": "TX",
+          "party": "R",
+          "district": "",
+          "chamber": "House",
+          "from": "2025-01-07",
+          "to": "2025-01-07"
+        }
+      ],
+      "aliases": [
+        "PFLUGER"
+      ],
+      "evidenceUrl": "https://www.govinfo.gov/metadata/pkg/CREC-2025-01-07/mods.xml"
+    },
+    {
+      "id": "f000110",
+      "bioguideId": "F000110",
+      "name": "Cleo Fields",
+      "fictional": false,
+      "terms": [
+        {
+          "state": "LA",
+          "party": "D",
+          "district": "",
+          "chamber": "House",
+          "from": "2025-01-07",
+          "to": "2025-01-07"
+        }
+      ],
+      "aliases": [
+        "FIELDS"
+      ],
+      "evidenceUrl": "https://www.govinfo.gov/metadata/pkg/CREC-2025-01-07/mods.xml"
+    }
+  ],
+  "documents": [
+    {
+      "id": "crec-2025-01-07-pt1-pgh53-4",
+      "kind": "record",
+      "url": "https://www.govinfo.gov/content/pkg/CREC-2025-01-07/html/CREC-2025-01-07-pt1-PgH53-4.htm",
+      "congress": 119,
+      "chamber": "House",
+      "date": "2025-01-07"
+    },
+    {
+      "id": "crec-2025-01-07-pt1-pgh61-3",
+      "kind": "record",
+      "url": "https://www.govinfo.gov/content/pkg/CREC-2025-01-07/html/CREC-2025-01-07-pt1-PgH61-3.htm",
+      "congress": 119,
+      "chamber": "House",
+      "date": "2025-01-07"
+    },
+    {
+      "id": "crec-2025-01-07-pt1-pgh63-27",
+      "kind": "record",
+      "url": "https://www.govinfo.gov/content/pkg/CREC-2025-01-07/html/CREC-2025-01-07-pt1-PgH63-27.htm",
+      "congress": 119,
+      "chamber": "House",
+      "date": "2025-01-07"
+    },
+    {
+      "id": "house-2025-6",
+      "kind": "house_vote",
+      "url": "https://clerk.house.gov/evs/2025/roll006.xml",
+      "congress": 119,
+      "chamber": "House",
+      "date": "2025-01-07"
+    },
+    {
+      "id": "119-hr-29-ih",
+      "kind": "bill",
+      "url": "https://www.govinfo.gov/bulkdata/BILLS/119/1/hr/BILLS-119hr29ih.xml",
+      "congress": 119,
+      "chamber": "House"
+    },
+    {
+      "id": "119-hr-29-eh",
+      "kind": "bill",
+      "url": "https://www.govinfo.gov/bulkdata/BILLS/119/1/hr/BILLS-119hr29eh.xml",
+      "congress": 119,
+      "chamber": "House",
+      "date": "2025-01-07"
+    },
+    {
+      "id": "house-2025-3",
+      "kind": "house_vote",
+      "url": "https://clerk.house.gov/evs/2025/roll003.xml",
+      "congress": 119,
+      "chamber": "House",
+      "date": "2025-01-03"
+    },
+    {
+      "id": "119-hres-5-eh",
+      "kind": "bill",
+      "url": "https://www.govinfo.gov/content/pkg/BILLS-119hres5eh/xml/BILLS-119hres5eh.xml",
+      "congress": 119,
+      "chamber": "House",
+      "date": "2025-01-03"
+    }
+  ],
+  "operativeBindings": [
+    {
+      "documentId": "house-2025-6",
+      "measureId": "119-hr-29",
+      "versionId": "119-hr-29-eh",
+      "evidenceSourceId": "119-hr-29-eh",
+      "evidence": "Passed the House of Representatives January 7, 2025.",
+      "status": "established",
+      "basis": "engrossed_house_passage"
+    }
+  ],
+  "houseRoster": "roll_call"
+}

@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; img-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <title>Said / Did — guided evidence review</title>
+    <style>
+      /* WORKSHEET_STYLE */
+    </style>
+  </head>
+  <body>
+    <header class="masthead">
+      <span class="brand">LOUDERTHANWORDS.FYI</span
+      ><span>Private research · nothing here is published</span>
+    </header>
+    <main>
+      <section id="welcome" class="intro">
+        <p class="eyebrow">START HERE · NO RESEARCH EXPERIENCE REQUIRED</p>
+        <h1>Help us check whether<br />the AI read it correctly.</h1>
+        <p class="lede">
+          We’re building <strong>Said / Did</strong>: a feature that puts a politician’s statement
+          next to a relevant legislative action, with evidence and context. Before trusting its
+          output, we need a human to read the same sources independently. That is what this page is
+          for.
+        </p>
+        <div class="flow" aria-label="How your review fits into the project">
+          <div>
+            <span>01 / COLLECTED</span>
+            <h3>Official records</h3>
+            <p>Saved statements, bill text and vote records.</p>
+          </div>
+          <div class="active">
+            <span>02 / YOU ARE HERE</span>
+            <h3>Your interpretation</h3>
+            <p>Check who said what, and which actions can fairly be compared.</p>
+          </div>
+          <div>
+            <span>03 / AFTER YOUR REVIEW</span>
+            <h3>Test the AI</h3>
+            <p>Compare Luna’s answers with your independently reviewed answers.</p>
+          </div>
+        </div>
+        <section class="card">
+          <h2>What data am I looking at?</h2>
+          <p id="scope-summary"></p>
+          <p id="measure-summary"></p>
+          <div id="counts" class="stats"></div>
+          <p>
+            A <strong>case</strong> is one stretch of text assigned to a speaker—not a whole speech,
+            a whole bill, or an accusation. Several cases may come from the same person or debate.
+            Some contain only parliamentary business and no usable position. Those are useful tests
+            too.
+          </p>
+          <p>
+            The <strong>Congressional Record</strong> is Congress’s written record. It can contain
+            inserted or quoted material; it is not proof that every word was spoken aloud. A
+            <strong>roll call</strong> records individual votes. A <strong>bill version</strong> is
+            a particular draft of proposed legislation.
+          </p>
+          <p class="notice">
+            These are archived records, not a live feed. Collection code proposed speaker names and
+            text boundaries; it can be wrong. The action inventory covers only the people collected
+            for this pilot—not every vote or every member of Congress.
+          </p>
+        </section>
+        <div class="two-up">
+          <section class="card">
+            <h2>What should the result be?</h2>
+            <p>A saved answer sheet saying, in your judgment:</p>
+            <ul>
+              <li>Who owns these words, and what the complete passage is.</li>
+              <li>What position or commitment it expresses, if any.</li>
+              <li>
+                Whether a recorded action is relevant, and what comparison the evidence permits.
+              </li>
+            </ul>
+            <p>
+              The download is a data file the local evaluator can read.
+              <strong>You don’t need to write code or edit JSON.</strong>
+            </p>
+          </section>
+          <section class="card">
+            <h2>What are you not being asked to do?</h2>
+            <ul>
+              <li>Decide whether you like the politician or policy.</li>
+              <li>Prove that someone lied or guess their private motives.</li>
+              <li>Assume a later vote contradicts an earlier statement.</li>
+              <li>Approve a public finding or finish every case in one sitting.</li>
+            </ul>
+            <p>“I can’t tell” is a valid stopping point. Leave a note and keep the case pending.</p>
+          </section>
+        </div>
+        <details class="card">
+          <summary>A made-up example: what a good review looks like</summary>
+          <p>
+            <strong>Fictional statement:</strong> “I’ll vote for the Clean River Bill if it includes
+            funding for small towns.”
+          </p>
+          <p>
+            <strong>Your reading:</strong> an intention to vote in support, with the exact condition
+            “if it includes funding for small towns.” The tone is separate from the stance.
+          </p>
+          <p>
+            <strong>Fictional action:</strong> the same person later votes No. That alone is not
+            enough to call it a contradiction. Did the voted-on version include the funding? Was it
+            actually a final vote on that bill?
+          </p>
+          <p>
+            <strong>Defensible result if those facts are missing:</strong> more context is needed.
+            This example supplies no answers for the real cases below.
+          </p>
+        </details>
+        <p id="benchmark-limit" class="notice"></p>
+        <button id="start" class="primary">Start with one passage →</button>
+        <p class="muted">
+          First read the text. You can pause before making any judgment. Luna’s predictions are
+          intentionally hidden to avoid influencing you.
+        </p>
+      </section>
+
+      <section id="workspace" hidden>
+        <div class="toolbar">
+          <button id="back-intro">← What is this for?</button
+          ><button id="download">Download my progress</button
+          ><label class="import-label"
+            >Resume a saved file<input id="import" type="file" accept=".json,application/json"
+          /></label>
+        </div>
+        <p id="message" role="status" aria-live="polite">
+          Your answers stay in this tab. Download your progress before closing or refreshing.
+        </p>
+        <nav class="case-nav" aria-label="Choose a passage">
+          <button id="previous">← Previous case</button
+          ><label
+            >Passage
+            <select id="case"></select></label
+          ><button id="next">Next case →</button><span id="progress"></span>
+        </nav>
+        <p id="case-heading" class="eyebrow"></p>
+        <div class="step-nav" role="group" aria-label="Review steps">
+          <button data-step="0">1. Read & attribute</button
+          ><button data-step="1">2. Interpret</button
+          ><button data-step="2">3. Compare actions</button
+          ><button data-step="3">4. Save your review</button>
+        </div>
+
+        <section class="step" data-panel="0">
+          <h2>1. Who said this, and are these their words?</h2>
+          <p>
+            Start with the highlighted passage. Then check the surrounding record for the speaker
+            heading, quoted speakers, and where the next person begins. You’re checking the
+            collection code here, not the AI.
+          </p>
+          <div class="two-up reading">
+            <section class="card">
+              <p class="eyebrow">EVIDENCE · NOT A MODEL ANSWER</p>
+              <h3 id="source-title"></h3>
+              <p id="source-caption"></p>
+              <a id="source" target="_blank" rel="noopener noreferrer"
+                >Open the official original ↗</a
+              >
+              <p id="parser-person" class="notice"></p>
+              <h4>Passage selected by the collection code</h4>
+              <pre id="quote" class="source-text"></pre>
+              <details id="full-context">
+                <summary>Read surrounding text / full archived record</summary>
+                <button id="jump-span">Jump to highlighted passage</button>
+                <pre id="context" class="source-text scroll-source"></pre>
+              </details>
+              <details>
+                <summary>How the collection code attributed this passage</summary>
+                <p id="identity-evidence"></p>
+                <p id="passage-context"></p>
+              </details>
+            </section>
+            <section class="card">
+              <h3>Your answer</h3>
+              <label for="person">Who is responsible for this statement?</label
+              ><select id="person"></select>
+              <p class="hint">
+                Choose a name only after checking the record. Leave unresolved if the speaker is
+                missing from the roster, quoted rather than speaking, or ambiguous.
+              </p>
+              <label for="expected-quote">The complete passage you verified</label
+              ><button id="use-quote">Use the displayed passage as my starting text</button
+              ><textarea
+                id="expected-quote"
+                rows="10"
+                placeholder="Read the context first. Use the button to copy the displayed passage, or paste corrected boundaries from the archived record."
+              ></textarea>
+              <p class="hint">
+                Copy exactly, including line breaks. Keep conditions and exceptions. If boundaries
+                are wrong, use the complete correct turn and explain the correction in your notes.
+              </p>
+              <label class="check"
+                ><input id="check-source" type="checkbox" />I checked the source, speaker and
+                passage boundaries; unresolved issues are in my notes.</label
+              >
+            </section>
+          </div>
+        </section>
+        <section class="step" data-panel="1" hidden>
+          <h2>2. What is the person actually saying?</h2>
+          <p>
+            Describe the statement, not your opinion of it. Do not use the vote to decide what the
+            statement means. A person can express a position without promising a particular vote.
+          </p>
+          <details class="card">
+            <summary>Read this passage again</summary>
+            <pre class="source-text repeat-quote"></pre>
+          </details>
+          <section class="card">
+            <label for="claim-decision">Can you identify a statement to evaluate?</label
+            ><select id="claim-decision">
+              <option value="">Choose after reading…</option>
+              <option value="yes">Yes — I can identify an attributable statement</option>
+              <option value="no">No — there is no eligible statement in this passage</option>
+              <option value="unsure">I’m not sure — leave this case pending</option>
+            </select>
+            <p class="hint">
+              “No” can mean a procedural handoff, a quotation from someone else, or unresolved
+              attribution. Explain why in your notes. A factual description can be eligible; it is
+              not necessarily a commitment.
+            </p>
+            <div id="claim-list"></div>
+            <button id="add-claim">+ Describe a statement</button>
+            <p class="hint">
+              Use one card per distinct statement/target. Do not split one position into several
+              cards just because it spans multiple sentences.
+            </p>
+            <label class="check"
+              ><input id="check-claims" type="checkbox" />I checked the meaning, target, conditions
+              and exceptions—or explained why there is no eligible statement.</label
+            >
+          </section>
+        </section>
+        <section class="step" data-panel="2" hidden>
+          <h2>3. Is there an action we can fairly compare?</h2>
+          <p>
+            Now inspect the action evidence. Match the same person and the supported bill or policy.
+            An absence is not a No vote; a procedural vote is not automatically a final passage
+            vote.
+          </p>
+          <div class="notice">
+            <strong>Missing context is important.</strong> A statement and a vote on the same day do
+            not establish which came first. A bill’s introduced draft is not automatically the text
+            voted on. Without those facts, “Needs more context” may be the only defensible
+            comparison.
+          </div>
+          <details class="card">
+            <summary>Bill text and available versions — what was being discussed?</summary>
+            <div id="measures"></div>
+          </details>
+          <p id="action-help"></p>
+          <div id="action-list"></div>
+          <section class="card">
+            <label class="check"
+              ><input id="check-actions" type="checkbox" />I inspected the inventory, recorded
+              plausible matches and mismatches, and noted missing evidence.</label
+            >
+            <p class="hint">
+              You do not need to add every unrelated person’s vote. Do review actions for the
+              verified speaker and any plausible or incorrectly attributed matches. Nothing is
+              selected by Luna. A missing action stays missing—do not invent one.
+            </p>
+          </section>
+        </section>
+        <section class="step" data-panel="3" hidden>
+          <h2>4. Leave a useful answer—even if it’s “not sure.”</h2>
+          <p>
+            Your job is to make a defensible record, not to force a conclusion. Pending cases are
+            saved too. Only complete a case when you have independently checked the evidence.
+          </p>
+          <section class="card">
+            <h3>Your review at a glance</h3>
+            <div id="review-summary"></div>
+            <label for="reviewer">Your name or consistent reviewer handle</label
+            ><input
+              id="reviewer"
+              autocomplete="name"
+              placeholder="Used to identify who reviewed the evidence"
+            />
+            <p class="hint">
+              The form adds the review time when you explicitly mark the case reviewed.
+            </p>
+            <label class="check"
+              ><input id="check-independent" type="checkbox" />These are my own evidence-based
+              answers. I have not used Luna’s predictions as the answer key.</label
+            >
+            <div class="button-row">
+              <button id="pending">Keep pending / needs help</button
+              ><button id="complete" class="primary">Mark this case human-reviewed</button>
+            </div>
+            <p id="case-status"></p>
+          </section>
+          <section class="card">
+            <h3>What happens after I save?</h3>
+            <ol>
+              <li>
+                Click <strong>Download my progress</strong>. Keep the downloaded file; there is no
+                automatic disk save.
+              </li>
+              <li>
+                To continue later, reopen this page and use <strong>Resume a saved file</strong>.
+              </li>
+              <li>
+                When you’re ready, give the downloaded file back to the developer/assistant. You
+                don’t need to run a command.
+              </li>
+              <li>
+                The local evaluator checks file validity and compares reviewed answers with the
+                cached model output. Disagreements need investigation; neither the code nor one
+                reviewer is infallible.
+              </li>
+            </ol>
+            <p>
+              Your review does not publish findings. Human review for public comparisons is a
+              separate step. This pilot alone cannot prove the model is accurate across Congress.
+            </p>
+          </section>
+        </section>
+        <section class="card notes">
+          <label for="notes">Notes / what you’re unsure about</label
+          ><textarea
+            id="notes"
+            rows="3"
+            placeholder="For example: I cannot establish which bill version was voted on, or the speaker heading is ambiguous. Explain corrections and exclusions here."
+          ></textarea>
+          <p class="hint">You can leave a note and move on. Don’t guess to finish a case.</p>
+        </section>
+        <div class="bottom-nav">
+          <button id="step-back">← Previous step</button
+          ><button id="step-next" class="primary">Continue →</button>
+        </div>
+        <details class="card">
+          <summary>Technical reference (optional—you do not need this to review)</summary>
+          <p id="technical"></p>
+          <pre id="guide"></pre>
+        </details>
+      </section>
+    </main>
+    <footer>
+      Evidence first. Uncertainty preserved. No AI calls, database writes or public updates from
+      this worksheet.
+    </footer>
+    <script id="packet-data" type="application/json">
+      /* WORKSHEET_DATA */
+    </script>
+    <script>
+      /* WORKSHEET_SCRIPT */
+    </script>
+  </body>
+</html>

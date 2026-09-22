@@ -1,0 +1,177 @@
+{
+  "id": "link-e2a11a1a63d25f9b5abc",
+  "version": 3,
+  "fingerprint": "305586a03e07fb080bfa745130bd224f621fcf746e7e6f1c560f788150d520fa",
+  "person": {
+    "id": "demo-eli-brooks",
+    "bioguideId": null,
+    "name": "Eli Brooks",
+    "fictional": true,
+    "terms": [
+      {
+        "state": "TX",
+        "party": "R",
+        "district": "12",
+        "chamber": "House",
+        "from": "2025-01-03",
+        "to": "2027-01-02"
+      }
+    ]
+  },
+  "state": "TX",
+  "party": "R",
+  "district": "12",
+  "chamber": "House",
+  "claim": {
+    "id": "claim-passage-2",
+    "passageId": "passage-2",
+    "quoteStart": 0,
+    "quoteEnd": 108,
+    "quote": "I will vote against H.R. 9001. I oppose this restriction on individual stock trading by members of Congress.",
+    "type": "voting_intention",
+    "stance": "oppose",
+    "targetId": "119-hr-9001",
+    "policy": "Public trust",
+    "qualifiers": [],
+    "conditions": []
+  },
+  "statement": {
+    "id": "passage-2",
+    "sourceId": "statement-2",
+    "personId": "demo-eli-brooks",
+    "identityEvidence": "Explicit fictional roster ID supplied in this fixture",
+    "attribution": "verified",
+    "start": 0,
+    "end": 108,
+    "kind": "recorded_statement",
+    "eventDate": "2026-08-04",
+    "eventTime": null,
+    "mediaUrl": null,
+    "context": "",
+    "contextMeasureId": null,
+    "contextEvidence": ""
+  },
+  "action": {
+    "id": "119-house-2-302-demo-eli-brooks",
+    "personId": "demo-eli-brooks",
+    "measureId": "119-hr-9001",
+    "versionId": "text-9001-v1",
+    "sourceId": "action-2",
+    "congress": 119,
+    "chamber": "House",
+    "session": 2,
+    "roll": 302,
+    "date": "2026-08-10",
+    "time": null,
+    "kind": "passage",
+    "question": "On Passage of H.R. 9001",
+    "result": "Agreed to",
+    "rawVote": "Yea",
+    "vote": "Yea",
+    "operativeText": "established",
+    "conditionsMet": "not_applicable",
+    "context": ""
+  },
+  "measure": {
+    "id": "119-hr-9001",
+    "congress": 119,
+    "type": "hr",
+    "number": 9001,
+    "title": "Individual Stock Trading Restrictions",
+    "policy": "Public trust",
+    "policyDefinition": "Prohibit members of Congress from trading individual stocks, with a transition period for existing holdings.",
+    "parentId": null,
+    "versions": [
+      {
+        "id": "text-9001-v1",
+        "issued": "2026-08-01",
+        "sourceId": "text-9001",
+        "provision": "Prohibit members of Congress from trading individual stocks, with a transition period for existing holdings."
+      }
+    ]
+  },
+  "assessment": "apparent_tension",
+  "explanation": "The recorded Yea differs from the explicit intention to vote against this measure. The fixture supplies no later explanation; this is not a finding about motive or honesty.",
+  "limitations": [
+    "Fictional person, statement, measure and action. This example is not evidence about any real member of Congress."
+  ],
+  "basis": "explicit_measure",
+  "chronology": "statement_before_action",
+  "evidence": [
+    {
+      "id": "statement-2",
+      "provider": "Local demonstration fixture",
+      "externalId": "statement-2",
+      "title": "Eli Brooks — fictional recorded statement",
+      "url": null,
+      "kind": "fixture",
+      "date": "2026-08-04",
+      "publishedAt": "2026-09-15T12:00:00.000Z",
+      "fetchedAt": "2026-09-15T12:00:00.000Z",
+      "modifiedAt": "2026-09-15T12:00:00.000Z",
+      "page": "Fixture 1",
+      "publicationRights": "fixture",
+      "hash": "da0393dfbc7d8d94d83bccc11a409f4fd658fb9a9dd1a8958f1dcde43be75e57",
+      "excerpt": "I will vote against H.R. 9001. I oppose this restriction on individual stock trading by members of Congress.",
+      "role": "statement",
+      "normalizedStart": 0,
+      "normalizedEnd": 108
+    },
+    {
+      "id": "action-2",
+      "provider": "Local demonstration fixture",
+      "externalId": "action-2",
+      "title": "Eli Brooks — fictional individual action",
+      "url": null,
+      "kind": "fixture",
+      "date": "2026-08-10",
+      "publishedAt": "2026-09-15T12:00:00.000Z",
+      "fetchedAt": "2026-09-15T12:00:00.000Z",
+      "modifiedAt": "2026-09-15T12:00:00.000Z",
+      "page": "Fixture 1",
+      "publicationRights": "fixture",
+      "hash": "80d7a6d49a367299802fbf3de28c929bc1e682f847ff62725d0aac01e154cf78",
+      "excerpt": "Fictional House roll call 302, 119th Congress, session 2. On Passage of H.R. 9001. Eli Brooks: Yea. Result: Agreed to. ",
+      "role": "action",
+      "normalizedStart": 0,
+      "normalizedEnd": 119
+    },
+    {
+      "id": "text-9001",
+      "provider": "Local demonstration fixture",
+      "externalId": "text-9001",
+      "title": "Fictional operative provision",
+      "url": null,
+      "kind": "fixture",
+      "date": "2026-08-01",
+      "publishedAt": "2026-09-15T12:00:00.000Z",
+      "fetchedAt": "2026-09-15T12:00:00.000Z",
+      "modifiedAt": "2026-09-15T12:00:00.000Z",
+      "page": "Fixture 1",
+      "publicationRights": "fixture",
+      "hash": "49ccd8eb088f6142ea4e5fb0c1023f411c89408f871ecccc239e5425825b241e",
+      "excerpt": "Prohibit members of Congress from trading individual stocks, with a transition period for existing holdings.",
+      "role": "provision",
+      "normalizedStart": 0,
+      "normalizedEnd": 108
+    }
+  ],
+  "reviewedAt": "2026-09-15T12:30:00.000Z",
+  "publishedAt": "2026-09-15T12:30:00.000Z",
+  "reviewMode": "demo",
+  "status": "published",
+  "history": [
+    {
+      "version": 1,
+      "release": "sd-fefedb25f18acaf7",
+      "status": "published",
+      "note": "Superseded by a reviewed revision."
+    },
+    {
+      "version": 2,
+      "release": "sd-3e29fbb76aeaacf2",
+      "status": "published",
+      "note": "Superseded by a reviewed revision."
+    }
+  ]
+}

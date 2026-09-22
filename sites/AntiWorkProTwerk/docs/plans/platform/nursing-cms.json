@@ -1,0 +1,6 @@
+{
+  "id": "cms-nursing-ca-il-tx",
+  "title": "CMS nursing facilities and disclosed parties · California, Illinois and Texas",
+  "states": ["CA", "IL", "TX"],
+  "maxFacilities": 10000
+}

@@ -1,0 +1,26 @@
+{
+  "id": "selected-fund-proxy-votes-2026",
+  "title": "Who votes your retirement? · selected fund disclosures",
+  "selection": "Thirteen explicitly selected fund series across four SEC registrants. Includes one index fund, Domini funds and Parnassus funds/ETFs, including a fund notice. This illustrative collection is not representative of all retirement investments or a ranking of funds. All discovered annual filings and amendments for these series in the stated period are considered; vote directions do not determine eligibility.",
+  "period": "2026-06-30",
+  "filedThrough": "2026-09-16",
+  "funds": [
+    {"cik":"0000036405","series":"S000002839"},
+    {"cik":"0000851680","series":"S000003423"},
+    {"cik":"0000851680","series":"S000003424"},
+    {"cik":"0000851680","series":"S000014393"},
+    {"cik":"0000851680","series":"S000067792"},
+    {"cik":"0000866256","series":"S000000856"},
+    {"cik":"0000866256","series":"S000089216"},
+    {"cik":"0000866256","series":"S000089217"},
+    {"cik":"0000747546","series":"S000000852"},
+    {"cik":"0000747546","series":"S000000853"},
+    {"cik":"0000747546","series":"S000000855"},
+    {"cik":"0000747546","series":"S000079321"},
+    {"cik":"0000747546","series":"S000091873"}
+  ],
+  "maxFilings": 100,
+  "maxIndexPages": 100,
+  "maxVotes": 100000,
+  "maxFileBytes": 60000000
+}

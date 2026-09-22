@@ -1,0 +1,179 @@
+{
+  "id": "link-1047f4d958826e4147e3",
+  "version": 2,
+  "fingerprint": "7c2f256cffda341050864b33cf629cd409d21c3ab6c85e0914f00fd0f9e4d35d",
+  "person": {
+    "id": "demo-nora-reyes",
+    "bioguideId": null,
+    "name": "Nora Reyes",
+    "fictional": true,
+    "terms": [
+      {
+        "state": "CA",
+        "party": "D",
+        "district": "18",
+        "chamber": "House",
+        "from": "2025-01-03",
+        "to": "2027-01-02"
+      }
+    ]
+  },
+  "state": "CA",
+  "party": "D",
+  "district": "18",
+  "chamber": "House",
+  "claim": {
+    "id": "claim-passage-4",
+    "passageId": "passage-4",
+    "quoteStart": 0,
+    "quoteEnd": 110,
+    "quote": "I support H.R. 9002 only if rural clinic support is preserved. Reducing that support would change my position.",
+    "type": "conditional",
+    "stance": "support",
+    "targetId": "119-hr-9002",
+    "policy": "Healthcare",
+    "qualifiers": [
+      "I support H.R. 9002 only if rural clinic support is preserved. Reducing that support would change my position."
+    ],
+    "conditions": [
+      "I support H.R. 9002 only if rural clinic support is preserved. Reducing that support would change my position."
+    ],
+    "meaning": "I support H.R. 9002 only if rural clinic support is preserved. Reducing that support would change my position.",
+    "sentiment": "not_assessed"
+  },
+  "statement": {
+    "id": "passage-4",
+    "sourceId": "statement-4",
+    "personId": "demo-nora-reyes",
+    "identityEvidence": "Explicit fictional roster ID supplied in this fixture",
+    "attribution": "verified",
+    "start": 0,
+    "end": 110,
+    "kind": "recorded_statement",
+    "eventDate": "2026-08-06",
+    "eventTime": null,
+    "mediaUrl": null,
+    "context": "The stated condition concerns rural clinic support, not prescription costs in general.",
+    "contextMeasureId": null,
+    "contextEvidence": ""
+  },
+  "action": {
+    "id": "119-house-2-304-demo-nora-reyes",
+    "personId": "demo-nora-reyes",
+    "measureId": "119-hr-9002",
+    "versionId": "text-9002-v1",
+    "sourceId": "action-4",
+    "congress": 119,
+    "chamber": "House",
+    "session": 2,
+    "roll": 304,
+    "date": "2026-08-14",
+    "time": null,
+    "kind": "passage",
+    "question": "On Passage of H.R. 9002",
+    "result": "Failed",
+    "rawVote": "Nay",
+    "vote": "Nay",
+    "operativeText": "changed",
+    "conditionsMet": "unknown",
+    "context": "The stated condition concerns rural clinic support, not prescription costs in general."
+  },
+  "measure": {
+    "id": "119-hr-9002",
+    "congress": 119,
+    "type": "hr",
+    "number": 9002,
+    "title": "Prescription Cost Access",
+    "policy": "Healthcare",
+    "policyDefinition": "Cap eligible out-of-pocket prescription costs for a defined public insurance population, without reducing rural clinic support.",
+    "parentId": null,
+    "versions": [
+      {
+        "id": "text-9002-v1",
+        "issued": "2026-08-01",
+        "sourceId": "text-9002",
+        "provision": "Cap eligible out-of-pocket prescription costs for a defined public insurance population, without reducing rural clinic support."
+      }
+    ]
+  },
+  "assessment": "context_dependent",
+  "explanation": "The statement is conditional. Whether the condition held must be checked. The operative text changed between the statement and action.",
+  "limitations": [
+    "The statement is conditional. Whether the condition held must be checked.",
+    "The operative text changed between the statement and action.",
+    "Fictional person, statement, measure and action. This example is not evidence about any real member of Congress."
+  ],
+  "basis": "explicit_measure",
+  "chronology": "statement_before_action",
+  "evidence": [
+    {
+      "id": "statement-4",
+      "provider": "Local demonstration fixture",
+      "externalId": "statement-4",
+      "title": "Nora Reyes — fictional recorded statement",
+      "url": null,
+      "kind": "fixture",
+      "date": "2026-08-06",
+      "publishedAt": "2026-09-15T12:00:00.000Z",
+      "fetchedAt": "2026-09-15T12:00:00.000Z",
+      "modifiedAt": "2026-09-15T12:00:00.000Z",
+      "page": "Fixture 1",
+      "publicationRights": "fixture",
+      "hash": "4493b0328aab7065c819c5fac23ec42b27e64ea3b7b953bdde8742a0fb9b4e79",
+      "excerpt": "I support H.R. 9002 only if rural clinic support is preserved. Reducing that support would change my position.",
+      "role": "statement",
+      "normalizedStart": 0,
+      "normalizedEnd": 110
+    },
+    {
+      "id": "action-4",
+      "provider": "Local demonstration fixture",
+      "externalId": "action-4",
+      "title": "Nora Reyes — fictional individual action",
+      "url": null,
+      "kind": "fixture",
+      "date": "2026-08-14",
+      "publishedAt": "2026-09-15T12:00:00.000Z",
+      "fetchedAt": "2026-09-15T12:00:00.000Z",
+      "modifiedAt": "2026-09-15T12:00:00.000Z",
+      "page": "Fixture 1",
+      "publicationRights": "fixture",
+      "hash": "8096d022ac3291fe96048480fd9beb346ac038eb08c26ee40218f1c66e54b4a9",
+      "excerpt": "Fictional House roll call 304, 119th Congress, session 2. On Passage of H.R. 9002. Nora Reyes: Nay. Result: Failed. The stated condition concerns rural clinic support, not prescription costs in general.",
+      "role": "action",
+      "normalizedStart": 0,
+      "normalizedEnd": 202
+    },
+    {
+      "id": "text-9002",
+      "provider": "Local demonstration fixture",
+      "externalId": "text-9002",
+      "title": "Fictional operative provision",
+      "url": null,
+      "kind": "fixture",
+      "date": "2026-08-01",
+      "publishedAt": "2026-09-15T12:00:00.000Z",
+      "fetchedAt": "2026-09-15T12:00:00.000Z",
+      "modifiedAt": "2026-09-15T12:00:00.000Z",
+      "page": "Fixture 1",
+      "publicationRights": "fixture",
+      "hash": "b00f5f173c4a8cabc320344e713b1e0b7ba7b9f7b7e969c83b1d8fd38e553dfc",
+      "excerpt": "Cap eligible out-of-pocket prescription costs for a defined public insurance population, without reducing rural clinic support.",
+      "role": "provision",
+      "normalizedStart": 0,
+      "normalizedEnd": 127
+    }
+  ],
+  "reviewedAt": "2026-09-15T12:30:00.000Z",
+  "publishedAt": "2026-09-15T12:30:00.000Z",
+  "reviewMode": "demo",
+  "status": "published",
+  "history": [
+    {
+      "version": 1,
+      "release": "sd-fefedb25f18acaf7",
+      "status": "published",
+      "note": "Superseded by a reviewed revision."
+    }
+  ]
+}

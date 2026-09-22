@@ -1,0 +1,7 @@
+{
+  "id": "asthma-us-completed",
+  "condition": "asthma",
+  "pageSize": 25,
+  "maxPages": 2,
+  "maxTracked": 1000
+}

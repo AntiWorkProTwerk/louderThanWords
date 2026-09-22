@@ -1,0 +1,173 @@
+{
+  "id": "link-7bf5c9112ed05615f7ae",
+  "version": 2,
+  "fingerprint": "47f25067a6f4e39f4401626e273733d91d9eb261f753799b21427587ac11223a",
+  "person": {
+    "id": "demo-nora-reyes",
+    "bioguideId": null,
+    "name": "Nora Reyes",
+    "fictional": true,
+    "terms": [
+      {
+        "state": "CA",
+        "party": "D",
+        "district": "18",
+        "chamber": "House",
+        "from": "2025-01-03",
+        "to": "2027-01-02"
+      }
+    ]
+  },
+  "state": "CA",
+  "party": "D",
+  "district": "18",
+  "chamber": "House",
+  "claim": {
+    "id": "claim-passage-5",
+    "passageId": "passage-5",
+    "quoteStart": 0,
+    "quoteEnd": 82,
+    "quote": "I support H.R. 9001. The transition period protects an orderly divestment process.",
+    "type": "position",
+    "stance": "support",
+    "targetId": "119-hr-9001",
+    "policy": "Public trust",
+    "qualifiers": [],
+    "conditions": [],
+    "meaning": "I support H.R. 9001. The transition period protects an orderly divestment process.",
+    "sentiment": "not_assessed"
+  },
+  "statement": {
+    "id": "passage-5",
+    "sourceId": "statement-5",
+    "personId": "demo-nora-reyes",
+    "identityEvidence": "Explicit fictional roster ID supplied in this fixture",
+    "attribution": "verified",
+    "start": 0,
+    "end": 82,
+    "kind": "inserted_statement",
+    "eventDate": "2026-08-07",
+    "eventTime": null,
+    "mediaUrl": null,
+    "context": "",
+    "contextMeasureId": null,
+    "contextEvidence": ""
+  },
+  "action": {
+    "id": "119-house-2-305-demo-nora-reyes",
+    "personId": "demo-nora-reyes",
+    "measureId": "119-hr-9001",
+    "versionId": "text-9001-v1",
+    "sourceId": "action-5",
+    "congress": 119,
+    "chamber": "House",
+    "session": 2,
+    "roll": 305,
+    "date": "2026-08-10",
+    "time": null,
+    "kind": "passage",
+    "question": "On Passage of H.R. 9001",
+    "result": "Agreed to",
+    "rawVote": "Yea",
+    "vote": "Yea",
+    "operativeText": "established",
+    "conditionsMet": "not_applicable",
+    "context": ""
+  },
+  "measure": {
+    "id": "119-hr-9001",
+    "congress": 119,
+    "type": "hr",
+    "number": 9001,
+    "title": "Individual Stock Trading Restrictions",
+    "policy": "Public trust",
+    "policyDefinition": "Prohibit members of Congress from trading individual stocks, with a transition period for existing holdings.",
+    "parentId": null,
+    "versions": [
+      {
+        "id": "text-9001-v1",
+        "issued": "2026-08-01",
+        "sourceId": "text-9001",
+        "provision": "Prohibit members of Congress from trading individual stocks, with a transition period for existing holdings."
+      }
+    ]
+  },
+  "assessment": "consistent",
+  "explanation": "The recorded choice aligns with the stated position on this exact measure. This comparison concerns this action, not every provision or a career-wide record.",
+  "limitations": [
+    "Fictional person, statement, measure and action. This example is not evidence about any real member of Congress."
+  ],
+  "basis": "explicit_measure",
+  "chronology": "statement_before_action",
+  "evidence": [
+    {
+      "id": "statement-5",
+      "provider": "Local demonstration fixture",
+      "externalId": "statement-5",
+      "title": "Nora Reyes — fictional recorded statement",
+      "url": null,
+      "kind": "fixture",
+      "date": "2026-08-07",
+      "publishedAt": "2026-09-15T12:00:00.000Z",
+      "fetchedAt": "2026-09-15T12:00:00.000Z",
+      "modifiedAt": "2026-09-15T12:00:00.000Z",
+      "page": "Fixture 1",
+      "publicationRights": "fixture",
+      "hash": "0de355d090f24aa8c3b1af9d7afb78cc2740b64a00da256813d0221cd4fa255c",
+      "excerpt": "I support H.R. 9001. The transition period protects an orderly divestment process.",
+      "role": "statement",
+      "normalizedStart": 0,
+      "normalizedEnd": 82
+    },
+    {
+      "id": "action-5",
+      "provider": "Local demonstration fixture",
+      "externalId": "action-5",
+      "title": "Nora Reyes — fictional individual action",
+      "url": null,
+      "kind": "fixture",
+      "date": "2026-08-10",
+      "publishedAt": "2026-09-15T12:00:00.000Z",
+      "fetchedAt": "2026-09-15T12:00:00.000Z",
+      "modifiedAt": "2026-09-15T12:00:00.000Z",
+      "page": "Fixture 1",
+      "publicationRights": "fixture",
+      "hash": "68e30bc367f1b77cd0b5ed2b40196a318bc67db848c5853fede4c4a8e61e4053",
+      "excerpt": "Fictional House roll call 305, 119th Congress, session 2. On Passage of H.R. 9001. Nora Reyes: Yea. Result: Agreed to. ",
+      "role": "action",
+      "normalizedStart": 0,
+      "normalizedEnd": 119
+    },
+    {
+      "id": "text-9001",
+      "provider": "Local demonstration fixture",
+      "externalId": "text-9001",
+      "title": "Fictional operative provision",
+      "url": null,
+      "kind": "fixture",
+      "date": "2026-08-01",
+      "publishedAt": "2026-09-15T12:00:00.000Z",
+      "fetchedAt": "2026-09-15T12:00:00.000Z",
+      "modifiedAt": "2026-09-15T12:00:00.000Z",
+      "page": "Fixture 1",
+      "publicationRights": "fixture",
+      "hash": "49ccd8eb088f6142ea4e5fb0c1023f411c89408f871ecccc239e5425825b241e",
+      "excerpt": "Prohibit members of Congress from trading individual stocks, with a transition period for existing holdings.",
+      "role": "provision",
+      "normalizedStart": 0,
+      "normalizedEnd": 108
+    }
+  ],
+  "reviewedAt": "2026-09-15T12:30:00.000Z",
+  "publishedAt": "2026-09-15T12:30:00.000Z",
+  "reviewMode": "demo",
+  "status": "published",
+  "history": [
+    {
+      "version": 1,
+      "release": "sd-fefedb25f18acaf7",
+      "status": "published",
+      "note": "Superseded by a reviewed revision."
+    }
+  ]
+}
