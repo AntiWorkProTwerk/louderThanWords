@@ -1,0 +1,56 @@
+import { test, expect } from '@playwright/test';
+
+test('trial records expose groups, source evidence and selected study sites without replacing the map', async ({page}) => {
+  const errors: string[]=[]; page.on('pageerror',e=>errors.push(e.message));
+  await page.setViewportSize({width:1672,height:941});
+  await page.goto('/records/votes/');
+  await expect(page.locator('.map-state-name')).toHaveCount(51,{timeout:60000});
+  await page.evaluate(()=>{(window as any).__trialMap=document.querySelector('.maplibregl-canvas');});
+  await page.getByRole('button', { name: /Explore data/ }).click();
+  await page.getByRole('dialog').locator('.catalog-card').filter({hasText:'Trial results'}).click();
+  await expect(page.locator('.trial-card')).toHaveCount(24);
+  await expect(page.locator('.trial-coverage')).toContainText('Official registry snapshot');
+  await expect(page.locator('.trial-stats')).toContainText('50');
+  await page.getByRole('button',{name:/Show 24 more studies/}).click();
+  await expect(page.locator('.trial-card')).toHaveCount(48);
+  await page.getByRole('button',{name:'By sponsor',exact:true}).click();
+  await expect(page.locator('.trial-groups button').first()).toBeVisible();
+  await page.locator('.trial-groups button').first().click();
+  await expect(page.locator('.trial-filter-note')).toBeVisible();
+  await page.getByRole('button',{name:'Clear filters',exact:true}).click();
+  await page.getByRole('button',{name:'By topic',exact:true}).click();
+  await expect(page.locator('.trial-groups button').first()).toBeVisible();
+  await page.getByRole('button',{name:'Studies',exact:true}).click();
+  await page.getByRole('searchbox').fill('NCT06940141');
+  await expect(page.locator('.trial-card')).toHaveCount(1);
+  await page.locator('.trial-card').click();
+  await expect(page.getByRole('link',{name:'Open original registry record ↗'})).toHaveAttribute('href','https://clinicaltrials.gov/study/NCT06940141');
+  await expect(page.locator('.trial-caution').first()).toContainText('not a verdict');
+  await expect.poll(async()=>Number(await page.getByTestId('us-map').getAttribute('data-record-sites'))).toBeGreaterThan(1);
+  await page.getByRole('checkbox',{name:/Connect this study/}).check();
+  await expect.poll(async()=>Number(await page.getByTestId('us-map').getAttribute('data-record-links'))).toBeGreaterThan(0);
+  expect(await page.evaluate(()=>document.querySelector('.maplibregl-canvas')===(window as any).__trialMap)).toBe(true);
+  await page.screenshot({path:'test-results/trial-results-desktop.png'});
+  await page.reload();
+  await expect(page.locator('.trial-detail')).toBeVisible();
+  await expect(page.getByRole('checkbox',{name:/Connect this study/})).toBeChecked();
+  expect(errors).toEqual([]);
+});
+
+test('phone trial explorer is readable, filters results and explains baseline tracking',async({page})=>{
+  await page.setViewportSize({width:390,height:844});
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.goto('/records/trials/');
+  await page.getByRole('button',{name:'Expand evidence panel'}).click();
+  await page.getByLabel('Registry results',{exact:true}).selectOption('posted');
+  await expect(page.locator('.trial-card')).toHaveCount(21);
+  await page.locator('.trial-card').first().click();
+  await expect(page.locator('.trial-detail')).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.screenshot({path:'test-results/trial-results-phone.png',fullPage:true});
+  await page.getByRole('button',{name:'Observed changes',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'No observed changes yet.'})).toBeVisible();
+  await page.getByRole('button',{name:'Clear filters',exact:true}).click();
+  await page.getByRole('searchbox').fill('zz-not-a-registry-study-zz');
+  await expect(page.getByRole('heading',{name:'No completed studies in this slice.'})).toBeVisible();
+});

@@ -1,0 +1,18 @@
+{
+  "scope": {
+    "id": "house-2025-01-07-hr29-pilot",
+    "title": "Official-source parser pilot: House, January 7, 2025",
+    "mode": "real",
+    "chamber": "House",
+    "from": "2025-01-07",
+    "through": "2025-01-07",
+    "eligibility": "One dated House debate and recorded actions referencing H.R. 29. A technical acquisition pilot, not representative of Congress or a basis for findings about honesty.",
+    "exclusions": [],
+    "lookbackDays": 7
+  },
+  "congress": 119,
+  "session": 1,
+  "measureIds": ["119-hr-29"],
+  "maxDocuments": 20,
+  "identities": []
+}

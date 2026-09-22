@@ -60,10 +60,42 @@ test('static assets are served directly and missing JSON stays a 404', async () 
   assert.equal(missing.status, 404);
 });
 
-test('the existing shared civic cache remains available without a D1 binding', async () => {
+test('the existing shared civic cache proxies to the backend without a D1 binding', async (t) => {
+  const forwarded: Request[] = [];
+  t.mock.method(globalThis, 'fetch', async (request: Request) => {
+    forwarded.push(request);
+    return Response.json(request.method === 'GET' ? { hit: false } : { ok: true });
+  });
   const url = `https://${registry.domain}/api/civic/cache?key=demo`;
   const get = await worker.fetch(new Request(url), {});
   assert.deepEqual(await get.json(), { hit: false });
-  const post = await worker.fetch(new Request(url, { method: 'POST' }), {});
-  assert.deepEqual(await post.json(), { ok: false, error: 'D1 not bound' });
+  const payload = { key: 'demo', payload: { value: 1 } };
+  const post = await worker.fetch(new Request(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  }), {});
+  assert.deepEqual(await post.json(), { ok: true });
+  assert.equal(forwarded.length, 2);
+  for (const request of forwarded) {
+    assert.equal(request.url, 'https://dukevibington-dev-louderthanwords.louder-than-words.workers.dev/api/civic/cache?key=demo');
+  }
+  assert.deepEqual(forwarded.map(request => request.method), ['GET', 'POST']);
+  assert.deepEqual(await forwarded[1].json(), payload);
+});
+
+test('nested prerendered pages are served before the SPA fallback for every site', async () => {
+  for (const site of sites) {
+    const env = { ASSETS: { fetch: async (request: Request) => {
+      const path = new URL(request.url).pathname;
+      return path === `${site.basePath}/research/example/index.html`
+        ? new Response('Prerendered evidence page')
+        : path === `${site.basePath}/index.html` ? new Response('App shell') : new Response('missing', {status:404});
+    } } };
+    const response = await worker.fetch(new Request(`https://${registry.domain}${site.basePath}/research/example/`), env);
+    assert.equal(await response.text(), 'Prerendered evidence page');
+    const redirect = await worker.fetch(new Request(`https://${registry.domain}${site.basePath}/research/example?q=test`), env);
+    assert.equal(redirect.status,308);
+    assert.equal(redirect.headers.get('location'),`https://${registry.domain}${site.basePath}/research/example/?q=test`);
+  }
 });

@@ -66,7 +66,7 @@ The existing shared `/api/civic/cache` endpoint is preserved separately and cont
 
 An optional `<USERNAME>__DATA` R2 bucket binding serves that site's `/data/*` and `/tiles/*` paths, including HTTP range requests. Without it, the shipped static dataset is used. Public dataset files are cacheable; account handlers must return `Cache-Control: private, no-store`. The shared worker runs before assets so configured R2 releases can supersede bundled data without rebuilding the frontend.
 
-Keep backend migrations, credentials, and dependencies in the owning site. The first site's `docs/implementation.md` describes the civic explorer integrations and acceptance checks.
+Keep backend migrations, credentials, and dependencies in the owning site. The first site's `docs/plans/stack/implementation.md` describes the civic explorer integrations and acceptance checks.
 
 ## Pull requests and ownership
 

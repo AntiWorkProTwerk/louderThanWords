@@ -44,7 +44,7 @@ export function renderHeaders() {
   return sites
     .map(
       (site) =>
-        `${site.basePath}/data/manifest.json\n  Cache-Control: public, max-age=60, must-revalidate\n\n${site.basePath}/data/releases/*\n  Cache-Control: public, max-age=31536000, immutable\n\n${site.basePath}/_app/immutable/*\n  Cache-Control: public, max-age=31536000, immutable\n`,
+        `${site.basePath}/data/manifest.json\n  Cache-Control: public, max-age=60, must-revalidate\n\n${site.basePath}/data/releases/*\n  Cache-Control: public, max-age=31536000, immutable\n\n${site.basePath}/data/said-did/manifest.json\n  Cache-Control: public, max-age=30, must-revalidate\n\n${site.basePath}/data/said-did/releases/*\n  Cache-Control: public, max-age=31536000, immutable\n\n${site.basePath}/_app/immutable/*\n  Cache-Control: public, max-age=31536000, immutable\n`,
     )
     .join('\n');
 }

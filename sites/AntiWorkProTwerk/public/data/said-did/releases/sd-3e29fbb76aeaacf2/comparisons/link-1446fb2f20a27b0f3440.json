@@ -1,0 +1,174 @@
+{
+  "id": "link-1446fb2f20a27b0f3440",
+  "version": 2,
+  "fingerprint": "155b2edd30a765aaf745e47caf262702acc75ae8eb5d0518930bc7de286f77db",
+  "person": {
+    "id": "demo-theo-bennett",
+    "bioguideId": null,
+    "name": "Theo Bennett",
+    "fictional": true,
+    "terms": [
+      {
+        "state": "NY",
+        "party": "I",
+        "district": "09",
+        "chamber": "House",
+        "from": "2025-01-03",
+        "to": "2027-01-02"
+      }
+    ]
+  },
+  "state": "NY",
+  "party": "I",
+  "district": "09",
+  "chamber": "House",
+  "claim": {
+    "id": "claim-passage-6",
+    "passageId": "passage-6",
+    "quoteStart": 0,
+    "quoteEnd": 87,
+    "quote": "I will vote for H.R. 9003. Flood recovery grants should reach the affected communities.",
+    "type": "voting_intention",
+    "stance": "support",
+    "targetId": "119-hr-9003",
+    "policy": "Disaster relief",
+    "qualifiers": [],
+    "conditions": [],
+    "meaning": "I will vote for H.R. 9003. Flood recovery grants should reach the affected communities.",
+    "sentiment": "not_assessed"
+  },
+  "statement": {
+    "id": "passage-6",
+    "sourceId": "statement-6",
+    "personId": "demo-theo-bennett",
+    "identityEvidence": "Explicit fictional roster ID supplied in this fixture",
+    "attribution": "verified",
+    "start": 0,
+    "end": 87,
+    "kind": "recorded_statement",
+    "eventDate": "2026-08-12",
+    "eventTime": null,
+    "mediaUrl": null,
+    "context": "",
+    "contextMeasureId": null,
+    "contextEvidence": ""
+  },
+  "action": {
+    "id": "119-house-2-306-demo-theo-bennett",
+    "personId": "demo-theo-bennett",
+    "measureId": "119-hr-9003",
+    "versionId": "text-9003-v1",
+    "sourceId": "action-6",
+    "congress": 119,
+    "chamber": "House",
+    "session": 2,
+    "roll": 306,
+    "date": "2026-08-12",
+    "time": null,
+    "kind": "passage",
+    "question": "On Passage of H.R. 9003",
+    "result": "Agreed to",
+    "rawVote": "Yea",
+    "vote": "Yea",
+    "operativeText": "established",
+    "conditionsMet": "not_applicable",
+    "context": ""
+  },
+  "measure": {
+    "id": "119-hr-9003",
+    "congress": 119,
+    "type": "hr",
+    "number": 9003,
+    "title": "Community Flood Recovery",
+    "policy": "Disaster relief",
+    "policyDefinition": "Appropriate recovery grants for communities affected by declared floods; distinguish final passage from debate procedure.",
+    "parentId": null,
+    "versions": [
+      {
+        "id": "text-9003-v1",
+        "issued": "2026-08-01",
+        "sourceId": "text-9003",
+        "provision": "Appropriate recovery grants for communities affected by declared floods; distinguish final passage from debate procedure."
+      }
+    ]
+  },
+  "assessment": "context_dependent",
+  "explanation": "Same day; order not established. This is not proof of a later reversal.",
+  "limitations": [
+    "Same day; order not established. This is not proof of a later reversal.",
+    "Fictional person, statement, measure and action. This example is not evidence about any real member of Congress."
+  ],
+  "basis": "explicit_measure",
+  "chronology": "same_day_order_unknown",
+  "evidence": [
+    {
+      "id": "statement-6",
+      "provider": "Local demonstration fixture",
+      "externalId": "statement-6",
+      "title": "Theo Bennett — fictional recorded statement",
+      "url": null,
+      "kind": "fixture",
+      "date": "2026-08-12",
+      "publishedAt": "2026-09-15T12:00:00.000Z",
+      "fetchedAt": "2026-09-15T12:00:00.000Z",
+      "modifiedAt": "2026-09-15T12:00:00.000Z",
+      "page": "Fixture 1",
+      "publicationRights": "fixture",
+      "hash": "bb8865b0b297c5e5ac311490f07fe0ea02ac155891476bd06642df18e77963a1",
+      "excerpt": "I will vote for H.R. 9003. Flood recovery grants should reach the affected communities.",
+      "role": "statement",
+      "normalizedStart": 0,
+      "normalizedEnd": 87
+    },
+    {
+      "id": "action-6",
+      "provider": "Local demonstration fixture",
+      "externalId": "action-6",
+      "title": "Theo Bennett — fictional individual action",
+      "url": null,
+      "kind": "fixture",
+      "date": "2026-08-12",
+      "publishedAt": "2026-09-15T12:00:00.000Z",
+      "fetchedAt": "2026-09-15T12:00:00.000Z",
+      "modifiedAt": "2026-09-15T12:00:00.000Z",
+      "page": "Fixture 1",
+      "publicationRights": "fixture",
+      "hash": "0ca5a3b45cdc7ed6f067a208d7812df47b83422aeb65ab9adfd8ab305a494923",
+      "excerpt": "Fictional House roll call 306, 119th Congress, session 2. On Passage of H.R. 9003. Theo Bennett: Yea. Result: Agreed to. ",
+      "role": "action",
+      "normalizedStart": 0,
+      "normalizedEnd": 121
+    },
+    {
+      "id": "text-9003",
+      "provider": "Local demonstration fixture",
+      "externalId": "text-9003",
+      "title": "Fictional operative provision",
+      "url": null,
+      "kind": "fixture",
+      "date": "2026-08-01",
+      "publishedAt": "2026-09-15T12:00:00.000Z",
+      "fetchedAt": "2026-09-15T12:00:00.000Z",
+      "modifiedAt": "2026-09-15T12:00:00.000Z",
+      "page": "Fixture 1",
+      "publicationRights": "fixture",
+      "hash": "3b52f41b52047f5b01c1f8fca6ac4b938fca40439543b4de48d7102f0a06f131",
+      "excerpt": "Appropriate recovery grants for communities affected by declared floods; distinguish final passage from debate procedure.",
+      "role": "provision",
+      "normalizedStart": 0,
+      "normalizedEnd": 121
+    }
+  ],
+  "reviewedAt": "2026-09-15T12:30:00.000Z",
+  "publishedAt": "2026-09-15T12:30:00.000Z",
+  "reviewMode": "demo",
+  "status": "published",
+  "history": [
+    {
+      "version": 1,
+      "release": "sd-fefedb25f18acaf7",
+      "status": "published",
+      "note": "Superseded by a reviewed revision."
+    }
+  ]
+}

@@ -1,0 +1,174 @@
+{
+  "id": "link-ab9ce039120b4281a51a",
+  "version": 2,
+  "fingerprint": "bccdebe9ec1a5d38a79e435a73fd36fcb2f4865928b64ee3d0266f68bedf389a",
+  "person": {
+    "id": "demo-eli-brooks",
+    "bioguideId": null,
+    "name": "Eli Brooks",
+    "fictional": true,
+    "terms": [
+      {
+        "state": "TX",
+        "party": "R",
+        "district": "12",
+        "chamber": "House",
+        "from": "2025-01-03",
+        "to": "2027-01-02"
+      }
+    ]
+  },
+  "state": "TX",
+  "party": "R",
+  "district": "12",
+  "chamber": "House",
+  "claim": {
+    "id": "claim-passage-7",
+    "passageId": "passage-7",
+    "quoteStart": 0,
+    "quoteEnd": 60,
+    "quote": "I support H.R. 9002 and the specified prescription cost cap.",
+    "type": "position",
+    "stance": "support",
+    "targetId": "119-hr-9002",
+    "policy": "Healthcare",
+    "qualifiers": [],
+    "conditions": [],
+    "meaning": "I support H.R. 9002 and the specified prescription cost cap.",
+    "sentiment": "not_assessed"
+  },
+  "statement": {
+    "id": "passage-7",
+    "sourceId": "statement-7",
+    "personId": "demo-eli-brooks",
+    "identityEvidence": "Explicit fictional roster ID supplied in this fixture",
+    "attribution": "verified",
+    "start": 0,
+    "end": 60,
+    "kind": "recorded_statement",
+    "eventDate": "2026-08-08",
+    "eventTime": null,
+    "mediaUrl": null,
+    "context": "",
+    "contextMeasureId": null,
+    "contextEvidence": ""
+  },
+  "action": {
+    "id": "119-house-2-307-demo-eli-brooks",
+    "personId": "demo-eli-brooks",
+    "measureId": "119-hr-9002",
+    "versionId": "text-9002-v1",
+    "sourceId": "action-7",
+    "congress": 119,
+    "chamber": "House",
+    "session": 2,
+    "roll": 307,
+    "date": "2026-08-14",
+    "time": null,
+    "kind": "passage",
+    "question": "On Passage of H.R. 9002",
+    "result": "Agreed to",
+    "rawVote": "Not Voting",
+    "vote": "Not Voting",
+    "operativeText": "established",
+    "conditionsMet": "not_applicable",
+    "context": ""
+  },
+  "measure": {
+    "id": "119-hr-9002",
+    "congress": 119,
+    "type": "hr",
+    "number": 9002,
+    "title": "Prescription Cost Access",
+    "policy": "Healthcare",
+    "policyDefinition": "Cap eligible out-of-pocket prescription costs for a defined public insurance population, without reducing rural clinic support.",
+    "parentId": null,
+    "versions": [
+      {
+        "id": "text-9002-v1",
+        "issued": "2026-08-01",
+        "sourceId": "text-9002",
+        "provision": "Cap eligible out-of-pocket prescription costs for a defined public insurance population, without reducing rural clinic support."
+      }
+    ]
+  },
+  "assessment": "context_dependent",
+  "explanation": "Not Voting is not a vote against the policy.",
+  "limitations": [
+    "Not Voting is not a vote against the policy.",
+    "Fictional person, statement, measure and action. This example is not evidence about any real member of Congress."
+  ],
+  "basis": "explicit_measure",
+  "chronology": "statement_before_action",
+  "evidence": [
+    {
+      "id": "statement-7",
+      "provider": "Local demonstration fixture",
+      "externalId": "statement-7",
+      "title": "Eli Brooks — fictional recorded statement",
+      "url": null,
+      "kind": "fixture",
+      "date": "2026-08-08",
+      "publishedAt": "2026-09-15T12:00:00.000Z",
+      "fetchedAt": "2026-09-15T12:00:00.000Z",
+      "modifiedAt": "2026-09-15T12:00:00.000Z",
+      "page": "Fixture 1",
+      "publicationRights": "fixture",
+      "hash": "d7e423e067c4e2da4e3898e817bed417d9cf894313ffae6d75c58566cd8f3ef1",
+      "excerpt": "I support H.R. 9002 and the specified prescription cost cap.",
+      "role": "statement",
+      "normalizedStart": 0,
+      "normalizedEnd": 60
+    },
+    {
+      "id": "action-7",
+      "provider": "Local demonstration fixture",
+      "externalId": "action-7",
+      "title": "Eli Brooks — fictional individual action",
+      "url": null,
+      "kind": "fixture",
+      "date": "2026-08-14",
+      "publishedAt": "2026-09-15T12:00:00.000Z",
+      "fetchedAt": "2026-09-15T12:00:00.000Z",
+      "modifiedAt": "2026-09-15T12:00:00.000Z",
+      "page": "Fixture 1",
+      "publicationRights": "fixture",
+      "hash": "2832b84eaca66749c7cf6545efc7d3389b064885b2c4ad172d82cb4ee571d347",
+      "excerpt": "Fictional House roll call 307, 119th Congress, session 2. On Passage of H.R. 9002. Eli Brooks: Not Voting. Result: Agreed to. ",
+      "role": "action",
+      "normalizedStart": 0,
+      "normalizedEnd": 126
+    },
+    {
+      "id": "text-9002",
+      "provider": "Local demonstration fixture",
+      "externalId": "text-9002",
+      "title": "Fictional operative provision",
+      "url": null,
+      "kind": "fixture",
+      "date": "2026-08-01",
+      "publishedAt": "2026-09-15T12:00:00.000Z",
+      "fetchedAt": "2026-09-15T12:00:00.000Z",
+      "modifiedAt": "2026-09-15T12:00:00.000Z",
+      "page": "Fixture 1",
+      "publicationRights": "fixture",
+      "hash": "b00f5f173c4a8cabc320344e713b1e0b7ba7b9f7b7e969c83b1d8fd38e553dfc",
+      "excerpt": "Cap eligible out-of-pocket prescription costs for a defined public insurance population, without reducing rural clinic support.",
+      "role": "provision",
+      "normalizedStart": 0,
+      "normalizedEnd": 127
+    }
+  ],
+  "reviewedAt": "2026-09-15T12:30:00.000Z",
+  "publishedAt": "2026-09-15T12:30:00.000Z",
+  "reviewMode": "demo",
+  "status": "published",
+  "history": [
+    {
+      "version": 1,
+      "release": "sd-fefedb25f18acaf7",
+      "status": "published",
+      "note": "Superseded by a reviewed revision."
+    }
+  ]
+}

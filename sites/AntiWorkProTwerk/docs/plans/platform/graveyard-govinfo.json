@@ -1,0 +1,11 @@
+{
+  "id": "first-fifty-bills-118-119",
+  "title": "Early-numbered House and Senate bills · 118th and 119th Congresses",
+  "selection": "All available H.R. 1–50 and S. 1–50 in each of the 118th and 119th Congresses. Numbered ranges are a deliberately bounded, nonrandom sample; reserved or unavailable numbers are recorded separately. Early-numbered bills can overrepresent leadership priorities. Not Congress-wide topic success rates. Congresses have different follow-up lengths.",
+  "ranges": [
+    { "congress": 118, "type": "HR", "first": 1, "last": 50 },
+    { "congress": 118, "type": "S", "first": 1, "last": 50 },
+    { "congress": 119, "type": "HR", "first": 1, "last": 50 },
+    { "congress": 119, "type": "S", "first": 1, "last": 50 }
+  ]
+}

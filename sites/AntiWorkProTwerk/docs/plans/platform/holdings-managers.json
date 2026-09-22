@@ -1,0 +1,18 @@
+{
+  "id": "sec-13f-three-managers-2026",
+  "title": "Quarterly holdings · three reporting managers",
+  "selection": "Berkshire Hathaway, JPMorgan Chase and Pershing Square Capital Management selected by exact SEC CIK. Complete as-filed tables for these managers in two publication windows; not all managers, assets or trading activity. Notices remain notices and do not become empty portfolios.",
+  "managers": ["0001067983", "0000019617", "0001336528"],
+  "archives": [
+    {
+      "id": "01mar2026-31may2026",
+      "url": "https://www.sec.gov/files/structureddata/data/form-13f-data-sets/01mar2026-31may2026_form13f.zip"
+    },
+    {
+      "id": "01jun2026-31aug2026",
+      "url": "https://www.sec.gov/files/datastandardsinnovation/data/form-13f-data-sets/01jun2026-31aug2026_form13f.zip"
+    }
+  ],
+  "maxFilings": 1000,
+  "maxRows": 500000
+}

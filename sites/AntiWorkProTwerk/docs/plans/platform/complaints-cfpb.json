@@ -1,0 +1,9 @@
+{
+  "id": "checking-savings-two-companies-2025-h1",
+  "from": "2025-01",
+  "through": "2025-06",
+  "product": "Checking or savings account",
+  "companies": ["ALLY FINANCIAL INC.", "SOFI TECHNOLOGIES, INC."],
+  "pageSize": 100,
+  "maxPerMonth": 2000
+}

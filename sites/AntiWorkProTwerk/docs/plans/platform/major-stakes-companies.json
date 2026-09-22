@@ -1,0 +1,10 @@
+{
+  "id": "selected-ownership-disclosures-2025-2026",
+  "title": "Major-stake disclosures · selected public companies",
+  "selection": "All structured Schedule 13D/13G filings and amendments discovered for five explicitly selected issuer CIKs in the filing-date window. These companies illustrate different reporting histories; they are not a representative sample, an industry ranking or the full market. Earlier uncollected amendments and original schedules remain outside this bounded history.",
+  "issuers": ["0001981792", "0001652044", "0000789019", "0001657853", "0002042347"],
+  "from": "2025-01-01",
+  "through": "2026-09-15",
+  "maxFilings": 500,
+  "maxIndexPages": 100
+}

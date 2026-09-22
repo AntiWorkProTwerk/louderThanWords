@@ -1,0 +1,10 @@
+{
+  "id": "epa-tce-2024-2025",
+  "term": "trichloroethylene",
+  "agency": "environmental-protection-agency",
+  "from": "2024-12-01",
+  "through": "2025-06-30",
+  "pageSize": 20,
+  "maxPages": 2,
+  "maxTracked": 200
+}

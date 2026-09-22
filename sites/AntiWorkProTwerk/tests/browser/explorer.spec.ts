@@ -85,6 +85,8 @@ test('saved profiles and private notes persist locally; all demo actions work', 
     await page.keyboard.press('Escape');
   }
   await page.getByRole('button', { name: /My account/ }).click();
+  const accountBounds = await page.getByRole('button', { name: /My account/ }).boundingBox();
+  expect(accountBounds!.x + accountBounds!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
   await expect(
     page.getByText('Online accounts and subscriptions are not connected in this demo.'),
   ).toBeVisible();
@@ -96,8 +98,9 @@ test('phone map and expandable bottom sheet work without horizontal overflow', a
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   const collapsed = await page.locator('#politicians').boundingBox();
   await page.getByRole('button', { name: 'Expand representative panel' }).click();
-  const expanded = await page.locator('#politicians').boundingBox();
-  expect(expanded!.height).toBeGreaterThan(collapsed!.height);
+  await expect(page.getByRole('button', { name: 'Collapse representative panel' })).toHaveAttribute('aria-expanded', 'true');
+  // The panel animates its height for 200 ms; a single immediate read can still be the first frame.
+  await expect.poll(async () => (await page.locator('#politicians').boundingBox())!.height).toBeGreaterThan(collapsed!.height);
   await page.locator('[data-person=garcia]').click();
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.getByRole('button', { name: 'Close details' }).click();
